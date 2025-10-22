@@ -19,51 +19,79 @@ const Navbar: React.FC = () => {
   return (
     <nav className="sticky top-0 z-50 bg-card border-b border-border backdrop-blur-sm bg-card/95 shadow-sm">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-md">
-              <Bus className="w-6 h-6 text-primary-foreground" />
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="relative">
+              <div className="text-4xl font-bold tracking-tighter">
+                <span className="text-foreground">WE</span>
+                <span className="text-primary">BUS</span>
+              </div>
+              <div className="absolute -bottom-1 left-0 w-full h-1 bg-primary"></div>
             </div>
-            <span className="text-xl font-bold text-foreground">Hiace Booking</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          {/* Center Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link 
+              to="/" 
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                isActive('/') ? 'text-primary' : 'text-foreground'
+              }`}
+            >
+              Home
+            </Link>
+            {!user?.isAdmin && (
+              <>
+                <Link 
+                  to="/#routes" 
+                  className="text-sm font-medium transition-colors hover:text-primary text-foreground"
+                >
+                  Our Destinations
+                </Link>
+                <Link 
+                  to="/#about" 
+                  className="text-sm font-medium transition-colors hover:text-primary text-foreground"
+                >
+                  About Us
+                </Link>
+              </>
+            )}
+            {user?.isAdmin && (
+              <Link 
+                to="/admin" 
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  isActive('/admin') ? 'text-primary' : 'text-foreground'
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                {user?.isAdmin && (
-                  <Button
-                    variant={isActive('/admin') ? 'default' : 'ghost'}
-                    onClick={() => navigate('/admin')}
-                    className="gap-2"
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    Dashboard
-                  </Button>
-                )}
-                {!user?.isAdmin && (
-                  <Button
-                    variant={isActive('/') ? 'default' : 'ghost'}
-                    onClick={() => navigate('/')}
-                    className="gap-2"
-                  >
-                    Routes
-                  </Button>
-                )}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
+                <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary">
                   <User className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">{user?.name}</span>
                 </div>
-                <Button variant="outline" onClick={handleLogout} className="gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout} 
+                  className="gap-2 border-2 hover:border-primary hover:text-primary"
+                >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  <span className="hidden md:inline">Logout</span>
                 </Button>
               </>
             ) : (
               <Button
                 onClick={() => navigate('/auth')}
-                className="bg-gradient-accent hover:opacity-90 transition-opacity"
+                className="bg-primary hover:bg-primary-dark text-white font-semibold px-6"
               >
-                Sign In
+                Login
               </Button>
             )}
           </div>

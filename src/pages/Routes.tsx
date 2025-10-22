@@ -7,13 +7,16 @@ import RouteCard from '@/components/RouteCard';
 import Navbar from '@/components/Navbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, MapPin, Calendar } from 'lucide-react';
+import { MapPin, Calendar, Users, Bus, Clock, ThumbsUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import heroImage from '@/assets/hero-van.jpg';
+import destinationsImage from '@/assets/egypt-destinations.jpg';
 
 const Routes: React.FC = () => {
   const [routes, setRoutes] = useState<RouteType[]>([]);
   const [filteredRoutes, setFilteredRoutes] = useState<RouteType[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({});
+  const [passengers, setPassengers] = useState(1);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -60,102 +63,196 @@ const Routes: React.FC = () => {
     setFilters((prev) => ({ ...prev, [key]: value || undefined }));
   };
 
-  const clearFilters = () => {
-    setFilters({});
-  };
-
-  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined && v !== '');
-
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12 space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-            Find Your Perfect Journey
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Book comfortable Hiace van rides to your favorite destinations across Egypt
-          </p>
+      {/* Hero Section */}
+      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70"></div>
         </div>
 
-        {/* Filters Section */}
-        <Card className="p-6 mb-8 border-2 shadow-lg">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Filter Routes</h2>
+        {/* Hero Content */}
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight">
+              WEBUS
+            </h1>
+            <div className="inline-block bg-primary px-6 py-3">
+              <p className="text-white text-xl md:text-2xl font-semibold">
+                You've come to the right place
+              </p>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Origin city..."
-                value={filters.origin || ''}
-                onChange={(e) => handleFilterChange('origin', e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Destination city..."
-                value={filters.destination || ''}
-                onChange={(e) => handleFilterChange('destination', e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="date"
-                value={filters.date || ''}
-                onChange={(e) => handleFilterChange('date', e.target.value)}
-                className="pl-10"
-              />
+
+          {/* Search Box */}
+          <Card className="max-w-5xl mx-auto bg-search-bg border-0 shadow-2xl p-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium block">Pick up location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Pick up location"
+                    value={filters.origin || ''}
+                    onChange={(e) => handleFilterChange('origin', e.target.value)}
+                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium block">Drop off location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Drop off location"
+                    value={filters.destination || ''}
+                    onChange={(e) => handleFilterChange('destination', e.target.value)}
+                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium block">Quantity</label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={passengers}
+                    onChange={(e) => setPassengers(Number(e.target.value))}
+                    placeholder="How many people?"
+                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                  />
+                </div>
+              </div>
             </div>
 
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                className="border-2"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium block">Departure date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={filters.date || ''}
+                    onChange={(e) => handleFilterChange('date', e.target.value)}
+                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                  />
+                </div>
+              </div>
+
+              <Button 
+                className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg w-full"
+                onClick={() => document.getElementById('routes')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                Clear Filters
+                Find a transfer
               </Button>
-            )}
-          </div>
-        </Card>
-
-        {/* Routes Grid */}
-        {filteredRoutes.length === 0 ? (
-          <Card className="p-12 text-center border-2">
-            <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No routes found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your filters or check back later for new routes
-            </p>
-          </Card>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">
-                Available Routes ({filteredRoutes.length})
-              </h2>
             </div>
-            
+          </Card>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Bus className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-4">Route Availability</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Provides a vast network throughout Egypt, linking major cities like Cairo, Hurghada, Dahab, Taba, and Sharm El Sheikh.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Clock className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-4">Comfort</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Basic comfort levels with reclining seats, air conditioning, and standard amenities.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <ThumbsUp className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-4">Pricing</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Affordable, with dynamic pricing based on demand and route.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Destinations Section */}
+      <section className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <img 
+                src={destinationsImage} 
+                alt="Egyptian Destinations" 
+                className="rounded-2xl shadow-2xl w-full"
+              />
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                Your Journey, Your Comfort—Book Now!
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+                Experience the best of Egypt's transportation services. From the bustling streets of Cairo to the serene beaches of the Red Sea, we connect you to your destination with comfort and reliability.
+              </p>
+              <Button 
+                className="bg-primary hover:bg-primary-dark text-white font-bold text-lg px-8 py-6 h-auto"
+                onClick={() => document.getElementById('routes')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Explore Routes
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Routes Grid */}
+      <section id="routes" className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-foreground mb-4">Available Routes</h2>
+            <p className="text-lg text-muted-foreground">
+              Choose your destination and book your seat
+            </p>
+          </div>
+
+          {filteredRoutes.length === 0 ? (
+            <Card className="p-12 text-center border-2">
+              <Bus className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">No routes found</h3>
+              <p className="text-muted-foreground">
+                Try adjusting your filters or check back later for new routes
+              </p>
+            </Card>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRoutes.map((route) => (
                 <RouteCard key={route.id} route={route} onBook={handleBook} />
               ))}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

@@ -60,10 +60,13 @@ const Auth: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-xl mx-auto">
-            <Bus className="w-10 h-10 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-xl mx-auto">
+            <Bus className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Hiace Booking</h1>
+          <div className="text-4xl font-bold tracking-tighter">
+            <span className="text-foreground">WE</span>
+            <span className="text-primary">BUS</span>
+          </div>
           <p className="text-muted-foreground">Your journey starts here</p>
         </div>
 
@@ -113,7 +116,7 @@ const Auth: React.FC = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-gradient-accent hover:opacity-90 transition-opacity"
+                    className="w-full h-11 bg-primary hover:bg-primary-dark text-white transition-all"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Signing in...' : 'Sign In'}
@@ -187,7 +190,7 @@ const Auth: React.FC = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-gradient-accent hover:opacity-90 transition-opacity"
+                    className="w-full h-11 bg-primary hover:bg-primary-dark text-white transition-all"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Creating account...' : 'Create Account'}

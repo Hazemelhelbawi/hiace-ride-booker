@@ -296,7 +296,7 @@ const AdminDashboard: React.FC = () => {
                 <CardTitle>Route Management</CardTitle>
                 <Dialog open={isRouteDialogOpen} onOpenChange={setIsRouteDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-accent hover:opacity-90 gap-2">
+                    <Button className="bg-primary hover:bg-primary-dark text-white gap-2">
                       <Plus className="w-4 h-4" />
                       Add Route
                     </Button>
@@ -394,7 +394,7 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
-                      <Button type="submit" className="w-full bg-gradient-accent hover:opacity-90">
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white">
                         Add Route
                       </Button>
                     </form>

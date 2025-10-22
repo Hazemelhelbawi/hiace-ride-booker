@@ -122,10 +122,10 @@ const BookingFlow: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
             {step === 1 ? (
               <Card className="border-2 shadow-lg">
-                <CardHeader className="border-b bg-gradient-primary text-primary-foreground">
+                <CardHeader className="border-b bg-primary text-white">
                   <CardTitle className="text-2xl">Select Your Seats</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -138,7 +138,7 @@ const BookingFlow: React.FC = () => {
               </Card>
             ) : (
               <Card className="border-2 shadow-lg">
-                <CardHeader className="border-b bg-gradient-primary text-primary-foreground">
+                <CardHeader className="border-b bg-primary text-white">
                   <CardTitle className="text-2xl">Passenger Information</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -199,7 +199,7 @@ const BookingFlow: React.FC = () => {
 
                     <Button
                       type="submit"
-                      className="w-full h-12 text-base font-semibold bg-gradient-accent hover:opacity-90 transition-opacity gap-2"
+                      className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-white transition-opacity gap-2"
                     >
                       <Check className="w-5 h-5" />
                       Confirm Booking
@@ -261,7 +261,7 @@ const BookingFlow: React.FC = () => {
                   <Button
                     onClick={handleContinue}
                     disabled={selectedSeats.length === 0}
-                    className="w-full h-12 text-base font-semibold bg-gradient-accent hover:opacity-90 transition-opacity"
+                    className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-white transition-all"
                   >
                     Continue to Passenger Info
                   </Button>
