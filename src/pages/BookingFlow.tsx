@@ -5,6 +5,7 @@ import { getRouteById, addBooking, getBookedSeats } from '@/services/localStorag
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
+import BookingTicket from '@/components/BookingTicket';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +22,8 @@ const BookingFlow: React.FC = () => {
   const [route, setRoute] = useState<Route | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
+  const [showTicket, setShowTicket] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
   const [passengerInfo, setPassengerInfo] = useState<Passenger>({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -40,12 +43,15 @@ const BookingFlow: React.FC = () => {
 
     setRoute(foundRoute);
 
-    // Initialize seats
+    // Initialize 14 seats for Toyota layout
     const bookedSeats = getBookedSeats(routeId);
-    const initialSeats: Seat[] = Array.from({ length: 12 }, (_, i) => ({
-      number: i + 1,
-      isAvailable: !bookedSeats.includes(i + 1),
+    // Seat numbers as per the layout: 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14 (no 4, 13)
+    const seatNumbers = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14];
+    const initialSeats: Seat[] = seatNumbers.map((num) => ({
+      number: num,
+      isAvailable: !bookedSeats.includes(num),
       isSelected: false,
+      price: num === 1 ? (foundRoute.price + 100) : foundRoute.price, // Seat 1 is premium
     }));
     setSeats(initialSeats);
   }, [routeId, navigate]);
@@ -59,7 +65,7 @@ const BookingFlow: React.FC = () => {
   };
 
   const selectedSeats = seats.filter((s) => s.isSelected);
-  const totalPrice = selectedSeats.length * (route?.price || 0);
+  const totalPrice = selectedSeats.reduce((sum, seat) => sum + (seat.price || route?.price || 0), 0);
 
   const handleContinue = () => {
     if (selectedSeats.length === 0) {
@@ -87,11 +93,18 @@ const BookingFlow: React.FC = () => {
       passenger: passengerInfo,
       status: 'pending',
       totalPrice,
+      isPaid: false,
       createdAt: new Date().toISOString(),
     };
 
     addBooking(booking);
-    toast.success('Booking confirmed! Check your email for details.');
+    setConfirmedBooking(booking);
+    setShowTicket(true);
+    toast.success('Booking confirmed!');
+  };
+
+  const handleCloseTicket = () => {
+    setShowTicket(false);
     navigate('/');
   };
 
@@ -109,6 +122,14 @@ const BookingFlow: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
+      
+      {showTicket && confirmedBooking && (
+        <BookingTicket 
+          booking={confirmedBooking} 
+          route={route} 
+          onClose={handleCloseTicket} 
+        />
+      )}
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Button
@@ -132,7 +153,8 @@ const BookingFlow: React.FC = () => {
                   <SeatMap
                     seats={seats}
                     onSeatSelect={handleSeatSelect}
-                    maxSeats={route.totalSeats}
+                    maxSeats={14}
+                    seatPrice={route.price}
                   />
                 </CardContent>
               </Card>
@@ -245,7 +267,7 @@ const BookingFlow: React.FC = () => {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Price per seat</span>
-                    <span className="font-medium text-foreground">${route.price}</span>
+                    <span className="font-medium text-foreground">{route.price} LE</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Number of seats</span>
@@ -253,7 +275,7 @@ const BookingFlow: React.FC = () => {
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span className="text-foreground">Total</span>
-                    <span className="text-primary">${totalPrice}</span>
+                    <span className="text-primary">{totalPrice} LE</span>
                   </div>
                 </div>
 
