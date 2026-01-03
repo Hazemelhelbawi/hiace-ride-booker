@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Booking, Route, BookingStatus } from '@/types';
-import { getBookings, updateBooking, getRoutes, addRoute, deleteRoute } from '@/services/localStorage';
+import { getBookings, updateBooking, getRoutes, addRoute, updateRoute, deleteRoute } from '@/services/localStorage';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -25,7 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Users, MapPin, Plus, Trash2 } from 'lucide-react';
+import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -35,6 +36,7 @@ const AdminDashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [newRoute, setNewRoute] = useState<Partial<Route>>({
     origin: '',
     destination: '',
@@ -75,6 +77,12 @@ const AdminDashboard: React.FC = () => {
     toast.success('Booking status updated');
   };
 
+  const handlePaymentToggle = (bookingId: string, isPaid: boolean) => {
+    updateBooking(bookingId, { isPaid });
+    loadData();
+    toast.success(isPaid ? 'Marked as paid' : 'Marked as unpaid');
+  };
+
   const getStatusColor = (status: BookingStatus) => {
     switch (status) {
       case 'confirmed':
@@ -99,13 +107,56 @@ const AdminDashboard: React.FC = () => {
       date: newRoute.date!,
       driverName: newRoute.driverName!,
       vanNumber: newRoute.vanNumber!,
-      availableSeats: 12,
-      totalSeats: 12,
+      availableSeats: 14,
+      totalSeats: 14,
     };
 
     addRoute(route);
     loadData();
     setIsRouteDialogOpen(false);
+    resetRouteForm();
+    toast.success('Route added successfully');
+  };
+
+  const handleEditRoute = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingRoute) return;
+
+    updateRoute(editingRoute.id, {
+      origin: newRoute.origin,
+      destination: newRoute.destination,
+      departureTime: newRoute.departureTime,
+      arrivalTime: newRoute.arrivalTime,
+      price: Number(newRoute.price),
+      date: newRoute.date,
+      driverName: newRoute.driverName,
+      vanNumber: newRoute.vanNumber,
+    });
+
+    loadData();
+    setEditingRoute(null);
+    setIsRouteDialogOpen(false);
+    resetRouteForm();
+    toast.success('Route updated successfully');
+  };
+
+  const openEditDialog = (route: Route) => {
+    setEditingRoute(route);
+    setNewRoute({
+      origin: route.origin,
+      destination: route.destination,
+      departureTime: route.departureTime,
+      arrivalTime: route.arrivalTime,
+      price: route.price,
+      date: route.date,
+      driverName: route.driverName,
+      vanNumber: route.vanNumber,
+    });
+    setIsRouteDialogOpen(true);
+  };
+
+  const resetRouteForm = () => {
     setNewRoute({
       origin: '',
       destination: '',
@@ -116,7 +167,7 @@ const AdminDashboard: React.FC = () => {
       driverName: '',
       vanNumber: '',
     });
-    toast.success('Route added successfully');
+    setEditingRoute(null);
   };
 
   const handleDeleteRoute = (routeId: string) => {
@@ -132,6 +183,7 @@ const AdminDashboard: React.FC = () => {
     pendingBookings: bookings.filter((b) => b.status === 'pending').length,
     confirmedBookings: bookings.filter((b) => b.status === 'confirmed').length,
     totalRoutes: routes.length,
+    paidBookings: bookings.filter((b) => b.isPaid).length,
   };
 
   return (
@@ -140,12 +192,12 @@ const AdminDashboard: React.FC = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
           <p className="text-muted-foreground">Manage bookings and routes</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card className="border-2">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -186,6 +238,18 @@ const AdminDashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="text-sm text-muted-foreground">Paid</p>
+                  <p className="text-3xl font-bold text-primary">{stats.paidBookings}</p>
+                </div>
+                <CreditCard className="w-8 h-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm text-muted-foreground">Active Routes</p>
                   <p className="text-3xl font-bold text-foreground">{stats.totalRoutes}</p>
                 </div>
@@ -214,10 +278,12 @@ const AdminDashboard: React.FC = () => {
                       <TableRow>
                         <TableHead>Booking ID</TableHead>
                         <TableHead>Passenger</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead>Route</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Seats</TableHead>
                         <TableHead>Total</TableHead>
+                        <TableHead>Paid</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -225,7 +291,7 @@ const AdminDashboard: React.FC = () => {
                     <TableBody>
                       {bookings.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                             No bookings yet
                           </TableCell>
                         </TableRow>
@@ -239,6 +305,7 @@ const AdminDashboard: React.FC = () => {
                                 <div className="text-sm text-muted-foreground">{booking.passenger.email}</div>
                               </div>
                             </TableCell>
+                            <TableCell className="text-sm">{booking.passenger.phone}</TableCell>
                             <TableCell>
                               {booking.route ? (
                                 <div className="text-sm">
@@ -251,8 +318,27 @@ const AdminDashboard: React.FC = () => {
                             <TableCell className="text-sm">
                               {format(new Date(booking.createdAt), 'MMM dd, yyyy')}
                             </TableCell>
-                            <TableCell>{booking.seats.join(', ')}</TableCell>
-                            <TableCell className="font-semibold">${booking.totalPrice}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap">
+                                {booking.seats.map((seat) => (
+                                  <span key={seat} className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-primary/10 text-primary rounded">
+                                    {seat}
+                                  </span>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-semibold">{booking.totalPrice} LE</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={booking.isPaid || false}
+                                  onCheckedChange={(checked) => handlePaymentToggle(booking.id, checked)}
+                                />
+                                <span className={booking.isPaid ? 'text-success text-sm' : 'text-warning text-sm'}>
+                                  {booking.isPaid ? 'Paid' : 'Unpaid'}
+                                </span>
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
@@ -294,18 +380,21 @@ const AdminDashboard: React.FC = () => {
             <Card className="border-2 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Route Management</CardTitle>
-                <Dialog open={isRouteDialogOpen} onOpenChange={setIsRouteDialogOpen}>
+                <Dialog open={isRouteDialogOpen} onOpenChange={(open) => {
+                  setIsRouteDialogOpen(open);
+                  if (!open) resetRouteForm();
+                }}>
                   <DialogTrigger asChild>
                     <Button className="bg-primary hover:bg-primary-dark text-white gap-2">
                       <Plus className="w-4 h-4" />
-                      Add Route
+                      Add New Trip
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Add New Route</DialogTitle>
+                      <DialogTitle>{editingRoute ? 'Edit Route' : 'Add New Trip'}</DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={handleAddRoute} className="space-y-4">
+                    <form onSubmit={editingRoute ? handleEditRoute : handleAddRoute} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="origin">Origin</Label>
@@ -313,6 +402,7 @@ const AdminDashboard: React.FC = () => {
                             id="origin"
                             value={newRoute.origin}
                             onChange={(e) => setNewRoute((prev) => ({ ...prev, origin: e.target.value }))}
+                            placeholder="e.g., Cairo"
                             required
                           />
                         </div>
@@ -322,6 +412,7 @@ const AdminDashboard: React.FC = () => {
                             id="destination"
                             value={newRoute.destination}
                             onChange={(e) => setNewRoute((prev) => ({ ...prev, destination: e.target.value }))}
+                            placeholder="e.g., Dahab"
                             required
                           />
                         </div>
@@ -362,12 +453,13 @@ const AdminDashboard: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="price">Price (per seat)</Label>
+                          <Label htmlFor="price">Price (LE per seat)</Label>
                           <Input
                             id="price"
                             type="number"
                             value={newRoute.price}
                             onChange={(e) => setNewRoute((prev) => ({ ...prev, price: Number(e.target.value) }))}
+                            placeholder="e.g., 750"
                             required
                           />
                         </div>
@@ -380,6 +472,7 @@ const AdminDashboard: React.FC = () => {
                             id="driverName"
                             value={newRoute.driverName}
                             onChange={(e) => setNewRoute((prev) => ({ ...prev, driverName: e.target.value }))}
+                            placeholder="e.g., Ahmed Hassan"
                             required
                           />
                         </div>
@@ -389,13 +482,14 @@ const AdminDashboard: React.FC = () => {
                             id="vanNumber"
                             value={newRoute.vanNumber}
                             onChange={(e) => setNewRoute((prev) => ({ ...prev, vanNumber: e.target.value }))}
+                            placeholder="e.g., ABC-1234"
                             required
                           />
                         </div>
                       </div>
 
                       <Button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white">
-                        Add Route
+                        {editingRoute ? 'Update Route' : 'Add Trip'}
                       </Button>
                     </form>
                   </DialogContent>
@@ -425,23 +519,34 @@ const AdminDashboard: React.FC = () => {
                             </div>
                           </TableCell>
                           <TableCell>{format(new Date(route.date), 'MMM dd, yyyy')}</TableCell>
-                          <TableCell className="text-sm">{route.departureTime}</TableCell>
-                          <TableCell className="font-semibold">${route.price}</TableCell>
+                          <TableCell className="text-sm">{route.departureTime} - {route.arrivalTime}</TableCell>
+                          <TableCell className="font-semibold">{route.price} LE</TableCell>
                           <TableCell>
                             {route.availableSeats} / {route.totalSeats}
                           </TableCell>
                           <TableCell className="text-sm">{route.driverName}</TableCell>
                           <TableCell className="text-sm font-mono">{route.vanNumber}</TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteRoute(route.id)}
-                              className="gap-2"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Delete
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditDialog(route)}
+                                className="gap-1"
+                              >
+                                <Edit className="w-3 h-3" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteRoute(route.id)}
+                                className="gap-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

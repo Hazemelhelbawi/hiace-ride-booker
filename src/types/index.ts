@@ -25,6 +25,7 @@ export interface Seat {
   number: number;
   isAvailable: boolean;
   isSelected?: boolean;
+  price?: number;
 }
 
 export interface Passenger {
@@ -44,6 +45,7 @@ export interface Booking {
   passenger: Passenger;
   status: BookingStatus;
   totalPrice: number;
+  isPaid: boolean;
   createdAt: string;
   route?: Route;
 }

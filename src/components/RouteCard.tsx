@@ -37,7 +37,7 @@ const RouteCard: React.FC<RouteCardProps> = ({ route, onBook }) => {
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-primary">
-              ${route.price}
+              {route.price} LE
             </div>
             <div className="text-xs text-muted-foreground">per seat</div>
           </div>
