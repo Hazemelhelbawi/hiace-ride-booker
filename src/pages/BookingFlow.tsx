@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Route, Seat, Booking, Passenger } from '@/types';
 import { getRouteById, addBooking, getBookedSeats } from '@/services/localStorage';
+import { sendBookingEmail } from '@/services/emailService';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
-import BookingTicket from '@/components/BookingTicket';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,8 +22,7 @@ const BookingFlow: React.FC = () => {
   const [route, setRoute] = useState<Route | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
-  const [showTicket, setShowTicket] = useState(false);
-  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [passengerInfo, setPassengerInfo] = useState<Passenger>({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -75,7 +74,7 @@ const BookingFlow: React.FC = () => {
     setStep(2);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user || !route) return;
@@ -84,6 +83,8 @@ const BookingFlow: React.FC = () => {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    setIsSubmitting(true);
 
     const booking: Booking = {
       id: Date.now().toString(),
@@ -98,14 +99,22 @@ const BookingFlow: React.FC = () => {
     };
 
     addBooking(booking);
-    setConfirmedBooking(booking);
-    setShowTicket(true);
-    toast.success('Booking confirmed!');
-  };
+    
+    // Send confirmation email
+    sendBookingEmail({
+      booking,
+      route,
+      status: 'pending',
+      isPaid: false,
+    });
 
-  const handleCloseTicket = () => {
-    setShowTicket(false);
-    navigate('/');
+    toast.success('Booking confirmed!');
+    
+    // Navigate to confirmation page
+    navigate('/booking/confirmation', { 
+      state: { booking, route },
+      replace: true 
+    });
   };
 
   if (!route) {
@@ -122,14 +131,6 @@ const BookingFlow: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
-      
-      {showTicket && confirmedBooking && (
-        <BookingTicket 
-          booking={confirmedBooking} 
-          route={route} 
-          onClose={handleCloseTicket} 
-        />
-      )}
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Button
@@ -221,10 +222,11 @@ const BookingFlow: React.FC = () => {
 
                     <Button
                       type="submit"
+                      disabled={isSubmitting}
                       className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-white transition-opacity gap-2"
                     >
                       <Check className="w-5 h-5" />
-                      Confirm Booking
+                      {isSubmitting ? 'Processing...' : 'Confirm Booking'}
                     </Button>
                   </form>
                 </CardContent>
