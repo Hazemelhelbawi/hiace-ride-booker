@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Booking, Route, BookingStatus } from '@/types';
-import { getBookings, updateBooking, getRoutes, addRoute, updateRoute, deleteRoute } from '@/services/localStorage';
+import { getBookings, updateBooking, getRoutes, addRoute, updateRoute, deleteRoute, cancelBooking, getRouteById } from '@/services/localStorage';
+import { sendBookingEmail } from '@/services/emailService';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard } from 'lucide-react';
+import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -71,16 +72,65 @@ const AdminDashboard: React.FC = () => {
     setRoutes(getRoutes());
   };
 
-  const handleStatusChange = (bookingId: string, newStatus: BookingStatus) => {
+  const handleStatusChange = async (bookingId: string, newStatus: BookingStatus) => {
+    const booking = getBookings().find(b => b.id === bookingId);
+    if (!booking) return;
+
     updateBooking(bookingId, { status: newStatus });
     loadData();
     toast.success('Booking status updated');
+
+    // Send email notification
+    const route = getRouteById(booking.routeId);
+    if (route) {
+      sendBookingEmail({
+        booking,
+        route,
+        status: newStatus,
+        isPaid: booking.isPaid,
+      });
+    }
   };
 
-  const handlePaymentToggle = (bookingId: string, isPaid: boolean) => {
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm('Are you sure you want to cancel this booking? This will restore the seats.')) return;
+    
+    const cancelledBooking = cancelBooking(bookingId);
+    if (cancelledBooking) {
+      loadData();
+      toast.success('Booking cancelled and seats restored');
+
+      // Send cancellation email
+      const route = getRouteById(cancelledBooking.routeId);
+      if (route) {
+        sendBookingEmail({
+          booking: cancelledBooking,
+          route,
+          status: 'cancelled',
+          isPaid: cancelledBooking.isPaid,
+        });
+      }
+    }
+  };
+
+  const handlePaymentToggle = async (bookingId: string, isPaid: boolean) => {
+    const booking = getBookings().find(b => b.id === bookingId);
+    if (!booking) return;
+
     updateBooking(bookingId, { isPaid });
     loadData();
     toast.success(isPaid ? 'Marked as paid' : 'Marked as unpaid');
+
+    // Send email notification for payment status change
+    const route = getRouteById(booking.routeId);
+    if (route) {
+      sendBookingEmail({
+        booking: { ...booking, isPaid },
+        route,
+        status: booking.status,
+        isPaid,
+      });
+    }
   };
 
   const getStatusColor = (status: BookingStatus) => {
@@ -347,22 +397,24 @@ const AdminDashboard: React.FC = () => {
                             <TableCell>
                               <div className="flex gap-2">
                                 {booking.status === 'pending' && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                      className="bg-success hover:bg-success/90"
-                                    >
-                                      Confirm
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                    className="bg-success hover:bg-success/90"
+                                  >
+                                    Confirm
+                                  </Button>
+                                )}
+                                {booking.status !== 'cancelled' && (
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleCancelBooking(booking.id)}
+                                    className="gap-1"
+                                  >
+                                    <XCircle className="w-3 h-3" />
+                                    Cancel
+                                  </Button>
                                 )}
                               </div>
                             </TableCell>

@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import BookingTicket from '@/components/BookingTicket';
 import { Booking, Route } from '@/types';
-import { getUserBookings, getRouteById } from '@/services/localStorage';
+import { getUserBookings, getRouteById, cancelBooking } from '@/services/localStorage';
+import { sendBookingEmail } from '@/services/emailService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +17,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { User, Mail, Phone, Calendar, MapPin, Ticket, Eye } from 'lucide-react';
+import { User, Mail, Phone, Calendar, MapPin, Ticket, Eye, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const Profile: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -41,6 +43,30 @@ const Profile: React.FC = () => {
     const route = getRouteById(booking.routeId);
     if (route) {
       setSelectedBooking({ booking, route });
+    }
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    
+    const cancelledBooking = cancelBooking(bookingId);
+    if (cancelledBooking) {
+      // Refresh bookings
+      if (user) {
+        setBookings(getUserBookings(user.id));
+      }
+      toast.success('Booking cancelled successfully');
+
+      // Send cancellation email
+      const route = getRouteById(cancelledBooking.routeId);
+      if (route) {
+        sendBookingEmail({
+          booking: cancelledBooking,
+          route,
+          status: 'cancelled',
+          isPaid: cancelledBooking.isPaid,
+        });
+      }
     }
   };
 
@@ -177,15 +203,28 @@ const Profile: React.FC = () => {
                             <TableCell className="font-semibold">{booking.totalPrice} LE</TableCell>
                             <TableCell>{getStatusBadge(booking.status, booking.isPaid)}</TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewTicket(booking)}
-                                className="gap-1"
-                              >
-                                <Eye className="w-4 h-4" />
-                                View Ticket
-                              </Button>
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewTicket(booking)}
+                                  className="gap-1"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  View
+                                </Button>
+                                {booking.status !== 'cancelled' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleCancelBooking(booking.id)}
+                                    className="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
