@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import RoutesPage from "./pages/Routes";
 import BookingFlow from "./pages/BookingFlow";
+import BookingConfirmation from "./pages/BookingConfirmation";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
@@ -44,6 +45,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <BookingFlow />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/booking/confirmation"
+                element={
+                  <ProtectedRoute>
+                    <BookingConfirmation />
                   </ProtectedRoute>
                 }
               />
