@@ -73,10 +73,14 @@ const Navbar: React.FC = () => {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/profile')}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80"
+                >
                   <User className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">{user?.name}</span>
-                </div>
+                </Button>
                 <Button 
                   variant="outline" 
                   onClick={handleLogout} 
