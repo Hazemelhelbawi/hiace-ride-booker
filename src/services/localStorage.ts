@@ -181,6 +181,34 @@ export const updateBooking = (id: string, updates: Partial<Booking>): void => {
   }
 };
 
+export const cancelBooking = (id: string): Booking | null => {
+  const bookings = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKINGS) || '[]');
+  const index = bookings.findIndex((b: Booking) => b.id === id);
+  
+  if (index === -1) return null;
+  
+  const booking = bookings[index];
+  
+  // Only allow cancellation if not already cancelled
+  if (booking.status === 'cancelled') return null;
+  
+  // Update booking status
+  bookings[index] = { ...booking, status: 'cancelled' };
+  localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
+  
+  // Restore seats to the route
+  const route = getRouteById(booking.routeId);
+  if (route) {
+    updateRoute(booking.routeId, {
+      availableSeats: route.availableSeats + booking.seats.length,
+    });
+  }
+  
+  window.dispatchEvent(new CustomEvent('bookingCancelled', { detail: bookings[index] }));
+  
+  return { ...bookings[index], route };
+};
+
 export const getUserBookings = (userId: string): Booking[] => {
   return getBookings().filter((b) => b.userId === userId);
 };
