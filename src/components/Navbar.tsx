@@ -2,15 +2,18 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bus, LogOut, User, LayoutDashboard } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { LogOut, User, Loader2 } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/auth');
   };
 
@@ -27,7 +30,7 @@ const Navbar: React.FC = () => {
                 <span className="text-foreground">WE</span>
                 <span className="text-primary">BUS</span>
               </div>
-              <div className="absolute -bottom-1 left-0 w-full h-1 bg-primary"></div>
+              <div className="absolute -bottom-1 start-0 w-full h-1 bg-primary"></div>
             </div>
           </Link>
 
@@ -39,7 +42,7 @@ const Navbar: React.FC = () => {
                 isActive('/') ? 'text-primary' : 'text-foreground'
               }`}
             >
-              Home
+              {t('nav.home')}
             </Link>
             {!user?.isAdmin && (
               <>
@@ -47,13 +50,13 @@ const Navbar: React.FC = () => {
                   to="/#routes" 
                   className="text-sm font-medium transition-colors hover:text-primary text-foreground"
                 >
-                  Our Destinations
+                  {t('nav.destinations')}
                 </Link>
                 <Link 
                   to="/#about" 
                   className="text-sm font-medium transition-colors hover:text-primary text-foreground"
                 >
-                  About Us
+                  {t('nav.about')}
                 </Link>
               </>
             )}
@@ -64,14 +67,18 @@ const Navbar: React.FC = () => {
                   isActive('/admin') ? 'text-primary' : 'text-foreground'
                 }`}
               >
-                Dashboard
+                {t('nav.dashboard')}
               </Link>
             )}
           </div>
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            {isAuthenticated ? (
+            <LanguageSwitcher />
+            
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            ) : isAuthenticated ? (
               <>
                 <Button
                   variant="ghost"
@@ -87,7 +94,7 @@ const Navbar: React.FC = () => {
                   className="gap-2 border-2 hover:border-primary hover:text-primary"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="hidden md:inline">Logout</span>
+                  <span className="hidden md:inline">{t('nav.logout')}</span>
                 </Button>
               </>
             ) : (
@@ -95,7 +102,7 @@ const Navbar: React.FC = () => {
                 onClick={() => navigate('/auth')}
                 className="bg-primary hover:bg-primary-dark text-white font-semibold px-6"
               >
-                Login
+                {t('nav.login')}
               </Button>
             )}
           </div>
