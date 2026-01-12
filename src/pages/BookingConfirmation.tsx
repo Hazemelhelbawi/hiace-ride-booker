@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Booking, Route } from '@/types';
+import { useLanguage } from '@/contexts/LanguageContext';
+import type { Booking, Route } from '@/services/api';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle2, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  User, 
-  Phone, 
-  Mail, 
-  Copy, 
-  Share2, 
+import {
+  CheckCircle2,
+  MapPin,
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  Mail,
+  Copy,
+  Share2,
   MessageCircle,
   Home,
   Ticket
@@ -25,6 +26,7 @@ import { format } from 'date-fns';
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [route, setRoute] = useState<Route | null>(null);
 
@@ -39,32 +41,32 @@ const BookingConfirmation: React.FC = () => {
 
   const getBookingDetails = () => {
     if (!booking || !route) return '';
-    
-    return `🚐 HiaceGo Booking Confirmation
 
-📋 Booking ID: #${booking.id.slice(0, 8)}
+    return `🚐 HiaceGo ${t('booking.confirmation')}
 
-🗺️ Route: ${route.origin} → ${route.destination}
-📅 Date: ${route.date}
-🕐 Departure: ${route.departureTime}
+📋 ${t('booking.bookingId')}: #${booking.id.slice(0, 8)}
 
-💺 Seats: ${booking.seats.join(', ')}
-💰 Total: ${booking.totalPrice} LE
+🗺️ ${t('booking.route')}: ${route.origin} → ${route.destination}
+📅 ${t('booking.date')}: ${route.date}
+🕐 ${t('admin.departureTime')}: ${route.departure_time}
 
-👤 Passenger: ${booking.passenger.name}
-📧 Email: ${booking.passenger.email}
+💺 ${t('booking.seats')}: ${booking.seats.join(', ')}
+💰 ${t('booking.total')}: ${booking.total_price} ${t('common.currency')}
 
-Status: ${booking.status === 'pending' ? '⏳ Pending Confirmation' : '✅ Confirmed'}
+👤 ${t('booking.passenger')}: ${booking.passenger_name}
+📧 ${t('booking.email')}: ${booking.passenger_email}
 
-Thank you for booking with HiaceGo!`;
+${t('booking.status')}: ${booking.status === 'pending' ? '⏳ ' + t('booking.pending') : '✅ ' + t('booking.confirmed')}
+
+${t('booking.thankYou')}`;
   };
 
   const handleCopyDetails = async () => {
     try {
       await navigator.clipboard.writeText(getBookingDetails());
-      toast.success('Booking details copied to clipboard!');
+      toast.success(t('booking.copiedToClipboard'));
     } catch (error) {
-      toast.error('Failed to copy details');
+      toast.error(t('booking.copyFailed'));
     }
   };
 
@@ -77,7 +79,7 @@ Thank you for booking with HiaceGo!`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'HiaceGo Booking Confirmation',
+          title: `HiaceGo ${t('booking.confirmation')}`,
           text: getBookingDetails(),
         });
       } catch (error) {
@@ -95,7 +97,7 @@ Thank you for booking with HiaceGo!`;
       <div className="min-h-screen bg-gradient-hero">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <p className="text-center text-muted-foreground">Loading...</p>
+          <p className="text-center text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -104,16 +106,16 @@ Thank you for booking with HiaceGo!`;
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4">
             <CheckCircle2 className="w-12 h-12 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Booking Confirmed!</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('booking.bookingConfirmed')}</h1>
           <p className="text-muted-foreground">
-            Your booking has been successfully created. Check your email for details.
+            {t('booking.checkEmail')}
           </p>
         </div>
 
@@ -123,7 +125,7 @@ Thank you for booking with HiaceGo!`;
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Ticket className="w-5 h-5" />
-                Booking Details
+                {t('booking.details')}
               </CardTitle>
               <Badge variant="secondary" className="bg-white/20 text-white">
                 #{booking.id.slice(0, 8)}
@@ -141,11 +143,11 @@ Thank you for booking with HiaceGo!`;
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {route.date}
+                    {format(new Date(route.date), 'MMM dd, yyyy')}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {route.departureTime}
+                    {route.departure_time}
                   </span>
                 </div>
               </div>
@@ -154,7 +156,7 @@ Thank you for booking with HiaceGo!`;
             {/* Seats & Price */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="text-sm text-muted-foreground mb-1">Selected Seats</div>
+                <div className="text-sm text-muted-foreground mb-1">{t('booking.selectedSeats')}</div>
                 <div className="flex gap-1 flex-wrap">
                   {booking.seats.map((seat) => (
                     <span
@@ -167,26 +169,26 @@ Thank you for booking with HiaceGo!`;
                 </div>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="text-sm text-muted-foreground mb-1">Total Price</div>
-                <div className="text-2xl font-bold text-primary">{booking.totalPrice} LE</div>
+                <div className="text-sm text-muted-foreground mb-1">{t('booking.totalPrice')}</div>
+                <div className="text-2xl font-bold text-primary">{booking.total_price} {t('common.currency')}</div>
               </div>
             </div>
 
             {/* Passenger Info */}
             <div className="border-t pt-4">
-              <div className="text-sm font-medium text-muted-foreground mb-3">Passenger Information</div>
+              <div className="text-sm font-medium text-muted-foreground mb-3">{t('booking.passengerInfo')}</div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-foreground">
                   <User className="w-4 h-4 text-muted-foreground" />
-                  {booking.passenger.name}
+                  {booking.passenger_name}
                 </div>
                 <div className="flex items-center gap-2 text-foreground">
                   <Phone className="w-4 h-4 text-muted-foreground" />
-                  {booking.passenger.phone}
+                  {booking.passenger_phone}
                 </div>
                 <div className="flex items-center gap-2 text-foreground">
                   <Mail className="w-4 h-4 text-muted-foreground" />
-                  {booking.passenger.email}
+                  {booking.passenger_email}
                 </div>
               </div>
             </div>
@@ -194,15 +196,15 @@ Thank you for booking with HiaceGo!`;
             {/* Status */}
             <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-500/10 rounded-lg border border-yellow-200 dark:border-yellow-500/20">
               <div>
-                <div className="text-sm text-muted-foreground">Booking Status</div>
+                <div className="text-sm text-muted-foreground">{t('booking.bookingStatus')}</div>
                 <div className="font-semibold text-yellow-700 dark:text-yellow-500">
-                  {booking.status === 'pending' ? '⏳ Pending Confirmation' : '✅ Confirmed'}
+                  {booking.status === 'pending' ? `⏳ ${t('booking.pendingConfirmation')}` : `✅ ${t('booking.confirmed')}`}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Payment Status</div>
+                <div className="text-sm text-muted-foreground">{t('booking.paymentStatus')}</div>
                 <div className="font-semibold text-yellow-700 dark:text-yellow-500">
-                  {booking.isPaid ? '✅ Paid' : '💳 Pay on arrival'}
+                  {booking.is_paid ? `✅ ${t('booking.paid')}` : `💳 ${t('booking.payOnArrival')}`}
                 </div>
               </div>
             </div>
@@ -212,7 +214,7 @@ Thank you for booking with HiaceGo!`;
         {/* Share Actions */}
         <Card className="border-2 shadow-lg mb-6">
           <CardContent className="p-4">
-            <div className="text-sm font-medium text-muted-foreground mb-3">Share Booking Details</div>
+            <div className="text-sm font-medium text-muted-foreground mb-3">{t('booking.shareDetails')}</div>
             <div className="grid grid-cols-3 gap-3">
               <Button
                 variant="outline"
@@ -228,7 +230,7 @@ Thank you for booking with HiaceGo!`;
                 className="flex-col h-auto py-4 gap-2"
               >
                 <Copy className="w-5 h-5 text-primary" />
-                <span className="text-xs">Copy</span>
+                <span className="text-xs">{t('common.copy')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -236,7 +238,7 @@ Thank you for booking with HiaceGo!`;
                 className="flex-col h-auto py-4 gap-2"
               >
                 <Share2 className="w-5 h-5 text-primary" />
-                <span className="text-xs">Share</span>
+                <span className="text-xs">{t('common.share')}</span>
               </Button>
             </div>
           </CardContent>
@@ -249,7 +251,7 @@ Thank you for booking with HiaceGo!`;
             className="flex-1 gap-2"
           >
             <Ticket className="w-4 h-4" />
-            View My Bookings
+            {t('booking.viewMyBookings')}
           </Button>
           <Button
             variant="outline"
@@ -257,18 +259,18 @@ Thank you for booking with HiaceGo!`;
             className="flex-1 gap-2"
           >
             <Home className="w-4 h-4" />
-            Back to Home
+            {t('nav.home')}
           </Button>
         </div>
 
         {/* Important Notes */}
         <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-lg border border-blue-200 dark:border-blue-500/20">
-          <h3 className="font-semibold text-blue-900 dark:text-blue-400 mb-2">📌 Important Notes</h3>
+          <h3 className="font-semibold text-blue-900 dark:text-blue-400 mb-2">📌 {t('booking.importantNotes')}</h3>
           <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-            <li>• Please arrive at least 15 minutes before departure</li>
-            <li>• Bring a valid ID for verification</li>
-            <li>• Payment can be made on arrival if not paid online</li>
-            <li>• You can cancel your booking from your profile page</li>
+            <li>• {t('booking.arriveEarly')}</li>
+            <li>• {t('booking.bringId')}</li>
+            <li>• {t('booking.paymentNote')}</li>
+            <li>• {t('booking.cancelNote')}</li>
           </ul>
         </div>
       </div>
