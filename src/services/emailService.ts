@@ -1,9 +1,30 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Booking, Route } from "@/types";
+
+interface EmailBookingData {
+  id: string;
+  seats: number[];
+  passenger: {
+    name: string;
+    phone: string;
+    email: string;
+    notes?: string;
+  };
+  totalPrice: number;
+  status: string;
+  isPaid: boolean;
+  createdAt: string;
+}
+
+interface EmailRouteData {
+  origin: string;
+  destination: string;
+  date: string;
+  departureTime: string;
+}
 
 interface SendEmailParams {
-  booking: Booking;
-  route: Route;
+  booking: EmailBookingData;
+  route: EmailRouteData;
   status: "pending" | "confirmed" | "cancelled";
   isPaid: boolean;
 }

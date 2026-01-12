@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Route, Seat, Booking, Passenger } from '@/types';
-import { getRouteById, addBooking, getBookedSeats } from '@/services/localStorage';
+import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
 import { sendBookingEmail } from '@/services/emailService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
 import { Button } from '@/components/ui/button';
@@ -13,17 +13,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Seat } from '@/types';
+
+interface PassengerInfo {
+  name: string;
+  phone: string;
+  email: string;
+  notes: string;
+}
 
 const BookingFlow: React.FC = () => {
   const { routeId } = useParams<{ routeId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { data: route, isLoading: routeLoading } = useRoute(routeId);
+  const { data: bookedSeats = [] } = useBookedSeats(routeId);
+  const createBooking = useCreateBooking();
 
-  const [route, setRoute] = useState<Route | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [passengerInfo, setPassengerInfo] = useState<Passenger>({
+  const [passengerInfo, setPassengerInfo] = useState<PassengerInfo>({
     name: user?.name || '',
     phone: user?.phone || '',
     email: user?.email || '',
@@ -31,29 +42,36 @@ const BookingFlow: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!routeId) return;
-
-    const foundRoute = getRouteById(routeId);
-    if (!foundRoute) {
-      toast.error('Route not found');
+    if (!routeLoading && !route && routeId) {
+      toast.error(t('booking.routeNotFound') || 'Route not found');
       navigate('/');
       return;
     }
 
-    setRoute(foundRoute);
+    if (route) {
+      // Initialize 14 seats for Toyota layout
+      const seatNumbers = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14];
+      const initialSeats: Seat[] = seatNumbers.map((num) => ({
+        number: num,
+        isAvailable: !bookedSeats.includes(num),
+        isSelected: false,
+        price: num === 1 ? (route.price + 100) : route.price,
+      }));
+      setSeats(initialSeats);
+    }
+  }, [route, routeLoading, routeId, bookedSeats, navigate, t]);
 
-    // Initialize 14 seats for Toyota layout
-    const bookedSeats = getBookedSeats(routeId);
-    // Seat numbers as per the layout: 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14 (no 4, 13)
-    const seatNumbers = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14];
-    const initialSeats: Seat[] = seatNumbers.map((num) => ({
-      number: num,
-      isAvailable: !bookedSeats.includes(num),
-      isSelected: false,
-      price: num === 1 ? (foundRoute.price + 100) : foundRoute.price, // Seat 1 is premium
-    }));
-    setSeats(initialSeats);
-  }, [routeId, navigate]);
+  // Update passenger info when user changes
+  useEffect(() => {
+    if (user) {
+      setPassengerInfo(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        phone: user.phone || prev.phone,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user]);
 
   const handleSeatSelect = (seatNumber: number) => {
     setSeats((prev) =>
@@ -68,7 +86,7 @@ const BookingFlow: React.FC = () => {
 
   const handleContinue = () => {
     if (selectedSeats.length === 0) {
-      toast.error('Please select at least one seat');
+      toast.error(t('booking.selectSeat') || 'Please select at least one seat');
       return;
     }
     setStep(2);
@@ -80,49 +98,78 @@ const BookingFlow: React.FC = () => {
     if (!user || !route) return;
 
     if (!passengerInfo.name || !passengerInfo.phone || !passengerInfo.email) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('booking.fillRequired') || 'Please fill in all required fields');
       return;
     }
 
     setIsSubmitting(true);
 
-    const booking: Booking = {
-      id: Date.now().toString(),
-      userId: user.id,
-      routeId: route.id,
-      seats: selectedSeats.map((s) => s.number),
-      passenger: passengerInfo,
-      status: 'pending',
-      totalPrice,
-      isPaid: false,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const bookingData = {
+        user_id: user.id,
+        route_id: route.id,
+        seats: selectedSeats.map((s) => s.number),
+        passenger_name: passengerInfo.name,
+        passenger_phone: passengerInfo.phone,
+        passenger_email: passengerInfo.email,
+        passenger_notes: passengerInfo.notes || null,
+        total_price: totalPrice,
+        status: 'pending',
+        is_paid: false,
+      };
 
-    addBooking(booking);
-    
-    // Send confirmation email
-    sendBookingEmail({
-      booking,
-      route,
-      status: 'pending',
-      isPaid: false,
-    });
+      const newBooking = await createBooking.mutateAsync(bookingData);
 
-    toast.success('Booking confirmed!');
-    
-    // Navigate to confirmation page
-    navigate('/booking/confirmation', { 
-      state: { booking, route },
-      replace: true 
-    });
+      // Send confirmation email
+      sendBookingEmail({
+        booking: {
+          id: newBooking.id,
+          seats: newBooking.seats,
+          passenger: {
+            name: newBooking.passenger_name,
+            phone: newBooking.passenger_phone,
+            email: newBooking.passenger_email,
+            notes: newBooking.passenger_notes || '',
+          },
+          totalPrice: newBooking.total_price,
+          status: newBooking.status,
+          isPaid: newBooking.is_paid,
+          createdAt: newBooking.created_at,
+        },
+        route: {
+          origin: route.origin,
+          destination: route.destination,
+          date: route.date,
+          departureTime: route.departure_time,
+        },
+        status: 'pending',
+        isPaid: false,
+      });
+
+      toast.success(t('booking.confirmed') || 'Booking confirmed!');
+
+      // Navigate to confirmation page
+      navigate('/booking/confirmation', {
+        state: {
+          booking: newBooking,
+          route: route,
+        },
+        replace: true,
+      });
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error(t('booking.error') || 'Failed to create booking');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (!route) {
+  if (routeLoading || !route) {
     return (
       <div className="min-h-screen bg-gradient-hero">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <p className="text-center text-muted-foreground">Loading...</p>
+          <p className="text-center text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -131,7 +178,7 @@ const BookingFlow: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Button
           variant="ghost"
@@ -139,16 +186,16 @@ const BookingFlow: React.FC = () => {
           className="mb-6 gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          {t('common.back')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {step === 1 ? (
               <Card className="border-2 shadow-lg">
                 <CardHeader className="border-b bg-primary text-white">
-                  <CardTitle className="text-2xl">Select Your Seats</CardTitle>
+                  <CardTitle className="text-2xl">{t('booking.selectSeats')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <SeatMap
@@ -162,25 +209,25 @@ const BookingFlow: React.FC = () => {
             ) : (
               <Card className="border-2 shadow-lg">
                 <CardHeader className="border-b bg-primary text-white">
-                  <CardTitle className="text-2xl">Passenger Information</CardTitle>
+                  <CardTitle className="text-2xl">{t('booking.passengerInfo')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name *</Label>
+                      <Label htmlFor="name">{t('booking.fullName')} *</Label>
                       <Input
                         id="name"
                         value={passengerInfo.name}
                         onChange={(e) =>
                           setPassengerInfo((prev) => ({ ...prev, name: e.target.value }))
                         }
-                        placeholder="Enter your full name"
+                        placeholder={t('booking.enterName')}
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="phone">{t('booking.phone')} *</Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -194,7 +241,7 @@ const BookingFlow: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
+                      <Label htmlFor="email">{t('booking.email')} *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -208,14 +255,14 @@ const BookingFlow: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                      <Label htmlFor="notes">{t('booking.notes')}</Label>
                       <Textarea
                         id="notes"
                         value={passengerInfo.notes}
                         onChange={(e) =>
                           setPassengerInfo((prev) => ({ ...prev, notes: e.target.value }))
                         }
-                        placeholder="Any special requests or notes..."
+                        placeholder={t('booking.notesPlaceholder')}
                         rows={4}
                       />
                     </div>
@@ -226,7 +273,7 @@ const BookingFlow: React.FC = () => {
                       className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-white transition-opacity gap-2"
                     >
                       <Check className="w-5 h-5" />
-                      {isSubmitting ? 'Processing...' : 'Confirm Booking'}
+                      {isSubmitting ? t('common.processing') : t('booking.confirmBooking')}
                     </Button>
                   </form>
                 </CardContent>
@@ -238,29 +285,29 @@ const BookingFlow: React.FC = () => {
           <div className="lg:col-span-1">
             <Card className="border-2 shadow-lg sticky top-24">
               <CardHeader className="border-b bg-card">
-                <CardTitle>Booking Summary</CardTitle>
+                <CardTitle>{t('booking.summary')}</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Route</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.route')}</div>
                     <div className="font-semibold text-foreground">
                       {route.origin} → {route.destination}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Date & Time</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.dateTime')}</div>
                     <div className="font-semibold text-foreground">
-                      {route.date} at {route.departureTime}
+                      {route.date} {t('common.at')} {route.departure_time}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Selected Seats</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.selectedSeats')}</div>
                     <div className="font-semibold text-foreground">
                       {selectedSeats.length === 0
-                        ? 'None selected'
+                        ? t('booking.noneSelected')
                         : selectedSeats.map((s) => s.number).join(', ')}
                     </div>
                   </div>
@@ -268,16 +315,16 @@ const BookingFlow: React.FC = () => {
 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price per seat</span>
-                    <span className="font-medium text-foreground">{route.price} LE</span>
+                    <span className="text-muted-foreground">{t('booking.pricePerSeat')}</span>
+                    <span className="font-medium text-foreground">{route.price} {t('common.currency')}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Number of seats</span>
+                    <span className="text-muted-foreground">{t('booking.numberOfSeats')}</span>
                     <span className="font-medium text-foreground">{selectedSeats.length}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span className="text-foreground">Total</span>
-                    <span className="text-primary">{totalPrice} LE</span>
+                    <span className="text-foreground">{t('booking.total')}</span>
+                    <span className="text-primary">{totalPrice} {t('common.currency')}</span>
                   </div>
                 </div>
 
@@ -287,7 +334,7 @@ const BookingFlow: React.FC = () => {
                     disabled={selectedSeats.length === 0}
                     className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-white transition-all"
                   >
-                    Continue to Passenger Info
+                    {t('booking.continueToInfo')}
                   </Button>
                 )}
               </CardContent>
