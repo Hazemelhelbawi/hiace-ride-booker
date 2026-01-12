@@ -1,35 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Route as RouteType, FilterOptions } from '@/types';
-import { getRoutes } from '@/services/localStorage';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useRoutes } from '@/hooks/useData';
 import RouteCard from '@/components/RouteCard';
 import Navbar from '@/components/Navbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, Users, Bus, Clock, ThumbsUp } from 'lucide-react';
+import { MapPin, Calendar, Users, Bus, Clock, ThumbsUp, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import heroImage from '@/assets/hero-van.jpg';
 import destinationsImage from '@/assets/egypt-destinations.jpg';
 
+interface FilterOptions {
+  origin?: string;
+  destination?: string;
+  date?: string;
+}
+
 const Routes: React.FC = () => {
-  const [routes, setRoutes] = useState<RouteType[]>([]);
-  const [filteredRoutes, setFilteredRoutes] = useState<RouteType[]>([]);
+  const { data: routes = [], isLoading } = useRoutes();
   const [filters, setFilters] = useState<FilterOptions>({});
   const [passengers, setPassengers] = useState(1);
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadRoutes = () => {
-      const allRoutes = getRoutes();
-      setRoutes(allRoutes);
-      setFilteredRoutes(allRoutes);
-    };
-    loadRoutes();
-  }, []);
-
-  useEffect(() => {
+  const filteredRoutes = useMemo(() => {
     let filtered = [...routes];
 
     if (filters.origin) {
@@ -48,10 +45,10 @@ const Routes: React.FC = () => {
       filtered = filtered.filter((r) => r.date === filters.date);
     }
 
-    setFilteredRoutes(filtered);
+    return filtered;
   }, [filters, routes]);
 
-  const handleBook = (route: RouteType) => {
+  const handleBook = (route: typeof routes[0]) => {
     if (!isAuthenticated) {
       navigate('/auth', { state: { from: '/', routeId: route.id } });
       return;
@@ -76,60 +73,58 @@ const Routes: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70"></div>
         </div>
 
-        {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-4">
           <div className="text-center mb-8">
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight">
-              WEBUS
+              {t('hero.title')}
             </h1>
             <div className="inline-block bg-primary px-6 py-3">
               <p className="text-white text-xl md:text-2xl font-semibold">
-                You've come to the right place
+                {t('hero.subtitle')}
               </p>
             </div>
           </div>
 
-          {/* Search Box */}
           <Card className="max-w-5xl mx-auto bg-search-bg border-0 shadow-2xl p-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="space-y-2">
-                <label className="text-white text-sm font-medium block">Pick up location</label>
+                <label className="text-white text-sm font-medium block">{t('search.pickupLocation')}</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
-                    placeholder="Pick up location"
+                    placeholder={t('search.pickupLocation')}
                     value={filters.origin || ''}
                     onChange={(e) => handleFilterChange('origin', e.target.value)}
-                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                    className="ps-10 bg-white border-0 h-12 text-foreground"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-white text-sm font-medium block">Drop off location</label>
+                <label className="text-white text-sm font-medium block">{t('search.dropoffLocation')}</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
-                    placeholder="Drop off location"
+                    placeholder={t('search.dropoffLocation')}
                     value={filters.destination || ''}
                     onChange={(e) => handleFilterChange('destination', e.target.value)}
-                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                    className="ps-10 bg-white border-0 h-12 text-foreground"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-white text-sm font-medium block">Quantity</label>
+                <label className="text-white text-sm font-medium block">{t('search.quantity')}</label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Users className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="number"
                     min="1"
                     max="12"
                     value={passengers}
                     onChange={(e) => setPassengers(Number(e.target.value))}
-                    placeholder="How many people?"
-                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                    placeholder={t('search.howManyPeople')}
+                    className="ps-10 bg-white border-0 h-12 text-foreground"
                   />
                 </div>
               </div>
@@ -137,14 +132,14 @@ const Routes: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
               <div className="space-y-2">
-                <label className="text-white text-sm font-medium block">Departure date</label>
+                <label className="text-white text-sm font-medium block">{t('search.departureDate')}</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="date"
                     value={filters.date || ''}
                     onChange={(e) => handleFilterChange('date', e.target.value)}
-                    className="pl-10 bg-white border-0 h-12 text-foreground"
+                    className="ps-10 bg-white border-0 h-12 text-foreground"
                   />
                 </div>
               </div>
@@ -153,7 +148,7 @@ const Routes: React.FC = () => {
                 className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg w-full"
                 onClick={() => document.getElementById('routes')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                Find a transfer
+                {t('hero.findTransfer')}
               </Button>
             </div>
           </Card>
@@ -168,30 +163,24 @@ const Routes: React.FC = () => {
               <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <Bus className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">Route Availability</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Provides a vast network throughout Egypt, linking major cities like Cairo, Hurghada, Dahab, Taba, and Sharm El Sheikh.
-              </p>
+              <h3 className="text-2xl font-bold text-foreground mb-4">{t('features.routeAvailability')}</h3>
+              <p className="text-muted-foreground leading-relaxed">{t('features.routeAvailabilityDesc')}</p>
             </div>
 
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <Clock className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">Comfort</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Basic comfort levels with reclining seats, air conditioning, and standard amenities.
-              </p>
+              <h3 className="text-2xl font-bold text-foreground mb-4">{t('features.comfort')}</h3>
+              <p className="text-muted-foreground leading-relaxed">{t('features.comfortDesc')}</p>
             </div>
 
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <ThumbsUp className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">Pricing</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Affordable, with dynamic pricing based on demand and route.
-              </p>
+              <h3 className="text-2xl font-bold text-foreground mb-4">{t('features.pricing')}</h3>
+              <p className="text-muted-foreground leading-relaxed">{t('features.pricingDesc')}</p>
             </div>
           </div>
         </div>
@@ -209,17 +198,13 @@ const Routes: React.FC = () => {
               />
             </div>
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Your Journey, Your Comfort—Book Now!
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                Experience the best of Egypt's transportation services. From the bustling streets of Cairo to the serene beaches of the Red Sea, we connect you to your destination with comfort and reliability.
-              </p>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">{t('destinations.title')}</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-8">{t('destinations.description')}</p>
               <Button 
                 className="bg-primary hover:bg-primary-dark text-white font-bold text-lg px-8 py-6 h-auto"
                 onClick={() => document.getElementById('routes')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                Explore Routes
+                {t('destinations.exploreRoutes')}
               </Button>
             </div>
           </div>
@@ -230,24 +215,24 @@ const Routes: React.FC = () => {
       <section id="routes" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Available Routes</h2>
-            <p className="text-lg text-muted-foreground">
-              Choose your destination and book your seat
-            </p>
+            <h2 className="text-4xl font-bold text-foreground mb-4">{t('routes.title')}</h2>
+            <p className="text-lg text-muted-foreground">{t('routes.subtitle')}</p>
           </div>
 
-          {filteredRoutes.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredRoutes.length === 0 ? (
             <Card className="p-12 text-center border-2">
               <Bus className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No routes found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your filters or check back later for new routes
-              </p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">{t('routes.noRoutes')}</h3>
+              <p className="text-muted-foreground">{t('routes.noRoutesDesc')}</p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRoutes.map((route) => (
-                <RouteCard key={route.id} route={route} onBook={handleBook} />
+                <RouteCard key={route.id} route={route} onBook={() => handleBook(route)} />
               ))}
             </div>
           )}

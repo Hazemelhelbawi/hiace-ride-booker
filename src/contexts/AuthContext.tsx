@@ -1,59 +1,142 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
-import * as storage from '@/services/localStorage';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
+interface Profile {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string | null;
+  avatar_url: string | null;
+}
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  phone: string | null;
+  avatar_url: string | null;
+  isAdmin: boolean;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
+  session: Session | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string, phone: string) => Promise<boolean>;
-  logout: () => void;
-  isAuthenticated: boolean;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Simple password hashing (in production, use proper backend authentication)
-const hashPassword = (password: string): string => {
-  return btoa(password); // Base64 encode for demo purposes
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for existing session
-    const currentUser = storage.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
+  const fetchUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<AuthUser | null> => {
+    try {
+      // Fetch profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      // Fetch role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+
+      if (roleError) {
+        console.error('Error fetching role:', roleError);
+      }
+
+      const isAdmin = roleData?.role === 'admin';
+
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: profile?.name || supabaseUser.email?.split('@')[0] || 'User',
+        phone: profile?.phone || null,
+        avatar_url: profile?.avatar_url || null,
+        isAdmin,
+      };
+    } catch (error) {
+      console.error('Error in fetchUserData:', error);
+      return null;
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      // Admin credentials
-      if (email === 'admin@lovable.test' && password === 'LovableAdmin#2025') {
-        const adminUser = storage.getUserByEmail(email);
-        if (adminUser) {
-          setUser(adminUser);
-          storage.setCurrentUser(adminUser);
-          toast.success('Welcome back, Admin!');
-          return true;
+  const refreshProfile = useCallback(async () => {
+    if (!session?.user) return;
+    const userData = await fetchUserData(session.user);
+    if (userData) {
+      setUser(userData);
+    }
+  }, [session, fetchUserData]);
+
+  useEffect(() => {
+    // Set up auth state listener BEFORE checking session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        setSession(newSession);
+        
+        if (newSession?.user) {
+          // Use setTimeout to prevent potential deadlocks
+          setTimeout(async () => {
+            const userData = await fetchUserData(newSession.user);
+            setUser(userData);
+            setIsLoading(false);
+          }, 0);
+        } else {
+          setUser(null);
+          setIsLoading(false);
         }
       }
+    );
 
-      // Regular user login
-      const foundUser = storage.getUserByEmail(email);
-      if (foundUser) {
-        // In a real app, verify password hash
-        setUser(foundUser);
-        storage.setCurrentUser(foundUser);
-        toast.success(`Welcome back, ${foundUser.name}!`);
-        return true;
+    // Check for existing session
+    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      
+      if (existingSession?.user) {
+        const userData = await fetchUserData(existingSession.user);
+        setUser(userData);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchUserData]);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
       }
 
-      toast.error('Invalid credentials');
-      return false;
+      toast.success('Welcome back!');
+      return true;
     } catch (error) {
       toast.error('Login failed. Please try again.');
       return false;
@@ -67,25 +150,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     phone: string
   ): Promise<boolean> => {
     try {
-      // Check if user already exists
-      const existingUser = storage.getUserByEmail(email);
-      if (existingUser) {
-        toast.error('Email already registered');
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            name,
+            phone,
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
         return false;
       }
 
-      const newUser: User = {
-        id: Date.now().toString(),
-        email,
-        name,
-        phone,
-        isAdmin: false,
-        createdAt: new Date().toISOString(),
-      };
-
-      storage.addUser(newUser);
-      setUser(newUser);
-      storage.setCurrentUser(newUser);
+      // Update profile with phone number
       toast.success('Account created successfully!');
       return true;
     } catch (error) {
@@ -94,20 +176,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    storage.setCurrentUser(null);
-    toast.success('Logged out successfully');
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Logout failed. Please try again.');
+    } else {
+      setUser(null);
+      setSession(null);
+      toast.success('Logged out successfully');
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
+        isLoading,
+        isAuthenticated: !!user,
         login,
         signup,
+        signInWithGoogle,
         logout,
-        isAuthenticated: !!user,
+        refreshProfile,
       }}
     >
       {children}
