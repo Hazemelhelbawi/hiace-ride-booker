@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { LogOut, User, Loader2 } from 'lucide-react';
+import { LogOut, User, Loader2, Bus } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
@@ -24,13 +24,15 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="relative">
-              <div className="text-4xl font-bold tracking-tighter">
-                <span className="text-foreground">WE</span>
-                <span className="text-primary">BUS</span>
+          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-all group">
+            <div className="relative flex items-center gap-1">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                <Bus className="w-5 h-5 text-white" />
               </div>
-              <div className="absolute -bottom-1 start-0 w-full h-1 bg-primary"></div>
+              <div className="text-2xl font-black tracking-tight">
+                <span className="text-foreground">Book</span>
+                <span className="text-primary">Bus</span>
+              </div>
             </div>
           </Link>
 
