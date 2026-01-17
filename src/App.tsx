@@ -13,6 +13,8 @@ import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Destinations from "./pages/Destinations";
+import About from "./pages/About";
 import { Loader2 } from "lucide-react";
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => {
@@ -83,6 +85,8 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                <Route path="/destinations" element={<Destinations />} />
+                <Route path="/about" element={<About />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
