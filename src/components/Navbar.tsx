@@ -49,14 +49,18 @@ const Navbar: React.FC = () => {
             {!user?.isAdmin && (
               <>
                 <Link 
-                  to="/#routes" 
-                  className="text-sm font-medium transition-colors hover:text-primary text-foreground"
+                  to="/destinations" 
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    isActive('/destinations') ? 'text-primary' : 'text-foreground'
+                  }`}
                 >
                   {t('nav.destinations')}
                 </Link>
                 <Link 
-                  to="/#about" 
-                  className="text-sm font-medium transition-colors hover:text-primary text-foreground"
+                  to="/about" 
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    isActive('/about') ? 'text-primary' : 'text-foreground'
+                  }`}
                 >
                   {t('nav.about')}
                 </Link>
