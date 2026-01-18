@@ -11,8 +11,10 @@ import {
   useUpdateBooking,
   useCancelBooking,
 } from '@/hooks/useData';
+import { useRealtimeBookings } from '@/hooks/useRealtimeBookings';
 import type { Route, Booking } from '@/services/api';
 import { sendBookingEmail } from '@/services/emailService';
+import { exportBookingsToPDF, exportBookingsToExcel } from '@/utils/exportBookings';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +38,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard, XCircle } from 'lucide-react';
+import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard, XCircle, FileText, FileSpreadsheet, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -58,6 +60,9 @@ const AdminDashboard: React.FC = () => {
 
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: routes = [], isLoading: routesLoading } = useRoutes();
+
+  // Enable real-time updates for bookings
+  useRealtimeBookings();
 
   const createRoute = useCreateRoute();
   const updateRoute = useUpdateRoute();
@@ -422,8 +427,30 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="bookings">
             <Card className="border-2 shadow-lg">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{t('admin.allBookings')}</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportBookingsToPDF(bookings, routes)}
+                    className="gap-2"
+                    disabled={bookings.length === 0}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export PDF
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportBookingsToExcel(bookings, routes)}
+                    className="gap-2"
+                    disabled={bookings.length === 0}
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Export Excel
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
