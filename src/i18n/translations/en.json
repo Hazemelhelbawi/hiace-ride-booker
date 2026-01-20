@@ -201,5 +201,19 @@
     "pending": "Pending",
     "confirmed": "Confirmed",
     "cancelled": "Cancelled"
+  },
+  "promo": {
+    "limitedOffer": "Limited Time Offer",
+    "endsIn": "Ends in",
+    "codeCopied": "Promo code copied!",
+    "copyFailed": "Failed to copy code"
+  },
+  "testimonials": {
+    "badge": "Customer Reviews",
+    "title": "What Our Travelers Say",
+    "subtitle": "Join thousands of satisfied customers who trust us for their journeys across Egypt",
+    "avgRating": "Average Rating",
+    "happyCustomers": "Happy Customers",
+    "routes": "Routes Available"
   }
 }

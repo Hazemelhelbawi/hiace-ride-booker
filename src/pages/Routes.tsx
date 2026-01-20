@@ -5,6 +5,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRoutes } from '@/hooks/useData';
 import RouteCard from '@/components/RouteCard';
 import Navbar from '@/components/Navbar';
+import PromoBanner from '@/components/PromoBanner';
+import Testimonials from '@/components/Testimonials';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MapPin, Calendar, Users, Bus, Clock, ThumbsUp, Loader2 } from 'lucide-react';
@@ -60,8 +62,20 @@ const Routes: React.FC = () => {
     setFilters((prev) => ({ ...prev, [key]: value || undefined }));
   };
 
+  // Promo expires in 24 hours from now
+  const promoExpiry = useMemo(() => {
+    const expiry = new Date();
+    expiry.setHours(expiry.getHours() + 24);
+    return expiry;
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
+      <PromoBanner 
+        code="WEBUS20" 
+        discount="20% OFF" 
+        expiresAt={promoExpiry}
+      />
       <Navbar />
       
       {/* Hero Section */}
@@ -220,6 +234,9 @@ const Routes: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* Routes Grid */}
       <section id="routes" className="py-24 bg-card">
