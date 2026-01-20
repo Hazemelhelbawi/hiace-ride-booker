@@ -38,8 +38,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard, XCircle, FileText, FileSpreadsheet, Download } from 'lucide-react';
+import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard, XCircle, FileText, FileSpreadsheet, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import BookingCalendar from '@/components/BookingCalendar';
 import { format } from 'date-fns';
 
 interface RouteFormData {
@@ -422,6 +423,10 @@ const AdminDashboard: React.FC = () => {
         <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList>
             <TabsTrigger value="bookings">{t('admin.bookings')}</TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-2">
+              <Calendar className="w-4 h-4" />
+              Calendar
+            </TabsTrigger>
             <TabsTrigger value="routes">{t('admin.routes')}</TabsTrigger>
           </TabsList>
 
@@ -560,6 +565,10 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <BookingCalendar routes={routes} bookings={bookings} />
           </TabsContent>
 
           <TabsContent value="routes">
