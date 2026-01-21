@@ -1,29 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useActivePromoCode } from '@/hooks/usePromoCodes';
 import { X, Tag, Clock, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-interface PromoBannerProps {
-  code: string;
-  discount: string;
-  expiresAt?: Date;
-  onClose?: () => void;
-}
-
-const PromoBanner: React.FC<PromoBannerProps> = ({ 
-  code, 
-  discount, 
-  expiresAt,
-  onClose 
-}) => {
+const PromoBanner: React.FC = () => {
   const { t, language } = useLanguage();
+  const { data: promoCode, isLoading } = useActivePromoCode();
   const [isVisible, setIsVisible] = useState(true);
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>('');
 
   useEffect(() => {
-    if (!expiresAt) return;
+    if (!promoCode?.expires_at) return;
+
+    const expiresAt = new Date(promoCode.expires_at);
 
     const updateTimeLeft = () => {
       const now = new Date();
@@ -48,11 +40,13 @@ const PromoBanner: React.FC<PromoBannerProps> = ({
     updateTimeLeft();
     const interval = setInterval(updateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [expiresAt, language]);
+  }, [promoCode?.expires_at, language]);
 
   const handleCopyCode = async () => {
+    if (!promoCode) return;
+    
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(promoCode.code);
       setCopied(true);
       toast.success(t('promo.codeCopied'));
       setTimeout(() => setCopied(false), 2000);
@@ -63,10 +57,10 @@ const PromoBanner: React.FC<PromoBannerProps> = ({
 
   const handleClose = () => {
     setIsVisible(false);
-    onClose?.();
   };
 
-  if (!isVisible) return null;
+  // Don't render if loading, no promo code, or closed
+  if (isLoading || !promoCode || !isVisible) return null;
 
   return (
     <div className="bg-gradient-to-r from-primary via-primary-dark to-accent text-white relative overflow-hidden">
@@ -81,12 +75,12 @@ const PromoBanner: React.FC<PromoBannerProps> = ({
           <div className="flex items-center gap-2">
             <Tag className="w-5 h-5 animate-bounce" />
             <span className="font-bold text-lg">
-              {t('promo.limitedOffer')}: {discount}
+              {t('promo.limitedOffer')}: {promoCode.discount_percent}% {t('promo.discount')}
             </span>
           </div>
           
           <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-            <span className="font-mono font-bold tracking-wider">{code}</span>
+            <span className="font-mono font-bold tracking-wider">{promoCode.code}</span>
             <Button
               variant="ghost"
               size="sm"

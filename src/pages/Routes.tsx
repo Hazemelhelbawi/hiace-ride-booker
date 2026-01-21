@@ -62,20 +62,9 @@ const Routes: React.FC = () => {
     setFilters((prev) => ({ ...prev, [key]: value || undefined }));
   };
 
-  // Promo expires in 24 hours from now
-  const promoExpiry = useMemo(() => {
-    const expiry = new Date();
-    expiry.setHours(expiry.getHours() + 24);
-    return expiry;
-  }, []);
-
   return (
     <div className="min-h-screen bg-background">
-      <PromoBanner 
-        code="WEBUS20" 
-        discount="20% OFF" 
-        expiresAt={promoExpiry}
-      />
+      <PromoBanner />
       <Navbar />
       
       {/* Hero Section */}

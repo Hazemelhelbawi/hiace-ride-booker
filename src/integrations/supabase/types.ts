@@ -17,12 +17,14 @@ export type Database = {
       bookings: {
         Row: {
           created_at: string
+          discount_amount: number | null
           id: string
           is_paid: boolean
           passenger_email: string
           passenger_name: string
           passenger_notes: string | null
           passenger_phone: string
+          promo_code: string | null
           route_id: string
           seats: number[]
           status: string
@@ -32,12 +34,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_amount?: number | null
           id?: string
           is_paid?: boolean
           passenger_email: string
           passenger_name: string
           passenger_notes?: string | null
           passenger_phone: string
+          promo_code?: string | null
           route_id: string
           seats: number[]
           status?: string
@@ -47,12 +51,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_amount?: number | null
           id?: string
           is_paid?: boolean
           passenger_email?: string
           passenger_name?: string
           passenger_notes?: string | null
           passenger_phone?: string
+          promo_code?: string | null
           route_id?: string
           seats?: number[]
           status?: string
@@ -97,6 +103,42 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          current_uses: number
+          discount_percent: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_uses?: number
+          discount_percent: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_uses?: number
+          discount_percent?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
         }
         Relationships: []
       }

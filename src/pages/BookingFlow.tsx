@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
+import { useIncrementPromoCodeUsage, type PromoCode } from '@/hooks/usePromoCodes';
 import { sendBookingEmail } from '@/services/emailService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
+import PromoCodeInput from '@/components/PromoCodeInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Seat } from '@/types';
 
@@ -30,10 +32,12 @@ const BookingFlow: React.FC = () => {
   const { data: route, isLoading: routeLoading } = useRoute(routeId);
   const { data: bookedSeats = [] } = useBookedSeats(routeId);
   const createBooking = useCreateBooking();
+  const incrementPromoUsage = useIncrementPromoCodeUsage();
 
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
   const [passengerInfo, setPassengerInfo] = useState<PassengerInfo>({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -82,7 +86,13 @@ const BookingFlow: React.FC = () => {
   };
 
   const selectedSeats = seats.filter((s) => s.isSelected);
-  const totalPrice = selectedSeats.reduce((sum, seat) => sum + (seat.price || route?.price || 0), 0);
+  const subtotalPrice = selectedSeats.reduce((sum, seat) => sum + (seat.price || route?.price || 0), 0);
+  
+  // Calculate discount
+  const discountAmount = appliedPromoCode 
+    ? Math.round((subtotalPrice * appliedPromoCode.discount_percent) / 100)
+    : 0;
+  const totalPrice = subtotalPrice - discountAmount;
 
   const handleContinue = () => {
     if (selectedSeats.length === 0) {
@@ -114,11 +124,18 @@ const BookingFlow: React.FC = () => {
         passenger_email: passengerInfo.email,
         passenger_notes: passengerInfo.notes || null,
         total_price: totalPrice,
+        promo_code: appliedPromoCode?.code || null,
+        discount_amount: discountAmount,
         status: 'pending',
         is_paid: false,
       };
 
       const newBooking = await createBooking.mutateAsync(bookingData);
+
+      // Increment promo code usage if one was applied
+      if (appliedPromoCode) {
+        await incrementPromoUsage.mutateAsync(appliedPromoCode.code);
+      }
 
       // Send confirmation email
       sendBookingEmail({
@@ -313,6 +330,14 @@ const BookingFlow: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Promo Code Input */}
+                <div className="border-t pt-4">
+                  <PromoCodeInput
+                    onApply={setAppliedPromoCode}
+                    appliedCode={appliedPromoCode}
+                  />
+                </div>
+
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{t('booking.pricePerSeat')}</span>
@@ -322,6 +347,23 @@ const BookingFlow: React.FC = () => {
                     <span className="text-muted-foreground">{t('booking.numberOfSeats')}</span>
                     <span className="font-medium text-foreground">{selectedSeats.length}</span>
                   </div>
+                  
+                  {appliedPromoCode && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{t('promo.originalPrice')}</span>
+                        <span className="font-medium text-foreground line-through">{subtotalPrice} {t('common.currency')}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-success">
+                        <span className="flex items-center gap-1">
+                          <Tag className="w-3 h-3" />
+                          {t('promo.discountApplied')} ({appliedPromoCode.discount_percent}%)
+                        </span>
+                        <span className="font-medium">-{discountAmount} {t('common.currency')}</span>
+                      </div>
+                    </>
+                  )}
+                  
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span className="text-foreground">{t('booking.total')}</span>
                     <span className="text-primary">{totalPrice} {t('common.currency')}</span>
