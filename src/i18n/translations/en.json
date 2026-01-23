@@ -137,7 +137,8 @@
     "welcomeBack": "Welcome back!",
     "accountCreated": "Account created successfully!",
     "invalidCredentials": "Invalid credentials",
-    "emailExists": "Email already registered"
+    "emailExists": "Email already registered",
+    "googleComingSoon": "Google login is coming soon!"
   },
   "profile": {
     "title": "My Profile",

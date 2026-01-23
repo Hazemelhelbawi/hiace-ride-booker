@@ -137,7 +137,8 @@
     "welcomeBack": "مرحباً بعودتك!",
     "accountCreated": "تم إنشاء الحساب بنجاح!",
     "invalidCredentials": "بيانات غير صحيحة",
-    "emailExists": "البريد الإلكتروني مسجل بالفعل"
+    "emailExists": "البريد الإلكتروني مسجل بالفعل",
+    "googleComingSoon": "تسجيل الدخول بحساب Google قريباً!"
   },
   "profile": {
     "title": "ملفي الشخصي",
