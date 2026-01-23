@@ -63,13 +63,13 @@ const Auth: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    // Show coming soon message
-    toast.info(t('auth.googleComingSoon') || 'Google login is coming soon!', {
-      duration: 3000,
-    });
-    setIsGoogleLoading(false);
-    // Commented out until Google OAuth is configured
-    // await signInWithGoogle();
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   if (authLoading) {
