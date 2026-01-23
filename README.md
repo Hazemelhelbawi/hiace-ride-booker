@@ -164,4 +164,4 @@ This project was created as a demo booking system.
 
 ---
 
-Built with ❤️ using React, TypeScript, and Tailwind CSS
+Built with using React, TypeScript, and Tailwind CSS
