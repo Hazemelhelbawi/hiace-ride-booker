@@ -103,10 +103,11 @@ const PromoBanner: React.FC = () => {
       <Button
         variant="ghost"
         size="sm"
-        className="absolute end-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-white/20 text-white rounded-full"
+        className="absolute end-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-white/20 text-white rounded-full z-20"
         onClick={handleClose}
+        aria-label="Close banner"
       >
-        <X className="w-4 h-4" />
+        <X className="w-5 h-5" />
       </Button>
     </div>
   );
