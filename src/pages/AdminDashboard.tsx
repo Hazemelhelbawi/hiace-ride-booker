@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   useBookings,
   useRoutes,
@@ -10,15 +10,20 @@ import {
   useDeleteRoute,
   useUpdateBooking,
   useCancelBooking,
-} from '@/hooks/useData';
-import type { Route, Booking } from '@/services/api';
-import { sendBookingEmail } from '@/services/emailService';
-import Navbar from '@/components/Navbar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
+} from "@/hooks/useData";
+import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
+import type { Route, Booking } from "@/services/api";
+import { sendBookingEmail } from "@/services/emailService";
+import {
+  exportBookingsToPDF,
+  exportBookingsToExcel,
+} from "@/utils/exportBookings";
+import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -26,19 +31,34 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { BarChart, Users, MapPin, Plus, Trash2, Edit, CreditCard, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  BarChart,
+  Users,
+  MapPin,
+  Plus,
+  Trash2,
+  Edit,
+  CreditCard,
+  XCircle,
+  FileText,
+  FileSpreadsheet,
+  Calendar,
+  Tag,
+} from "lucide-react";
+import { toast } from "sonner";
+import BookingCalendar from "@/components/BookingCalendar";
+import PromoCodeManager from "@/components/admin/PromoCodeManager";
+import { format } from "date-fns";
 
 interface RouteFormData {
   origin: string;
@@ -59,6 +79,9 @@ const AdminDashboard: React.FC = () => {
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: routes = [], isLoading: routesLoading } = useRoutes();
 
+  // Enable real-time updates for bookings
+  useRealtimeBookings();
+
   const createRoute = useCreateRoute();
   const updateRoute = useUpdateRoute();
   const deleteRoute = useDeleteRoute();
@@ -68,20 +91,20 @@ const AdminDashboard: React.FC = () => {
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [newRoute, setNewRoute] = useState<RouteFormData>({
-    origin: '',
-    destination: '',
-    departure_time: '',
-    arrival_time: '',
+    origin: "",
+    destination: "",
+    departure_time: "",
+    arrival_time: "",
     price: 0,
-    date: '',
-    driver_name: '',
-    van_number: '',
+    date: "",
+    driver_name: "",
+    van_number: "",
   });
 
   // Redirect if not admin
   React.useEffect(() => {
     if (!authLoading && (!user || !user.isAdmin)) {
-      navigate('/');
+      navigate("/");
     }
   }, [user, authLoading, navigate]);
 
@@ -90,8 +113,11 @@ const AdminDashboard: React.FC = () => {
     if (!booking) return;
 
     try {
-      await updateBooking.mutateAsync({ id: bookingId, updates: { status: newStatus as 'pending' | 'confirmed' | 'cancelled' } });
-      toast.success(t('admin.statusUpdated'));
+      await updateBooking.mutateAsync({
+        id: bookingId,
+        updates: { status: newStatus as "pending" | "confirmed" | "cancelled" },
+      });
+      toast.success(t("admin.statusUpdated"));
 
       // Send email notification
       const route = routes.find((r) => r.id === booking.route_id);
@@ -104,7 +130,7 @@ const AdminDashboard: React.FC = () => {
               name: booking.passenger_name,
               phone: booking.passenger_phone,
               email: booking.passenger_email,
-              notes: booking.passenger_notes || '',
+              notes: booking.passenger_notes || "",
             },
             totalPrice: booking.total_price,
             status: newStatus,
@@ -122,19 +148,19 @@ const AdminDashboard: React.FC = () => {
         });
       }
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(t("common.error"));
     }
   };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm(t('admin.confirmCancel'))) return;
+    if (!confirm(t("admin.confirmCancel"))) return;
 
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking) return;
 
     try {
       await cancelBooking.mutateAsync(bookingId);
-      toast.success(t('admin.bookingCancelled'));
+      toast.success(t("admin.bookingCancelled"));
 
       // Send cancellation email
       const route = routes.find((r) => r.id === booking.route_id);
@@ -147,10 +173,10 @@ const AdminDashboard: React.FC = () => {
               name: booking.passenger_name,
               phone: booking.passenger_phone,
               email: booking.passenger_email,
-              notes: booking.passenger_notes || '',
+              notes: booking.passenger_notes || "",
             },
             totalPrice: booking.total_price,
-            status: 'cancelled',
+            status: "cancelled",
             isPaid: booking.is_paid,
             createdAt: booking.created_at,
           },
@@ -160,12 +186,12 @@ const AdminDashboard: React.FC = () => {
             date: route.date,
             departureTime: route.departure_time,
           },
-          status: 'cancelled',
+          status: "cancelled",
           isPaid: booking.is_paid,
         });
       }
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(t("common.error"));
     }
   };
 
@@ -174,8 +200,11 @@ const AdminDashboard: React.FC = () => {
     if (!booking) return;
 
     try {
-      await updateBooking.mutateAsync({ id: bookingId, updates: { is_paid: isPaid } });
-      toast.success(isPaid ? t('admin.markedPaid') : t('admin.markedUnpaid'));
+      await updateBooking.mutateAsync({
+        id: bookingId,
+        updates: { is_paid: isPaid },
+      });
+      toast.success(isPaid ? t("admin.markedPaid") : t("admin.markedUnpaid"));
 
       // Send email notification
       const route = routes.find((r) => r.id === booking.route_id);
@@ -188,7 +217,7 @@ const AdminDashboard: React.FC = () => {
               name: booking.passenger_name,
               phone: booking.passenger_phone,
               email: booking.passenger_email,
-              notes: booking.passenger_notes || '',
+              notes: booking.passenger_notes || "",
             },
             totalPrice: booking.total_price,
             status: booking.status,
@@ -206,20 +235,20 @@ const AdminDashboard: React.FC = () => {
         });
       }
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(t("common.error"));
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed':
-        return 'bg-success text-success-foreground';
-      case 'pending':
-        return 'bg-warning text-warning-foreground';
-      case 'cancelled':
-        return 'bg-destructive text-destructive-foreground';
+      case "confirmed":
+        return "bg-success text-success-foreground";
+      case "pending":
+        return "bg-warning text-warning-foreground";
+      case "cancelled":
+        return "bg-destructive text-destructive-foreground";
       default:
-        return 'bg-muted text-muted-foreground';
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -242,9 +271,9 @@ const AdminDashboard: React.FC = () => {
 
       setIsRouteDialogOpen(false);
       resetRouteForm();
-      toast.success(t('admin.routeAdded'));
+      toast.success(t("admin.routeAdded"));
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(t("common.error"));
     }
   };
 
@@ -271,9 +300,9 @@ const AdminDashboard: React.FC = () => {
       setEditingRoute(null);
       setIsRouteDialogOpen(false);
       resetRouteForm();
-      toast.success(t('admin.routeUpdated'));
+      toast.success(t("admin.routeUpdated"));
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(t("common.error"));
     }
   };
 
@@ -294,26 +323,26 @@ const AdminDashboard: React.FC = () => {
 
   const resetRouteForm = () => {
     setNewRoute({
-      origin: '',
-      destination: '',
-      departure_time: '',
-      arrival_time: '',
+      origin: "",
+      destination: "",
+      departure_time: "",
+      arrival_time: "",
       price: 0,
-      date: '',
-      driver_name: '',
-      van_number: '',
+      date: "",
+      driver_name: "",
+      van_number: "",
     });
     setEditingRoute(null);
   };
 
   const handleDeleteRoute = async (routeId: string) => {
-    if (!confirm(t('admin.confirmDeleteRoute'))) return;
+    if (!confirm(t("admin.confirmDeleteRoute"))) return;
 
     try {
       await deleteRoute.mutateAsync(routeId);
-      toast.success(t('admin.routeDeleted'));
+      toast.success(t("admin.routeDeleted"));
     } catch (error) {
-      toast.error(t('common.error'));
+      toast.error(t("common.error"));
     }
   };
 
@@ -323,8 +352,8 @@ const AdminDashboard: React.FC = () => {
 
   const stats = {
     totalBookings: bookings.length,
-    pendingBookings: bookings.filter((b) => b.status === 'pending').length,
-    confirmedBookings: bookings.filter((b) => b.status === 'confirmed').length,
+    pendingBookings: bookings.filter((b) => b.status === "pending").length,
+    confirmedBookings: bookings.filter((b) => b.status === "confirmed").length,
     totalRoutes: routes.length,
     paidBookings: bookings.filter((b) => b.is_paid).length,
   };
@@ -334,7 +363,9 @@ const AdminDashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-hero">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <p className="text-center text-muted-foreground">{t('common.loading')}</p>
+          <p className="text-center text-muted-foreground">
+            {t("common.loading")}
+          </p>
         </div>
       </div>
     );
@@ -346,8 +377,12 @@ const AdminDashboard: React.FC = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">{t('admin.dashboard')}</h1>
-          <p className="text-muted-foreground">{t('admin.manageBookingsRoutes')}</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            {t("admin.dashboard")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("admin.manageBookingsRoutes")}
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -356,8 +391,12 @@ const AdminDashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('admin.totalBookings')}</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.totalBookings}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("admin.totalBookings")}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {stats.totalBookings}
+                  </p>
                 </div>
                 <BarChart className="w-8 h-8 text-primary" />
               </div>
@@ -368,8 +407,12 @@ const AdminDashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('admin.pending')}</p>
-                  <p className="text-3xl font-bold text-warning">{stats.pendingBookings}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("admin.pending")}
+                  </p>
+                  <p className="text-3xl font-bold text-warning">
+                    {stats.pendingBookings}
+                  </p>
                 </div>
                 <Users className="w-8 h-8 text-warning" />
               </div>
@@ -380,8 +423,12 @@ const AdminDashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('admin.confirmed')}</p>
-                  <p className="text-3xl font-bold text-success">{stats.confirmedBookings}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("admin.confirmed")}
+                  </p>
+                  <p className="text-3xl font-bold text-success">
+                    {stats.confirmedBookings}
+                  </p>
                 </div>
                 <Users className="w-8 h-8 text-success" />
               </div>
@@ -392,8 +439,12 @@ const AdminDashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('admin.paid')}</p>
-                  <p className="text-3xl font-bold text-primary">{stats.paidBookings}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("admin.paid")}
+                  </p>
+                  <p className="text-3xl font-bold text-primary">
+                    {stats.paidBookings}
+                  </p>
                 </div>
                 <CreditCard className="w-8 h-8 text-primary" />
               </div>
@@ -404,8 +455,12 @@ const AdminDashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('admin.activeRoutes')}</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.totalRoutes}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("admin.activeRoutes")}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {stats.totalRoutes}
+                  </p>
                 </div>
                 <MapPin className="w-8 h-8 text-primary" />
               </div>
@@ -416,37 +471,70 @@ const AdminDashboard: React.FC = () => {
         {/* Main Content */}
         <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="bookings">{t('admin.bookings')}</TabsTrigger>
-            <TabsTrigger value="routes">{t('admin.routes')}</TabsTrigger>
+            <TabsTrigger value="bookings">{t("admin.bookings")}</TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-2">
+              <Calendar className="w-4 h-4" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="routes">{t("admin.routes")}</TabsTrigger>
+            <TabsTrigger value="promos" className="gap-2">
+              <Tag className="w-4 h-4" />
+              {t("admin.promoCodes")}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
             <Card className="border-2 shadow-lg">
-              <CardHeader>
-                <CardTitle>{t('admin.allBookings')}</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{t("admin.allBookings")}</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportBookingsToPDF(bookings, routes)}
+                    className="gap-2"
+                    disabled={bookings.length === 0}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export PDF
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportBookingsToExcel(bookings, routes)}
+                    className="gap-2"
+                    disabled={bookings.length === 0}
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Export Excel
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('admin.bookingId')}</TableHead>
-                        <TableHead>{t('admin.passenger')}</TableHead>
-                        <TableHead>{t('admin.phone')}</TableHead>
-                        <TableHead>{t('admin.route')}</TableHead>
-                        <TableHead>{t('admin.date')}</TableHead>
-                        <TableHead>{t('admin.seats')}</TableHead>
-                        <TableHead>{t('admin.total')}</TableHead>
-                        <TableHead>{t('admin.paid')}</TableHead>
-                        <TableHead>{t('admin.status')}</TableHead>
-                        <TableHead>{t('admin.actions')}</TableHead>
+                        <TableHead>{t("admin.bookingId")}</TableHead>
+                        <TableHead>{t("admin.passenger")}</TableHead>
+                        <TableHead>{t("admin.phone")}</TableHead>
+                        <TableHead>{t("admin.route")}</TableHead>
+                        <TableHead>{t("admin.date")}</TableHead>
+                        <TableHead>{t("admin.seats")}</TableHead>
+                        <TableHead>{t("admin.total")}</TableHead>
+                        <TableHead>{t("admin.paid")}</TableHead>
+                        <TableHead>{t("admin.status")}</TableHead>
+                        <TableHead>{t("admin.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {bookings.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                            {t('admin.noBookings')}
+                          <TableCell
+                            colSpan={10}
+                            className="text-center text-muted-foreground py-8"
+                          >
+                            {t("admin.noBookings")}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -454,72 +542,107 @@ const AdminDashboard: React.FC = () => {
                           const route = getRouteForBooking(booking);
                           return (
                             <TableRow key={booking.id}>
-                              <TableCell className="font-mono text-sm">#{booking.id.slice(0, 8)}</TableCell>
+                              <TableCell className="font-mono text-sm">
+                                #{booking.id.slice(0, 8)}
+                              </TableCell>
                               <TableCell>
                                 <div>
-                                  <div className="font-medium">{booking.passenger_name}</div>
-                                  <div className="text-sm text-muted-foreground">{booking.passenger_email}</div>
+                                  <div className="font-medium">
+                                    {booking.passenger_name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {booking.passenger_email}
+                                  </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-sm">{booking.passenger_phone}</TableCell>
+                              <TableCell className="text-sm">
+                                {booking.passenger_phone}
+                              </TableCell>
                               <TableCell>
                                 {route ? (
                                   <div className="text-sm">
                                     {route.origin} → {route.destination}
                                   </div>
                                 ) : (
-                                  'N/A'
+                                  "N/A"
                                 )}
                               </TableCell>
                               <TableCell className="text-sm">
-                                {format(new Date(booking.created_at), 'MMM dd, yyyy')}
+                                {format(
+                                  new Date(booking.created_at),
+                                  "MMM dd, yyyy",
+                                )}
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-1 flex-wrap">
                                   {booking.seats.map((seat) => (
-                                    <span key={seat} className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-primary/10 text-primary rounded">
+                                    <span
+                                      key={seat}
+                                      className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-primary/10 text-primary rounded"
+                                    >
                                       {seat}
                                     </span>
                                   ))}
                                 </div>
                               </TableCell>
-                              <TableCell className="font-semibold">{booking.total_price} {t('common.currency')}</TableCell>
+                              <TableCell className="font-semibold">
+                                {booking.total_price} {t("common.currency")}
+                              </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
                                   <Switch
                                     checked={booking.is_paid}
-                                    onCheckedChange={(checked) => handlePaymentToggle(booking.id, checked)}
+                                    onCheckedChange={(checked) =>
+                                      handlePaymentToggle(booking.id, checked)
+                                    }
                                   />
-                                  <span className={booking.is_paid ? 'text-success text-sm' : 'text-warning text-sm'}>
-                                    {booking.is_paid ? t('admin.paid') : t('admin.unpaid')}
+                                  <span
+                                    className={
+                                      booking.is_paid
+                                        ? "text-success text-sm"
+                                        : "text-warning text-sm"
+                                    }
+                                  >
+                                    {booking.is_paid
+                                      ? t("admin.paid")
+                                      : t("admin.unpaid")}
                                   </span>
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <Badge className={getStatusColor(booking.status)}>
+                                <Badge
+                                  className={getStatusColor(booking.status)}
+                                >
                                   {booking.status}
                                 </Badge>
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-2">
-                                  {booking.status === 'pending' && (
+                                  {booking.status === "pending" && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                      onClick={() =>
+                                        handleStatusChange(
+                                          booking.id,
+                                          "confirmed",
+                                        )
+                                      }
                                       className="bg-success hover:bg-success/90"
                                     >
-                                      {t('admin.confirm')}
+                                      {t("admin.confirm")}
                                     </Button>
                                   )}
-                                  {booking.status !== 'cancelled' && (
+                                  {booking.status !== "cancelled" && (
                                     <Button
                                       size="sm"
                                       variant="destructive"
-                                      onClick={() => handleCancelBooking(booking.id)}
+                                      onClick={() =>
+                                        handleCancelBooking(booking.id)
+                                      }
                                       className="gap-1"
                                     >
                                       <XCircle className="w-3 h-3" />
-                                      {t('admin.cancel')}
+                                      {t("admin.cancel")}
                                     </Button>
                                   )}
                                 </div>
@@ -535,42 +658,68 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="calendar">
+            <BookingCalendar routes={routes} bookings={bookings} />
+          </TabsContent>
+
           <TabsContent value="routes">
             <Card className="border-2 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{t('admin.routeManagement')}</CardTitle>
-                <Dialog open={isRouteDialogOpen} onOpenChange={(open) => {
-                  setIsRouteDialogOpen(open);
-                  if (!open) resetRouteForm();
-                }}>
+                <CardTitle>{t("admin.routeManagement")}</CardTitle>
+                <Dialog
+                  open={isRouteDialogOpen}
+                  onOpenChange={(open) => {
+                    setIsRouteDialogOpen(open);
+                    if (!open) resetRouteForm();
+                  }}
+                >
                   <DialogTrigger asChild>
                     <Button className="bg-primary hover:bg-primary-dark text-white gap-2">
                       <Plus className="w-4 h-4" />
-                      {t('admin.addTrip')}
+                      {t("admin.addTrip")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>{editingRoute ? t('admin.editRoute') : t('admin.addTrip')}</DialogTitle>
+                      <DialogTitle>
+                        {editingRoute
+                          ? t("admin.editRoute")
+                          : t("admin.addTrip")}
+                      </DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={editingRoute ? handleEditRoute : handleAddRoute} className="space-y-4">
+                    <form
+                      onSubmit={editingRoute ? handleEditRoute : handleAddRoute}
+                      className="space-y-4"
+                    >
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="origin">{t('admin.origin')}</Label>
+                          <Label htmlFor="origin">{t("admin.origin")}</Label>
                           <Input
                             id="origin"
                             value={newRoute.origin}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, origin: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                origin: e.target.value,
+                              }))
+                            }
                             placeholder="e.g., Cairo"
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="destination">{t('admin.destination')}</Label>
+                          <Label htmlFor="destination">
+                            {t("admin.destination")}
+                          </Label>
                           <Input
                             id="destination"
                             value={newRoute.destination}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, destination: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                destination: e.target.value,
+                              }))
+                            }
                             placeholder="e.g., Dahab"
                             required
                           />
@@ -579,22 +728,36 @@ const AdminDashboard: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="departure_time">{t('admin.departureTime')}</Label>
+                          <Label htmlFor="departure_time">
+                            {t("admin.departureTime")}
+                          </Label>
                           <Input
                             id="departure_time"
                             type="time"
                             value={newRoute.departure_time}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, departure_time: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                departure_time: e.target.value,
+                              }))
+                            }
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="arrival_time">{t('admin.arrivalTime')}</Label>
+                          <Label htmlFor="arrival_time">
+                            {t("admin.arrivalTime")}
+                          </Label>
                           <Input
                             id="arrival_time"
                             type="time"
                             value={newRoute.arrival_time}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, arrival_time: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                arrival_time: e.target.value,
+                              }))
+                            }
                             required
                           />
                         </div>
@@ -602,22 +765,32 @@ const AdminDashboard: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="date">{t('admin.date')}</Label>
+                          <Label htmlFor="date">{t("admin.date")}</Label>
                           <Input
                             id="date"
                             type="date"
                             value={newRoute.date}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, date: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                date: e.target.value,
+                              }))
+                            }
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="price">{t('admin.price')}</Label>
+                          <Label htmlFor="price">{t("admin.price")}</Label>
                           <Input
                             id="price"
                             type="number"
                             value={newRoute.price}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, price: Number(e.target.value) }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                price: Number(e.target.value),
+                              }))
+                            }
                             placeholder="e.g., 750"
                             required
                           />
@@ -626,29 +799,48 @@ const AdminDashboard: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="driver_name">{t('admin.driverName')}</Label>
+                          <Label htmlFor="driver_name">
+                            {t("admin.driverName")}
+                          </Label>
                           <Input
                             id="driver_name"
                             value={newRoute.driver_name}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, driver_name: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                driver_name: e.target.value,
+                              }))
+                            }
                             placeholder="e.g., Ahmed Hassan"
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="van_number">{t('admin.vanNumber')}</Label>
+                          <Label htmlFor="van_number">
+                            {t("admin.vanNumber")}
+                          </Label>
                           <Input
                             id="van_number"
                             value={newRoute.van_number}
-                            onChange={(e) => setNewRoute((prev) => ({ ...prev, van_number: e.target.value }))}
+                            onChange={(e) =>
+                              setNewRoute((prev) => ({
+                                ...prev,
+                                van_number: e.target.value,
+                              }))
+                            }
                             placeholder="e.g., ABC-1234"
                             required
                           />
                         </div>
                       </div>
 
-                      <Button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white">
-                        {editingRoute ? t('admin.updateRoute') : t('admin.addTrip')}
+                      <Button
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary-dark text-white"
+                      >
+                        {editingRoute
+                          ? t("admin.updateRoute")
+                          : t("admin.addTrip")}
                       </Button>
                     </form>
                   </DialogContent>
@@ -659,14 +851,14 @@ const AdminDashboard: React.FC = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('admin.route')}</TableHead>
-                        <TableHead>{t('admin.date')}</TableHead>
-                        <TableHead>{t('admin.time')}</TableHead>
-                        <TableHead>{t('admin.price')}</TableHead>
-                        <TableHead>{t('routes.seatsAvailable')}</TableHead>
-                        <TableHead>{t('routes.driver')}</TableHead>
-                        <TableHead>{t('routes.van')}</TableHead>
-                        <TableHead>{t('admin.actions')}</TableHead>
+                        <TableHead>{t("admin.route")}</TableHead>
+                        <TableHead>{t("admin.date")}</TableHead>
+                        <TableHead>{t("admin.time")}</TableHead>
+                        <TableHead>{t("admin.price")}</TableHead>
+                        <TableHead>{t("routes.seatsAvailable")}</TableHead>
+                        <TableHead>{t("routes.driver")}</TableHead>
+                        <TableHead>{t("routes.van")}</TableHead>
+                        <TableHead>{t("admin.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -677,14 +869,24 @@ const AdminDashboard: React.FC = () => {
                               {route.origin} → {route.destination}
                             </div>
                           </TableCell>
-                          <TableCell>{format(new Date(route.date), 'MMM dd, yyyy')}</TableCell>
-                          <TableCell className="text-sm">{route.departure_time} - {route.arrival_time}</TableCell>
-                          <TableCell className="font-semibold">{route.price} {t('common.currency')}</TableCell>
+                          <TableCell>
+                            {format(new Date(route.date), "MMM dd, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {route.departure_time} - {route.arrival_time}
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {route.price} {t("common.currency")}
+                          </TableCell>
                           <TableCell>
                             {route.available_seats} / {route.total_seats}
                           </TableCell>
-                          <TableCell className="text-sm">{route.driver_name}</TableCell>
-                          <TableCell className="text-sm font-mono">{route.van_number}</TableCell>
+                          <TableCell className="text-sm">
+                            {route.driver_name}
+                          </TableCell>
+                          <TableCell className="text-sm font-mono">
+                            {route.van_number}
+                          </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
                               <Button
@@ -694,7 +896,7 @@ const AdminDashboard: React.FC = () => {
                                 className="gap-1"
                               >
                                 <Edit className="w-3 h-3" />
-                                {t('admin.edit')}
+                                {t("admin.edit")}
                               </Button>
                               <Button
                                 size="sm"
@@ -703,7 +905,7 @@ const AdminDashboard: React.FC = () => {
                                 className="gap-1"
                               >
                                 <Trash2 className="w-3 h-3" />
-                                {t('admin.delete')}
+                                {t("admin.delete")}
                               </Button>
                             </div>
                           </TableCell>
@@ -714,6 +916,10 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="promos">
+            <PromoCodeManager />
           </TabsContent>
         </Tabs>
       </div>

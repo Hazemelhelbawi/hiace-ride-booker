@@ -74,7 +74,7 @@ const initializeStorage = () => {
   if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
     const adminUser: User = {
       id: 'admin',
-      email: 'admin@lovable.test',
+      email: 'admin@bookbus.com',
       name: 'Admin User',
       phone: '+20 100 000 0000',
       isAdmin: true,

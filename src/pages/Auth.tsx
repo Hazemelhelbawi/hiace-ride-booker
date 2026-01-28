@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bus, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { toast } from 'sonner';
 
 const Auth: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -62,8 +63,13 @@ const Auth: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    await signInWithGoogle();
-    // Google OAuth will redirect, so we don't need to handle navigation here
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   if (authLoading) {
@@ -88,7 +94,7 @@ const Auth: React.FC = () => {
             <Bus className="w-12 h-12 text-white" />
           </div>
           <div className="text-4xl font-bold tracking-tighter">
-            <span className="text-foreground">WE</span>
+            <span className="text-foreground">Book</span>
             <span className="text-primary">BUS</span>
           </div>
           <p className="text-muted-foreground">{t('hero.subtitle')}</p>

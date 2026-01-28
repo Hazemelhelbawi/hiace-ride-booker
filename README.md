@@ -18,8 +18,8 @@ A complete React-based passenger booking system for Hiace vans with clean, reusa
 - **Statistics**: Overview cards showing booking metrics
 
 **Admin Login Credentials:**
-- Email: `admin@lovable.test`
-- Password: `LovableAdmin#2025`
+- Email: `admin@bookbus.com`
+- Password: `Admin#2025`
 
 ## 🧩 Tech Stack
 
@@ -164,4 +164,4 @@ This project was created as a demo booking system.
 
 ---
 
-Built with ❤️ using React, TypeScript, and Tailwind CSS
+Built with using React, TypeScript, and Tailwind CSS
