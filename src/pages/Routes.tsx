@@ -7,8 +7,15 @@ import RouteCard from '@/components/RouteCard';
 import Navbar from '@/components/Navbar';
 import PromoBanner from '@/components/PromoBanner';
 import Testimonials from '@/components/Testimonials';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MapPin, Calendar, Users, Bus, Clock, ThumbsUp, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import heroImage from '@/assets/hero-van.jpg';
@@ -28,19 +35,45 @@ const Routes: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  // Get unique origins and destinations from routes
+  const uniqueOrigins = useMemo(() => {
+    const origins = [...new Set(routes.map(r => r.origin))];
+    return origins.sort();
+  }, [routes]);
+
+  const uniqueDestinations = useMemo(() => {
+    // If origin is selected, show only destinations available from that origin
+    if (filters.origin) {
+      const destinations = routes
+        .filter(r => r.origin === filters.origin)
+        .map(r => r.destination);
+      return [...new Set(destinations)].sort();
+    }
+    // Otherwise show all destinations
+    const destinations = [...new Set(routes.map(r => r.destination))];
+    return destinations.sort();
+  }, [routes, filters.origin]);
+
+  // Available origins based on selected destination
+  const availableOrigins = useMemo(() => {
+    if (filters.destination) {
+      const origins = routes
+        .filter(r => r.destination === filters.destination)
+        .map(r => r.origin);
+      return [...new Set(origins)].sort();
+    }
+    return uniqueOrigins;
+  }, [routes, filters.destination, uniqueOrigins]);
+
   const filteredRoutes = useMemo(() => {
     let filtered = [...routes];
 
     if (filters.origin) {
-      filtered = filtered.filter((r) =>
-        r.origin.toLowerCase().includes(filters.origin!.toLowerCase())
-      );
+      filtered = filtered.filter((r) => r.origin === filters.origin);
     }
 
     if (filters.destination) {
-      filtered = filtered.filter((r) =>
-        r.destination.toLowerCase().includes(filters.destination!.toLowerCase())
-      );
+      filtered = filtered.filter((r) => r.destination === filters.destination);
     }
 
     if (filters.date) {
@@ -58,8 +91,24 @@ const Routes: React.FC = () => {
     navigate(`/booking/${route.id}`);
   };
 
-  const handleFilterChange = (key: keyof FilterOptions, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value || undefined }));
+  const handleOriginChange = (value: string) => {
+    setFilters((prev) => ({ 
+      ...prev, 
+      origin: value === 'all' ? undefined : value,
+      // Reset destination if it's not available from new origin
+      destination: value === 'all' ? prev.destination : undefined
+    }));
+  };
+
+  const handleDestinationChange = (value: string) => {
+    setFilters((prev) => ({ 
+      ...prev, 
+      destination: value === 'all' ? undefined : value 
+    }));
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({ ...prev, date: e.target.value || undefined }));
   };
 
   return (
@@ -95,26 +144,40 @@ const Routes: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">{t('search.pickupLocation')}</label>
                 <div className="relative">
-                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                  <Input
-                    placeholder={t('search.pickupLocation')}
-                    value={filters.origin || ''}
-                    onChange={(e) => handleFilterChange('origin', e.target.value)}
-                    className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
-                  />
+                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary z-10" />
+                  <Select value={filters.origin || 'all'} onValueChange={handleOriginChange}>
+                    <SelectTrigger className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary">
+                      <SelectValue placeholder={t('search.pickupLocation')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('search.allLocations') || 'All Locations'}</SelectItem>
+                      {availableOrigins.map((origin) => (
+                        <SelectItem key={origin} value={origin}>
+                          {origin}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">{t('search.dropoffLocation')}</label>
                 <div className="relative">
-                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                  <Input
-                    placeholder={t('search.dropoffLocation')}
-                    value={filters.destination || ''}
-                    onChange={(e) => handleFilterChange('destination', e.target.value)}
-                    className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
-                  />
+                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary z-10" />
+                  <Select value={filters.destination || 'all'} onValueChange={handleDestinationChange}>
+                    <SelectTrigger className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary">
+                      <SelectValue placeholder={t('search.dropoffLocation')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('search.allLocations') || 'All Locations'}</SelectItem>
+                      {uniqueDestinations.map((destination) => (
+                        <SelectItem key={destination} value={destination}>
+                          {destination}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -143,7 +206,7 @@ const Routes: React.FC = () => {
                   <Input
                     type="date"
                     value={filters.date || ''}
-                    onChange={(e) => handleFilterChange('date', e.target.value)}
+                    onChange={handleDateChange}
                     className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
                   />
                 </div>
