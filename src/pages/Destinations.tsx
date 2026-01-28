@@ -8,46 +8,64 @@ import egyptDestinations from "@/assets/egypt-destinations.jpg";
 const destinations = [
   {
     name: { en: "Cairo", ar: "القاهرة" },
-    description: { en: "The capital city with pyramids and rich history", ar: "العاصمة مع الأهرامات والتاريخ العريق" },
+    description: {
+      en: "The capital city with pyramids and rich history",
+      ar: "العاصمة مع الأهرامات والتاريخ العريق",
+    },
     travelTime: "Base",
     rating: 4.8,
-    image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=400"
+    image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=400",
   },
   {
     name: { en: "Alexandria", ar: "الإسكندرية" },
-    description: { en: "Mediterranean pearl with beautiful beaches", ar: "لؤلؤة البحر المتوسط بشواطئها الجميلة" },
+    description: {
+      en: "Mediterranean pearl with beautiful beaches",
+      ar: "لؤلؤة البحر المتوسط بشواطئها الجميلة",
+    },
     travelTime: "3h",
     rating: 4.7,
-    image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400"
+    image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400",
   },
   {
     name: { en: "Luxor", ar: "الأقصر" },
-    description: { en: "Ancient temples and Valley of the Kings", ar: "المعابد القديمة ووادي الملوك" },
+    description: {
+      en: "Ancient temples and Valley of the Kings",
+      ar: "المعابد القديمة ووادي الملوك",
+    },
     travelTime: "8h",
     rating: 4.9,
-    image: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?w=400"
+    image: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?w=400",
   },
   {
     name: { en: "Aswan", ar: "أسوان" },
-    description: { en: "Nubian culture and the famous High Dam", ar: "الثقافة النوبية والسد العالي الشهير" },
+    description: {
+      en: "Nubian culture and the famous High Dam",
+      ar: "الثقافة النوبية والسد العالي الشهير",
+    },
     travelTime: "10h",
     rating: 4.6,
-    image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400"
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
   },
   {
     name: { en: "Hurghada", ar: "الغردقة" },
-    description: { en: "Red Sea resort with amazing diving spots", ar: "منتجع البحر الأحمر مع مواقع غوص مذهلة" },
+    description: {
+      en: "Red Sea resort with amazing diving spots",
+      ar: "منتجع البحر الأحمر مع مواقع غوص مذهلة",
+    },
     travelTime: "6h",
     rating: 4.5,
-    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400"
+    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400",
   },
   {
     name: { en: "Sharm El Sheikh", ar: "شرم الشيخ" },
-    description: { en: "World-class beaches and coral reefs", ar: "شواطئ عالمية وشعاب مرجانية" },
+    description: {
+      en: "World-class beaches and coral reefs",
+      ar: "شواطئ عالمية وشعاب مرجانية",
+    },
     travelTime: "7h",
     rating: 4.8,
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400"
-  }
+    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400",
+  },
 ];
 
 const Destinations: React.FC = () => {
@@ -57,13 +75,13 @@ const Destinations: React.FC = () => {
   return (
     <div className={`min-h-screen bg-background ${isRTL ? "rtl" : "ltr"}`}>
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img 
-            src={egyptDestinations} 
-            alt="Egypt Destinations" 
+          <img
+            src={egyptDestinations}
+            alt="Egypt Destinations"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
@@ -73,10 +91,9 @@ const Destinations: React.FC = () => {
             {isRTL ? "وجهاتنا" : "Our Destinations"}
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {isRTL 
+            {isRTL
               ? "اكتشف أجمل المدن المصرية مع رحلات مريحة وآمنة"
-              : "Discover Egypt's most beautiful cities with comfortable and safe travel"
-            }
+              : "Discover Egypt's most beautiful cities with comfortable and safe travel"}
           </p>
         </div>
       </section>
@@ -85,13 +102,13 @@ const Destinations: React.FC = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {destinations.map((destination, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className="group overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
             >
               <div className="relative h-48 overflow-hidden">
-                <img 
-                  src={destination.image} 
+                <img
+                  src={destination.image}
                   alt={destination.name[language]}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
@@ -131,13 +148,12 @@ const Destinations: React.FC = () => {
             {isRTL ? "جاهز للسفر؟" : "Ready to Travel?"}
           </h2>
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            {isRTL 
+            {isRTL
               ? "احجز رحلتك الآن واستمتع بتجربة سفر لا تُنسى"
-              : "Book your trip now and enjoy an unforgettable travel experience"
-            }
+              : "Book your trip now and enjoy an unforgettable travel experience"}
           </p>
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-full font-semibold hover:bg-primary/90 transition-colors"
           >
             <Bus className="w-5 h-5" />
