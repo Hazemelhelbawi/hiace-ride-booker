@@ -37,7 +37,8 @@
     "dropoffLocation": "مكان الوصول",
     "quantity": "عدد الركاب",
     "departureDate": "تاريخ السفر",
-    "howManyPeople": "كم عدد الأشخاص؟"
+    "howManyPeople": "كم عدد الأشخاص؟",
+    "allLocations": "جميع المواقع"
   },
   "features": {
     "routeAvailability": "تغطية واسعة",

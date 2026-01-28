@@ -1,4 +1,12 @@
 {
+  "search": {
+    "pickupLocation": "Pick-up Location",
+    "dropoffLocation": "Drop-off Location",
+    "departureDate": "Departure Date",
+    "quantity": "Passengers",
+    "howManyPeople": "How many people?",
+    "allLocations": "All Locations"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
@@ -33,11 +41,12 @@
     "findTransfer": "Find a transfer"
   },
   "search": {
-    "pickupLocation": "Pick up location",
-    "dropoffLocation": "Drop off location",
-    "quantity": "Quantity",
-    "departureDate": "Departure date",
-    "howManyPeople": "How many people?"
+    "pickupLocation": "Pick-up Location",
+    "dropoffLocation": "Drop-off Location",
+    "quantity": "Passengers",
+    "departureDate": "Departure Date",
+    "howManyPeople": "How many people?",
+    "allLocations": "All Locations"
   },
   "features": {
     "routeAvailability": "Route Availability",

@@ -11,6 +11,7 @@ const destinations = [
     description: { en: "The capital city with pyramids and rich history", ar: "العاصمة مع الأهرامات والتاريخ العريق" },
     travelTime: "Base",
     rating: 4.8,
+    // Cairo - Pyramids of Giza
     image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=400"
   },
   {
@@ -18,27 +19,31 @@ const destinations = [
     description: { en: "Mediterranean pearl with beautiful beaches", ar: "لؤلؤة البحر المتوسط بشواطئها الجميلة" },
     travelTime: "3h",
     rating: 4.7,
-    image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400"
+    // Alexandria - Citadel of Qaitbay
+    image: "https://images.unsplash.com/photo-1572252821143-035a024857ac?w=400"
   },
   {
     name: { en: "Luxor", ar: "الأقصر" },
     description: { en: "Ancient temples and Valley of the Kings", ar: "المعابد القديمة ووادي الملوك" },
     travelTime: "8h",
     rating: 4.9,
-    image: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?w=400"
+    // Luxor - Karnak Temple
+    image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400"
   },
   {
     name: { en: "Aswan", ar: "أسوان" },
     description: { en: "Nubian culture and the famous High Dam", ar: "الثقافة النوبية والسد العالي الشهير" },
     travelTime: "10h",
     rating: 4.6,
-    image: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400"
+    // Aswan - Philae Temple
+    image: "https://images.unsplash.com/photo-1600001564024-18f404f5a6c3?w=400"
   },
   {
     name: { en: "Hurghada", ar: "الغردقة" },
     description: { en: "Red Sea resort with amazing diving spots", ar: "منتجع البحر الأحمر مع مواقع غوص مذهلة" },
     travelTime: "6h",
     rating: 4.5,
+    // Hurghada - Red Sea coral reef
     image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400"
   },
   {
@@ -46,7 +51,32 @@ const destinations = [
     description: { en: "World-class beaches and coral reefs", ar: "شواطئ عالمية وشعاب مرجانية" },
     travelTime: "7h",
     rating: 4.8,
+    // Sharm El Sheikh - beach resort
     image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400"
+  },
+  {
+    name: { en: "Dahab", ar: "دهب" },
+    description: { en: "Laid-back beach town famous for diving", ar: "مدينة شاطئية هادئة مشهورة بالغوص" },
+    travelTime: "8h",
+    rating: 4.7,
+    // Dahab - Blue Hole diving spot
+    image: "https://images.unsplash.com/photo-1682687982501-1e58ab814714?w=400"
+  },
+  {
+    name: { en: "Saint Catherine", ar: "سانت كاترين" },
+    description: { en: "Mount Sinai and the historic monastery", ar: "جبل سيناء والدير التاريخي" },
+    travelTime: "9h",
+    rating: 4.6,
+    // Saint Catherine - Mount Sinai
+    image: "https://images.unsplash.com/photo-1548769142-8e0d6c61a26e?w=400"
+  },
+  {
+    name: { en: "El Tor", ar: "الطور" },
+    description: { en: "Gateway to Sinai with natural hot springs", ar: "بوابة سيناء مع الينابيع الحارة الطبيعية" },
+    travelTime: "6h",
+    rating: 4.4,
+    // El Tor - Sinai coast
+    image: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400"
   }
 ];
 
