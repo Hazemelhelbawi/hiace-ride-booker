@@ -25,7 +25,8 @@ const destinations = [
     },
     travelTime: "3h",
     rating: 4.7,
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
+    image:
+      "https://images.unsplash.com/photo-1594808815295-52034d585f56?q=80&w=1074",
   },
   {
     name: { en: "Luxor", ar: "الأقصر" },
@@ -35,7 +36,8 @@ const destinations = [
     },
     travelTime: "8h",
     rating: 4.9,
-    image: "https://images.unsplash.com/photo-1552520514-5fefe8c9ef14?w=400",
+    image:
+      "https://images.unsplash.com/photo-1587975844610-40f1ad10d07e?q=80&w=1171",
   },
   {
     name: { en: "Aswan", ar: "أسوان" },
@@ -46,7 +48,8 @@ const destinations = [
     travelTime: "10h",
     rating: 4.6,
     // Aswan - Philae Temple
-    image: "https://images.unsplash.com/photo-1600001564024-18f404f5a6c3?w=400",
+    image:
+      "https://images.unsplash.com/photo-1644517270263-4112379d97ca?q=80&w=1170",
   },
   {
     name: { en: "Hurghada", ar: "الغردقة" },
@@ -101,7 +104,8 @@ const destinations = [
     travelTime: "6h",
     rating: 4.4,
     // El Tor - Sinai coast
-    image: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400",
+    image:
+      "https://images.unsplash.com/photo-1642032669625-30d27b475a1f?q=80&w=564",
   },
 ];
 
