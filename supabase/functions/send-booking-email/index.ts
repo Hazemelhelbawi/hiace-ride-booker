@@ -1,11 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "resend";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface BookingEmailRequest {
@@ -22,6 +23,15 @@ interface BookingEmailRequest {
   };
   seats: number[];
   totalPrice: number;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 const getStatusSubject = (status: string, isPaid: boolean): string => {
@@ -54,8 +64,82 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+
     const data: BookingEmailRequest = await req.json();
     const { to, passengerName, bookingId, status, isPaid, route, seats, totalPrice } = data;
+
+    // Validate that the booking belongs to the authenticated user or they are admin
+    const { data: booking, error: bookingError } = await supabaseClient
+      .from("bookings")
+      .select("user_id")
+      .eq("id", bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      return new Response(JSON.stringify({ error: "Booking not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Check ownership - RLS will already filter, but double-check
+    if (booking.user_id !== userId) {
+      // Check if admin
+      const { data: roleData } = await supabaseClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
+    // Input validation
+    if (!to || !passengerName || !bookingId || !status || !route) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Sanitize all user inputs for HTML
+    const safeName = escapeHtml(passengerName.slice(0, 100));
+    const safeOrigin = escapeHtml(route.origin.slice(0, 100));
+    const safeDestination = escapeHtml(route.destination.slice(0, 100));
+    const safeDate = escapeHtml(route.date.slice(0, 20));
+    const safeDepartureTime = escapeHtml(route.departureTime.slice(0, 20));
+    const safeBookingId = escapeHtml(bookingId.slice(0, 36));
 
     const statusColor = getStatusColor(status);
     const subject = getStatusSubject(status, isPaid);
@@ -78,11 +162,11 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 30px;">
               <span style="display: inline-block; background-color: ${statusColor}20; color: ${statusColor}; padding: 8px 24px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 14px;">
-                ${status}
+                ${escapeHtml(status)}
               </span>
             </div>
 
-            <h2 style="color: #1f2937; margin: 0 0 20px 0;">Hello, ${passengerName}!</h2>
+            <h2 style="color: #1f2937; margin: 0 0 20px 0;">Hello, ${safeName}!</h2>
             
             ${status === "confirmed" ? `
               <p style="color: #4b5563; line-height: 1.6;">Great news! Your booking has been confirmed. Get ready for your trip!</p>
@@ -97,27 +181,27 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
                 <span style="color: #6b7280; font-size: 13px;">Booking ID</span>
-                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600; font-family: monospace;">#${bookingId.slice(0, 8)}</p>
+                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600; font-family: monospace;">#${safeBookingId.slice(0, 8)}</p>
               </div>
 
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
                 <span style="color: #6b7280; font-size: 13px;">Route</span>
-                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${route.origin} → ${route.destination}</p>
+                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${safeOrigin} → ${safeDestination}</p>
               </div>
 
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
                 <span style="color: #6b7280; font-size: 13px;">Date & Time</span>
-                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${route.date} at ${route.departureTime}</p>
+                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${safeDate} at ${safeDepartureTime}</p>
               </div>
 
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
                 <span style="color: #6b7280; font-size: 13px;">Seats</span>
-                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${seats.join(", ")}</p>
+                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${seats.map(s => String(Number(s))).join(", ")}</p>
               </div>
 
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
                 <span style="color: #6b7280; font-size: 13px;">Total Price</span>
-                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600; font-size: 20px;">${totalPrice} LE</p>
+                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600; font-size: 20px;">${Number(totalPrice)} LE</p>
               </div>
 
               <div>
