@@ -35,10 +35,13 @@
     "login": "Login",
     "logout": "Logout"
   },
+
   "hero": {
-    "title": "Travel Smart, Arrive Happy",
+    "welcome": "Everyday BUS,",
+    "title": "Live a Different Experience With Us",
     "subtitle": "Egypt's Most Trusted Transfer Service",
-    "findTransfer": "Find a transfer"
+    "findTransfer": "Find a transfer",
+    "trustedBy10000Travelers": "Trusted by 10,000+ travelers"
   },
   "search": {
     "pickupLocation": "Pick-up Location",

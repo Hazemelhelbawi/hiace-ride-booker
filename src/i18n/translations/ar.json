@@ -28,9 +28,11 @@
     "logout": "تسجيل الخروج"
   },
   "hero": {
-    "title": "سافر بذكاء، وصل بسعادة",
+    "welcome": "Everyday BUS",
+    "title": "عيش تجربة مختلفة معانا كل يوم",
     "subtitle": "خدمة التوصيل الأكثر ثقة في مصر",
-    "findTransfer": "ابحث عن رحلة"
+    "findTransfer": "ابحث عن رحلة",
+    "trustedBy10000Travelers": "يثق بنا أكثر من 10,000 مسافر"
   },
   "search": {
     "pickupLocation": "مكان الانطلاق",

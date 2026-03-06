@@ -1,14 +1,14 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useRoutes } from '@/hooks/useData';
-import RouteCard from '@/components/RouteCard';
-import Navbar from '@/components/Navbar';
-import PromoBanner from '@/components/PromoBanner';
-import Testimonials from '@/components/Testimonials';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useRoutes } from "@/hooks/useData";
+import RouteCard from "@/components/RouteCard";
+import Navbar from "@/components/Navbar";
+import PromoBanner from "@/components/PromoBanner";
+import Testimonials from "@/components/Testimonials";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,10 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, Calendar, Users, Bus, Clock, ThumbsUp, Loader2 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import heroImage from '@/assets/hero-van.jpg';
-import destinationsImage from '@/assets/egypt-destinations.jpg';
+import {
+  MapPin,
+  Calendar,
+  Users,
+  Bus,
+  Clock,
+  ThumbsUp,
+  Loader2,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+// import heroImage from "@/assets/hero-van.jpg";
+import hero from "@/assets/hero.png";
+import logoImage from "@/assets/logo.png";
+// import destinationsImage from "@/assets/egypt-destinations.jpg";
+import aboutImage from "@/assets/about.png";
 
 interface FilterOptions {
   origin?: string;
@@ -37,7 +48,7 @@ const Routes: React.FC = () => {
 
   // Get unique origins and destinations from routes
   const uniqueOrigins = useMemo(() => {
-    const origins = [...new Set(routes.map(r => r.origin))];
+    const origins = [...new Set(routes.map((r) => r.origin))];
     return origins.sort();
   }, [routes]);
 
@@ -45,12 +56,12 @@ const Routes: React.FC = () => {
     // If origin is selected, show only destinations available from that origin
     if (filters.origin) {
       const destinations = routes
-        .filter(r => r.origin === filters.origin)
-        .map(r => r.destination);
+        .filter((r) => r.origin === filters.origin)
+        .map((r) => r.destination);
       return [...new Set(destinations)].sort();
     }
     // Otherwise show all destinations
-    const destinations = [...new Set(routes.map(r => r.destination))];
+    const destinations = [...new Set(routes.map((r) => r.destination))];
     return destinations.sort();
   }, [routes, filters.origin]);
 
@@ -58,8 +69,8 @@ const Routes: React.FC = () => {
   const availableOrigins = useMemo(() => {
     if (filters.destination) {
       const origins = routes
-        .filter(r => r.destination === filters.destination)
-        .map(r => r.origin);
+        .filter((r) => r.destination === filters.destination)
+        .map((r) => r.origin);
       return [...new Set(origins)].sort();
     }
     return uniqueOrigins;
@@ -83,27 +94,27 @@ const Routes: React.FC = () => {
     return filtered;
   }, [filters, routes]);
 
-  const handleBook = (route: typeof routes[0]) => {
+  const handleBook = (route: (typeof routes)[0]) => {
     if (!isAuthenticated) {
-      navigate('/auth', { state: { from: '/', routeId: route.id } });
+      navigate("/auth", { state: { from: "/", routeId: route.id } });
       return;
     }
     navigate(`/booking/${route.id}`);
   };
 
   const handleOriginChange = (value: string) => {
-    setFilters((prev) => ({ 
-      ...prev, 
-      origin: value === 'all' ? undefined : value,
+    setFilters((prev) => ({
+      ...prev,
+      origin: value === "all" ? undefined : value,
       // Reset destination if it's not available from new origin
-      destination: value === 'all' ? prev.destination : undefined
+      destination: value === "all" ? prev.destination : undefined,
     }));
   };
 
   const handleDestinationChange = (value: string) => {
-    setFilters((prev) => ({ 
-      ...prev, 
-      destination: value === 'all' ? undefined : value 
+    setFilters((prev) => ({
+      ...prev,
+      destination: value === "all" ? undefined : value,
     }));
   };
 
@@ -115,12 +126,13 @@ const Routes: React.FC = () => {
     <div className="min-h-screen bg-background">
       <PromoBanner />
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative h-[650px] flex items-center justify-center overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
+          style={{ backgroundImage: `url(${hero})` }}
+          // style={{ backgroundImage: `url(${heroImage})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50"></div>
         </div>
@@ -129,28 +141,43 @@ const Routes: React.FC = () => {
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
               <Bus className="w-5 h-5 text-white" />
-              <span className="text-white/90 text-sm font-medium">Trusted by 10,000+ travelers</span>
+              <span className="text-white/90 text-sm font-medium">
+                {t("hero.trustedBy10000Travelers")}
+              </span>
             </div>
+            <div className="flex items-center justify-center">
+              <img src={logoImage} alt="logo" />
+            </div>
+            {/* <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
+                {t("hero.welcome")}
+              </h1> */}
             <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
-              {t('hero.title')}
+              {t("hero.title")}
             </h1>
             <p className="text-white/90 text-xl md:text-2xl font-medium max-w-2xl mx-auto">
-              {t('hero.subtitle')}
+              {t("hero.subtitle")}
             </p>
           </div>
 
           <Card className="max-w-5xl mx-auto bg-card/95 backdrop-blur-lg border-0 shadow-2xl p-8 rounded-2xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="space-y-2">
-                <label className="text-foreground text-sm font-medium block">{t('search.pickupLocation')}</label>
+                <label className="text-foreground text-sm font-medium block">
+                  {t("search.pickupLocation")}
+                </label>
                 <div className="relative">
                   <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary z-10" />
-                  <Select value={filters.origin || 'all'} onValueChange={handleOriginChange}>
+                  <Select
+                    value={filters.origin || "all"}
+                    onValueChange={handleOriginChange}
+                  >
                     <SelectTrigger className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary">
-                      <SelectValue placeholder={t('search.pickupLocation')} />
+                      <SelectValue placeholder={t("search.pickupLocation")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t('search.allLocations') || 'All Locations'}</SelectItem>
+                      <SelectItem value="all">
+                        {t("search.allLocations") || "All Locations"}
+                      </SelectItem>
                       {availableOrigins.map((origin) => (
                         <SelectItem key={origin} value={origin}>
                           {origin}
@@ -160,17 +187,24 @@ const Routes: React.FC = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <label className="text-foreground text-sm font-medium block">{t('search.dropoffLocation')}</label>
+                <label className="text-foreground text-sm font-medium block">
+                  {t("search.dropoffLocation")}
+                </label>
                 <div className="relative">
                   <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary z-10" />
-                  <Select value={filters.destination || 'all'} onValueChange={handleDestinationChange}>
+                  <Select
+                    value={filters.destination || "all"}
+                    onValueChange={handleDestinationChange}
+                  >
                     <SelectTrigger className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary">
-                      <SelectValue placeholder={t('search.dropoffLocation')} />
+                      <SelectValue placeholder={t("search.dropoffLocation")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t('search.allLocations') || 'All Locations'}</SelectItem>
+                      <SelectItem value="all">
+                        {t("search.allLocations") || "All Locations"}
+                      </SelectItem>
                       {uniqueDestinations.map((destination) => (
                         <SelectItem key={destination} value={destination}>
                           {destination}
@@ -182,7 +216,9 @@ const Routes: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-foreground text-sm font-medium block">{t('search.quantity')}</label>
+                <label className="text-foreground text-sm font-medium block">
+                  {t("search.quantity")}
+                </label>
                 <div className="relative">
                   <Users className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                   <Input
@@ -191,7 +227,7 @@ const Routes: React.FC = () => {
                     max="12"
                     value={passengers}
                     onChange={(e) => setPassengers(Number(e.target.value))}
-                    placeholder={t('search.howManyPeople')}
+                    placeholder={t("search.howManyPeople")}
                     className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
                   />
                 </div>
@@ -200,23 +236,29 @@ const Routes: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
               <div className="space-y-2">
-                <label className="text-foreground text-sm font-medium block">{t('search.departureDate')}</label>
+                <label className="text-foreground text-sm font-medium block">
+                  {t("search.departureDate")}
+                </label>
                 <div className="relative">
                   <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                   <Input
                     type="date"
-                    value={filters.date || ''}
+                    value={filters.date || ""}
                     onChange={handleDateChange}
                     className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
 
-              <Button 
+              <Button
                 className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg w-full rounded-xl shadow-lg hover:shadow-xl transition-all"
-                onClick={() => document.getElementById('routes')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() =>
+                  document
+                    .getElementById("routes")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
               >
-                {t('hero.findTransfer')}
+                {t("hero.findTransfer")}
               </Button>
             </div>
           </Card>
@@ -227,32 +269,48 @@ const Routes: React.FC = () => {
       <section className="py-24 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Why Choose BookBus?</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Experience the best way to travel across Egypt</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Why Choose BookBus?
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Experience the best way to travel across Egypt
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="text-center group">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
                 <Bus className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{t('features.routeAvailability')}</h3>
-              <p className="text-muted-foreground leading-relaxed">{t('features.routeAvailabilityDesc')}</p>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                {t("features.routeAvailability")}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {t("features.routeAvailabilityDesc")}
+              </p>
             </div>
 
             <div className="text-center group">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent to-accent-light flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
                 <Clock className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{t('features.comfort')}</h3>
-              <p className="text-muted-foreground leading-relaxed">{t('features.comfortDesc')}</p>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                {t("features.comfort")}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {t("features.comfortDesc")}
+              </p>
             </div>
 
             <div className="text-center group">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
                 <ThumbsUp className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{t('features.pricing')}</h3>
-              <p className="text-muted-foreground leading-relaxed">{t('features.pricingDesc')}</p>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                {t("features.pricing")}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {t("features.pricingDesc")}
+              </p>
             </div>
           </div>
         </div>
@@ -267,19 +325,28 @@ const Routes: React.FC = () => {
                 <MapPin className="w-4 h-4" />
                 Explore Egypt
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-foreground mb-6 leading-tight">{t('destinations.title')}</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">{t('destinations.description')}</p>
-              <Button 
+              <h2 className="text-4xl md:text-5xl font-black text-foreground mb-6 leading-tight">
+                {t("destinations.title")}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+                {t("destinations.description")}
+              </p>
+              <Button
                 className="bg-primary hover:bg-primary-dark text-white font-bold text-lg px-8 py-6 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all"
-                onClick={() => document.getElementById('routes')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() =>
+                  document
+                    .getElementById("routes")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
               >
-                {t('destinations.exploreRoutes')}
+                {t("destinations.exploreRoutes")}
               </Button>
             </div>
             <div className="order-1 lg:order-2">
-              <img 
-                src={destinationsImage} 
-                alt="Egyptian Destinations" 
+              <img
+                // src={destinationsImage}
+                src={aboutImage}
+                alt="about Image"
                 className="rounded-3xl shadow-2xl w-full"
               />
             </div>
@@ -294,8 +361,12 @@ const Routes: React.FC = () => {
       <section id="routes" className="py-24 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
-            <h2 className="text-4xl font-black text-foreground mb-4">{t('routes.title')}</h2>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">{t('routes.subtitle')}</p>
+            <h2 className="text-4xl font-black text-foreground mb-4">
+              {t("routes.title")}
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              {t("routes.subtitle")}
+            </p>
           </div>
 
           {isLoading ? (
@@ -305,13 +376,21 @@ const Routes: React.FC = () => {
           ) : filteredRoutes.length === 0 ? (
             <Card className="p-12 text-center border-2 border-dashed rounded-2xl">
               <Bus className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">{t('routes.noRoutes')}</h3>
-              <p className="text-muted-foreground">{t('routes.noRoutesDesc')}</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {t("routes.noRoutes")}
+              </h3>
+              <p className="text-muted-foreground">
+                {t("routes.noRoutesDesc")}
+              </p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredRoutes.map((route) => (
-                <RouteCard key={route.id} route={route} onBook={() => handleBook(route)} />
+                <RouteCard
+                  key={route.id}
+                  route={route}
+                  onBook={() => handleBook(route)}
+                />
               ))}
             </div>
           )}
