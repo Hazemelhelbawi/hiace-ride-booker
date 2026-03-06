@@ -484,6 +484,14 @@ const AdminDashboard: React.FC = () => {
               <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
               {t("admin.promoCodes")}
             </TabsTrigger>
+            <TabsTrigger value="stops" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+              Stops
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <RouteIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+              Templates
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
