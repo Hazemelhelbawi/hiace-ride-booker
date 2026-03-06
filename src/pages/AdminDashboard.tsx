@@ -470,15 +470,15 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="bookings">{t("admin.bookings")}</TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-2">
-              <Calendar className="w-4 h-4" />
+          <TabsList className="flex flex-wrap h-auto gap-1">
+            <TabsTrigger value="bookings" className="text-xs sm:text-sm">{t("admin.bookings")}</TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="routes">{t("admin.routes")}</TabsTrigger>
-            <TabsTrigger value="promos" className="gap-2">
-              <Tag className="w-4 h-4" />
+            <TabsTrigger value="routes" className="text-xs sm:text-sm">{t("admin.routes")}</TabsTrigger>
+            <TabsTrigger value="promos" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
               {t("admin.promoCodes")}
             </TabsTrigger>
           </TabsList>
