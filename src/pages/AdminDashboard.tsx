@@ -485,9 +485,9 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="bookings">
             <Card className="border-2 shadow-lg">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{t("admin.allBookings")}</CardTitle>
-                <div className="flex gap-2">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <CardTitle className="text-lg sm:text-xl">{t("admin.allBookings")}</CardTitle>
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
