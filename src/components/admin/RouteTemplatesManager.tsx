@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Route, ArrowRight, GripVertical, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Route, ArrowRight, X, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 const REGIONS = [
