@@ -54,7 +54,7 @@ const BookingFlow: React.FC = () => {
 
     if (route) {
       // Initialize 14 seats for Toyota layout
-      const seatNumbers = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14];
+      const seatNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
       const initialSeats: Seat[] = seatNumbers.map((num) => ({
         number: num,
         isAvailable: !bookedSeats.includes(num),
