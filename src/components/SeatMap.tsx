@@ -25,37 +25,25 @@ const SeatMap: React.FC<SeatMapProps> = ({
       return;
     }
 
-    // Trigger animation
     setAnimatingSeat(seat.number);
     setTimeout(() => setAnimatingSeat(null), 300);
 
     onSeatSelect(seat.number);
   };
 
-  // Get seat by number
   const getSeat = (num: number): Seat | undefined =>
     seats.find((s) => s.number === num);
 
-  // Toyota 14-seat layout based on reference image
-  // Row 0: Driver, empty, empty, Seat 1 (premium)
-  // Row 1: Seat 2, Seat 3, aisle, empty
-  // Row 2: Seat 5, Seat 6, empty, Seat 7
-  // Row 3: Seat 8, Seat 9, empty, Seat 10
-  // Row 4: Seat 11, Seat 12, aisle, Seat 14
-
-  const renderSeat = (
-    seatNumber: number | null,
-    // isPremium: boolean = false,
-  ) => {
+  const renderSeat = (seatNumber: number | null) => {
     if (seatNumber === null) {
-      return <div className="w-16 h-20" />;
+      return <div className="w-14 h-18 sm:w-16 sm:h-20" />;
     }
 
     const seat = getSeat(seatNumber);
-    if (!seat) return <div className="w-16 h-20" />;
+    if (!seat) return <div className="w-14 h-18 sm:w-16 sm:h-20" />;
 
-    const price = seatPrice;
-    // const price = isPremium ? seatPrice + 100 : seatPrice;
+    // Use seat.price if available (supports premium pricing), fallback to seatPrice
+    const price = seat.price ?? seatPrice;
     const isAnimating = animatingSeat === seatNumber;
 
     return (
@@ -63,11 +51,10 @@ const SeatMap: React.FC<SeatMapProps> = ({
         onClick={() => handleSeatClick(seat)}
         disabled={!seat.isAvailable}
         className={cn(
-          "w-16 h-20 rounded-lg relative border-2",
+          "w-14 h-18 sm:w-16 sm:h-20 rounded-lg relative border-2",
           "flex flex-col items-center justify-end pb-1",
           "transition-all duration-300 ease-out",
           "hover:scale-105 active:scale-95",
-          // Animation classes
           isAnimating &&
             seat.isSelected &&
             "animate-[pulse_0.3s_ease-in-out] ring-4 ring-primary/50",
@@ -87,10 +74,10 @@ const SeatMap: React.FC<SeatMapProps> = ({
           transform: seat.isSelected ? "scale(1.02)" : undefined,
         }}
       >
-        {/* Price badge with animation */}
+        {/* Price badge */}
         <div
           className={cn(
-            "absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold text-white",
+            "absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold text-white",
             "transition-all duration-300",
             seat.isSelected
               ? "bg-primary scale-110"
@@ -102,15 +89,14 @@ const SeatMap: React.FC<SeatMapProps> = ({
           {price}
         </div>
 
-        {/* Seat icon with smooth color transition */}
+        {/* Seat icon */}
         <div
           className={cn(
             "flex-1 flex items-center justify-center transition-transform duration-300",
             seat.isSelected && "scale-105",
           )}
         >
-          <svg viewBox="0 0 40 40" className="w-10 h-10">
-            {/* Seat back */}
+          <svg viewBox="0 0 40 40" className="w-8 h-8 sm:w-10 sm:h-10">
             <rect
               x="5"
               y="2"
@@ -126,7 +112,6 @@ const SeatMap: React.FC<SeatMapProps> = ({
                     : "text-muted-foreground/50 fill-transparent",
               )}
             />
-            {/* Seat bottom */}
             <rect
               x="3"
               y="22"
@@ -145,10 +130,10 @@ const SeatMap: React.FC<SeatMapProps> = ({
           </svg>
         </div>
 
-        {/* Seat number with transition */}
+        {/* Seat number */}
         <span
           className={cn(
-            "text-sm font-semibold transition-all duration-300",
+            "text-xs sm:text-sm font-semibold transition-all duration-300",
             seat.isSelected
               ? "text-primary scale-110"
               : seat.isAvailable
@@ -159,7 +144,7 @@ const SeatMap: React.FC<SeatMapProps> = ({
           {seatNumber}
         </span>
 
-        {/* Selection checkmark animation */}
+        {/* Selection checkmark */}
         {seat.isSelected && (
           <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center animate-scale-in">
             <svg
@@ -182,31 +167,31 @@ const SeatMap: React.FC<SeatMapProps> = ({
   };
 
   const renderAisle = () => (
-    <div className="w-16 h-20 flex items-center justify-center">
-      <div className="w-10 h-14 rounded bg-muted-foreground/20" />
+    <div className="w-14 h-18 sm:w-16 sm:h-20 flex items-center justify-center">
+      <div className="w-8 h-12 sm:w-10 sm:h-14 rounded bg-muted-foreground/20" />
     </div>
   );
 
   const renderDriver = () => (
-    <div className="w-16 h-20 rounded-lg border-2 border-muted-foreground/30 bg-muted flex items-center justify-center">
-      <span className="text-2xl">👨‍✈️</span>
+    <div className="w-14 h-18 sm:w-16 sm:h-20 rounded-lg border-2 border-muted-foreground/30 bg-muted flex items-center justify-center">
+      <span className="text-xl sm:text-2xl">👨‍✈️</span>
     </div>
   );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white border-2 border-muted-foreground/30" />
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white border-2 border-muted-foreground/30" />
             <span className="text-muted-foreground">Available</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 border-2 border-primary" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-primary/10 border-2 border-primary" />
             <span className="text-muted-foreground">Selected</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-muted-foreground/20 border-2 border-muted-foreground/30" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-muted-foreground/20 border-2 border-muted-foreground/30" />
             <span className="text-muted-foreground">Booked</span>
           </div>
         </div>
@@ -215,47 +200,45 @@ const SeatMap: React.FC<SeatMapProps> = ({
         </div>
       </div>
 
-      <div className="bg-card p-6 rounded-2xl border-2 border-primary/20 shadow-lg">
-        {/* Red top bar like reference */}
-        <div className="h-2 bg-primary rounded-full mb-6" />
+      <div className="bg-card p-3 sm:p-6 rounded-2xl border-2 border-primary/20 shadow-lg">
+        <div className="h-2 bg-primary rounded-full mb-4 sm:mb-6" />
 
-        {/* Seats layout - Toyota 14 seats */}
-        <div className="space-y-3">
+        {/* Seats layout - Toyota 14 seats (including seat 4) */}
+        <div className="space-y-2 sm:space-y-3">
           {/* Row 1: Driver, empty, empty, Seat 1 (premium) */}
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-1.5 sm:gap-3">
             {renderDriver()}
-            <div className="w-16 h-20" />
-            <div className="w-16 h-20" />
+            <div className="w-14 h-18 sm:w-16 sm:h-20" />
+            <div className="w-14 h-18 sm:w-16 sm:h-20" />
             {renderSeat(1)}
-            {/* {renderSeat(1, true)} */}
           </div>
 
-          {/* Row 2: Seat 2, Seat 3, aisle, empty */}
-          <div className="flex justify-center gap-3">
+          {/* Row 2: Seat 2, Seat 3, aisle, Seat 4 */}
+          <div className="flex justify-center gap-1.5 sm:gap-3">
             {renderSeat(2)}
             {renderSeat(3)}
             {renderAisle()}
-            <div className="w-16 h-20" />
+            {renderSeat(4)}
           </div>
 
           {/* Row 3: Seat 5, Seat 6, empty, Seat 7 */}
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-1.5 sm:gap-3">
             {renderSeat(5)}
             {renderSeat(6)}
-            <div className="w-16 h-20" />
+            <div className="w-14 h-18 sm:w-16 sm:h-20" />
             {renderSeat(7)}
           </div>
 
           {/* Row 4: Seat 8, Seat 9, empty, Seat 10 */}
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-1.5 sm:gap-3">
             {renderSeat(8)}
             {renderSeat(9)}
-            <div className="w-16 h-20" />
+            <div className="w-14 h-18 sm:w-16 sm:h-20" />
             {renderSeat(10)}
           </div>
 
           {/* Row 5: Seat 11, Seat 12, aisle, Seat 14 */}
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-1.5 sm:gap-3">
             {renderSeat(11)}
             {renderSeat(12)}
             {renderAisle()}
@@ -263,9 +246,8 @@ const SeatMap: React.FC<SeatMapProps> = ({
           </div>
         </div>
 
-        {/* Van rear indicator */}
-        <div className="mt-6 flex justify-center">
-          <div className="px-6 py-2 bg-muted rounded-full text-xs text-muted-foreground font-medium">
+        <div className="mt-4 sm:mt-6 flex justify-center">
+          <div className="px-4 sm:px-6 py-2 bg-muted rounded-full text-xs text-muted-foreground font-medium">
             Rear of Van
           </div>
         </div>

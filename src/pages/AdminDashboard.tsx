@@ -377,7 +377,7 @@ const AdminDashboard: React.FC = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">
             {t("admin.dashboard")}
           </h1>
           <p className="text-muted-foreground">
@@ -386,7 +386,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-8">
           <Card className="border-2">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -470,24 +470,24 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="bookings">{t("admin.bookings")}</TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-2">
-              <Calendar className="w-4 h-4" />
+          <TabsList className="flex flex-wrap h-auto gap-1">
+            <TabsTrigger value="bookings" className="text-xs sm:text-sm">{t("admin.bookings")}</TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="routes">{t("admin.routes")}</TabsTrigger>
-            <TabsTrigger value="promos" className="gap-2">
-              <Tag className="w-4 h-4" />
+            <TabsTrigger value="routes" className="text-xs sm:text-sm">{t("admin.routes")}</TabsTrigger>
+            <TabsTrigger value="promos" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
               {t("admin.promoCodes")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
             <Card className="border-2 shadow-lg">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{t("admin.allBookings")}</CardTitle>
-                <div className="flex gap-2">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <CardTitle className="text-lg sm:text-xl">{t("admin.allBookings")}</CardTitle>
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
