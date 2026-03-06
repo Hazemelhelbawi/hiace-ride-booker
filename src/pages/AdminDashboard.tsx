@@ -932,6 +932,14 @@ const AdminDashboard: React.FC = () => {
           <TabsContent value="promos">
             <PromoCodeManager />
           </TabsContent>
+
+          <TabsContent value="stops">
+            <StopsManager />
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <RouteTemplatesManager />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
