@@ -59,6 +59,8 @@ import {
 import { toast } from "sonner";
 import BookingCalendar from "@/components/BookingCalendar";
 import PromoCodeManager from "@/components/admin/PromoCodeManager";
+import StopsManager from "@/components/admin/StopsManager";
+import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
 import { format } from "date-fns";
 
 interface RouteFormData {
