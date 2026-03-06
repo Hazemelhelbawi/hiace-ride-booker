@@ -217,8 +217,8 @@ const SeatMap: React.FC<SeatMapProps> = ({
           <div className="flex justify-center gap-1.5 sm:gap-3">
             {renderSeat(2)}
             {renderSeat(3)}
-            {renderAisle()}
             {renderSeat(4)}
+            {renderAisle()}
           </div>
 
           {/* Row 3: Seat 5, Seat 6, empty, Seat 7 */}
