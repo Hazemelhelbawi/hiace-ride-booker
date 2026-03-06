@@ -54,6 +54,7 @@ import {
   FileSpreadsheet,
   Calendar,
   Tag,
+  Route as RouteIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import BookingCalendar from "@/components/BookingCalendar";
