@@ -142,6 +142,78 @@ export type Database = {
         }
         Relationships: []
       }
+      route_template_stops: {
+        Row: {
+          created_at: string
+          id: string
+          route_template_id: string
+          sequence_order: number
+          stop_id: string
+          stop_role: Database["public"]["Enums"]["stop_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          route_template_id: string
+          sequence_order: number
+          stop_id: string
+          stop_role?: Database["public"]["Enums"]["stop_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          route_template_id?: string
+          sequence_order?: number
+          stop_id?: string
+          stop_role?: Database["public"]["Enums"]["stop_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_template_stops_route_template_id_fkey"
+            columns: ["route_template_id"]
+            isOneToOne: false
+            referencedRelation: "route_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_template_stops_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_templates: {
+        Row: {
+          created_at: string
+          destination_region: string
+          id: string
+          is_active: boolean
+          name: string
+          origin_region: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destination_region: string
+          id?: string
+          is_active?: boolean
+          name: string
+          origin_region: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destination_region?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          origin_region?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       routes: {
         Row: {
           arrival_time: string
@@ -190,6 +262,48 @@ export type Database = {
         }
         Relationships: []
       }
+      stops: {
+        Row: {
+          address: string | null
+          city: string
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          name_ar: string
+          name_en: string
+          region: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name_ar: string
+          name_en: string
+          region: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name_ar?: string
+          name_en?: string
+          region?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -226,6 +340,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      stop_role: "pickup" | "dropoff" | "both"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -354,6 +469,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      stop_role: ["pickup", "dropoff", "both"],
     },
   },
 } as const
