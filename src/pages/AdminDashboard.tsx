@@ -54,10 +54,13 @@ import {
   FileSpreadsheet,
   Calendar,
   Tag,
+  Route as RouteIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import BookingCalendar from "@/components/BookingCalendar";
 import PromoCodeManager from "@/components/admin/PromoCodeManager";
+import StopsManager from "@/components/admin/StopsManager";
+import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
 import { format } from "date-fns";
 
 interface RouteFormData {
@@ -480,6 +483,14 @@ const AdminDashboard: React.FC = () => {
             <TabsTrigger value="promos" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
               {t("admin.promoCodes")}
+            </TabsTrigger>
+            <TabsTrigger value="stops" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+              Stops
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <RouteIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+              Templates
             </TabsTrigger>
           </TabsList>
 
@@ -920,6 +931,14 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="promos">
             <PromoCodeManager />
+          </TabsContent>
+
+          <TabsContent value="stops">
+            <StopsManager />
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <RouteTemplatesManager />
           </TabsContent>
         </Tabs>
       </div>
