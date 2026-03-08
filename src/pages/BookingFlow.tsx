@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
+import { useStops } from '@/hooks/useStopsData';
 import { useIncrementPromoCodeUsage, type PromoCode } from '@/hooks/usePromoCodes';
 import { sendBookingEmail } from '@/services/emailService';
 import { useAuth } from '@/contexts/AuthContext';
