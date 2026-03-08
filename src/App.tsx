@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import PrivateTripRequest from "./pages/PrivateTripRequest";
 import Destinations from "./pages/Destinations";
 import About from "./pages/About";
 import { Loader2 } from "lucide-react";
@@ -95,6 +96,7 @@ const App = () => {
                   }
                 />
                 <Route path="/destinations" element={<Destinations />} />
+                <Route path="/private-trip" element={<PrivateTripRequest />} />
                 <Route path="/about" element={<About />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

@@ -109,6 +109,48 @@ export type Database = {
           },
         ]
       }
+      private_trip_requests: {
+        Row: {
+          created_at: string
+          dropoff_location: string
+          id: string
+          name: string
+          notes: string | null
+          number_of_passengers: number
+          phone: string
+          pickup_location: string
+          preferred_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dropoff_location: string
+          id?: string
+          name: string
+          notes?: string | null
+          number_of_passengers?: number
+          phone: string
+          pickup_location: string
+          preferred_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dropoff_location?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          number_of_passengers?: number
+          phone?: string
+          pickup_location?: string
+          preferred_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

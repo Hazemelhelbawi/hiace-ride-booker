@@ -57,6 +57,7 @@ import {
   FileSpreadsheet,
   Calendar,
   Tag,
+  Car,
   Route as RouteIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -65,6 +66,7 @@ import PromoCodeManager from "@/components/admin/PromoCodeManager";
 import StopsManager from "@/components/admin/StopsManager";
 import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
 import SchedulesManager from "@/components/admin/SchedulesManager";
+import PrivateTripRequestsManager from "@/components/admin/PrivateTripRequestsManager";
 import { format } from "date-fns";
 
 interface RouteFormData {
@@ -504,6 +506,10 @@ const AdminDashboard: React.FC = () => {
             <TabsTrigger value="schedules" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
               Schedules
+            </TabsTrigger>
+            <TabsTrigger value="private-requests" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Car className="w-3 h-3 sm:w-4 sm:h-4" />
+              Private Trips
             </TabsTrigger>
           </TabsList>
 
@@ -985,6 +991,10 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="schedules">
             <SchedulesManager />
+          </TabsContent>
+
+          <TabsContent value="private-requests">
+            <PrivateTripRequestsManager />
           </TabsContent>
         </Tabs>
       </div>
