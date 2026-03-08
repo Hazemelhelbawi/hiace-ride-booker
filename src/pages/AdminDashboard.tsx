@@ -61,6 +61,7 @@ import BookingCalendar from "@/components/BookingCalendar";
 import PromoCodeManager from "@/components/admin/PromoCodeManager";
 import StopsManager from "@/components/admin/StopsManager";
 import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
+import SchedulesManager from "@/components/admin/SchedulesManager";
 import { format } from "date-fns";
 
 interface RouteFormData {
