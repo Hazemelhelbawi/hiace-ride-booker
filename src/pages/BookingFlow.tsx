@@ -265,17 +265,11 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {pickupStops.length > 0 ? (
-                              pickupStops.map(stop => (
-                                <SelectItem key={stop.id} value={stop.name_en}>
-                                  {stop.name_en} - {stop.name_ar}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value={route.origin}>
-                                {route.origin}
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
                               </SelectItem>
-                            )}
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -289,17 +283,11 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {dropoffStops.length > 0 ? (
-                              dropoffStops.map(stop => (
-                                <SelectItem key={stop.id} value={stop.name_en}>
-                                  {stop.name_en} - {stop.name_ar}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value={route.destination}>
-                                {route.destination}
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
                               </SelectItem>
-                            )}
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
