@@ -324,6 +324,7 @@ const AdminDashboard: React.FC = () => {
       date: route.date,
       driver_name: route.driver_name,
       van_number: route.van_number,
+      van_type: route.total_seats <= 12 ? '12_seats' : '13_seats',
     });
     setIsRouteDialogOpen(true);
   };
