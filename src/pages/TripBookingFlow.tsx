@@ -222,7 +222,7 @@ const TripBookingFlow: React.FC = () => {
         .from('bookings')
         .insert([{
           user_id: user.id,
-          route_id: '00000000-0000-0000-0000-000000000000', // placeholder for legacy field
+          route_id: null as any,
           trip_instance_id: selectedTrip.id,
           pickup_stop_id: pickupStopId,
           dropoff_stop_id: dropoffStopId,
