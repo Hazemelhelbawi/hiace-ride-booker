@@ -262,11 +262,13 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {allStops.map(stop => (
-                              <SelectItem key={stop.id} value={stop.name_en}>
-                                {stop.name_en} - {stop.name_ar}
-                              </SelectItem>
-                            ))}
+                            {allStops
+                              .filter(stop => stop.region.toLowerCase() === route.origin.toLowerCase())
+                              .map(stop => (
+                                <SelectItem key={stop.id} value={stop.name_en}>
+                                  {stop.name_en} - {stop.name_ar}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -280,11 +282,13 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {allStops.map(stop => (
-                              <SelectItem key={stop.id} value={stop.name_en}>
-                                {stop.name_en} - {stop.name_ar}
-                              </SelectItem>
-                            ))}
+                            {allStops
+                              .filter(stop => stop.region.toLowerCase() === route.destination.toLowerCase())
+                              .map(stop => (
+                                <SelectItem key={stop.id} value={stop.name_en}>
+                                  {stop.name_en} - {stop.name_ar}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
