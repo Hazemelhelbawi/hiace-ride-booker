@@ -187,19 +187,11 @@ export const generateTripInstances = async (scheduleId: string): Promise<number>
 
   if (instances.length === 0) return 0;
 
-  // For daily_repeats > 1, we can't use upsert with unique constraint on (schedule_id, trip_date)
-  // So we'll insert and ignore duplicates
-  if (dailyRepeats > 1) {
-    const { error } = await supabase
-      .from('trip_instances')
-      .insert(instances);
-    if (error) { console.error('Error generating trips:', error); throw error; }
-  } else {
-    const { error } = await supabase
-      .from('trip_instances')
-      .upsert(instances, { onConflict: 'schedule_id,trip_date', ignoreDuplicates: true });
-    if (error) { console.error('Error generating trips:', error); throw error; }
-  }
+  // Insert all instances (unique constraint was removed to allow daily_repeats > 1)
+  const { error } = await supabase
+    .from('trip_instances')
+    .insert(instances);
+  if (error) { console.error('Error generating trips:', error); throw error; }
   return instances.length;
 };
 

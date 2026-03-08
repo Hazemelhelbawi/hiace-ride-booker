@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
 import PromoCodeInput from '@/components/PromoCodeInput';
+import PaymentUpload from '@/components/PaymentUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
