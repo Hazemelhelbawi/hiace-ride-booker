@@ -162,6 +162,33 @@ const SchedulesManager: React.FC = () => {
                         </div>
                       </div>
                     )}
+                    {/* Van Type */}
+                    <div>
+                      <Label>Van Type</Label>
+                      <Select value={form.van_type} onValueChange={(v: any) => setForm(p => ({
+                        ...p,
+                        van_type: v,
+                        seats_per_vehicle: v === '12_seats' ? 12 : 13,
+                      }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="13_seats">13 Seats (with seat 4)</SelectItem>
+                          <SelectItem value="12_seats">12 Seats (without seat 4)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Daily Repeats */}
+                    <div>
+                      <Label>Daily Repeats (same trip per day)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={form.daily_repeats}
+                        onChange={e => setForm(p => ({ ...p, daily_repeats: parseInt(e.target.value) || 1 }))}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">How many times this trip runs each day (1-10)</p>
+                    </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <Label>Vehicles</Label>
@@ -178,7 +205,7 @@ const SchedulesManager: React.FC = () => {
                     </div>
                     <div className="p-3 bg-muted rounded-lg text-sm">
                       <Bus className="w-4 h-4 inline mr-1" />
-                      Total Capacity: <strong>{form.vehicle_count * form.seats_per_vehicle}</strong> seats
+                      Total Capacity: <strong>{form.vehicle_count * form.seats_per_vehicle}</strong> seats per trip × <strong>{form.daily_repeats}</strong> repeat(s) = <strong>{form.vehicle_count * form.seats_per_vehicle * form.daily_repeats}</strong> total seats/day
                     </div>
                     <Button type="submit" className="w-full" disabled={createSchedule.isPending}>
                       {createSchedule.isPending ? 'Creating...' : 'Create Schedule'}
