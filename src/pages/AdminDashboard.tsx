@@ -602,8 +602,17 @@ const AdminDashboard: React.FC = () => {
                                   ))}
                                 </div>
                               </TableCell>
-                              <TableCell className="font-semibold">
+                               <TableCell className="font-semibold">
                                 {booking.total_price} {t("common.currency")}
+                              </TableCell>
+                              <TableCell>
+                                {(booking as any).payment_screenshot_url ? (
+                                  <a href={(booking as any).payment_screenshot_url} target="_blank" rel="noopener noreferrer">
+                                    <img src={(booking as any).payment_screenshot_url} alt="Payment" className="w-10 h-10 rounded object-cover border hover:scale-150 transition-transform" />
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
