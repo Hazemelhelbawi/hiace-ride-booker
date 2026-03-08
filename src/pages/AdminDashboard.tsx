@@ -944,6 +944,10 @@ const AdminDashboard: React.FC = () => {
           <TabsContent value="templates">
             <RouteTemplatesManager />
           </TabsContent>
+
+          <TabsContent value="schedules">
+            <SchedulesManager />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
