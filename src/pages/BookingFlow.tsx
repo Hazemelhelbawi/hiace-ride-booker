@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
 import { useIncrementPromoCodeUsage, type PromoCode } from '@/hooks/usePromoCodes';
@@ -8,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
 import PromoCodeInput from '@/components/PromoCodeInput';
+import PaymentUpload from '@/components/PaymentUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +40,7 @@ const BookingFlow: React.FC = () => {
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState<string>('');
   const [passengerInfo, setPassengerInfo] = useState<PassengerInfo>({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -53,8 +56,10 @@ const BookingFlow: React.FC = () => {
     }
 
     if (route) {
-      // Initialize 14 seats for Toyota layout
-      const seatNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
+      // Use total_seats to determine van layout
+      const seatNumbers = route.total_seats <= 12
+        ? [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14]
+        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
       const initialSeats: Seat[] = seatNumbers.map((num) => ({
         number: num,
         isAvailable: !bookedSeats.includes(num),
@@ -126,6 +131,7 @@ const BookingFlow: React.FC = () => {
         total_price: totalPrice,
         promo_code: appliedPromoCode?.code || null,
         discount_amount: discountAmount,
+        payment_screenshot_url: paymentScreenshotUrl || null,
         status: 'pending',
         is_paid: false,
       };
@@ -283,6 +289,12 @@ const BookingFlow: React.FC = () => {
                         rows={4}
                       />
                     </div>
+
+                    {/* Payment Upload */}
+                    <PaymentUpload
+                      onUpload={setPaymentScreenshotUrl}
+                      uploadedUrl={paymentScreenshotUrl}
+                    />
 
                     <Button
                       type="submit"

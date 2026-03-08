@@ -42,6 +42,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   BarChart,
   Users,
   MapPin,
@@ -73,6 +76,7 @@ interface RouteFormData {
   date: string;
   driver_name: string;
   van_number: string;
+  van_type: '13_seats' | '12_seats';
 }
 
 const AdminDashboard: React.FC = () => {
@@ -103,6 +107,7 @@ const AdminDashboard: React.FC = () => {
     date: "",
     driver_name: "",
     van_number: "",
+    van_type: "13_seats",
   });
 
   // Redirect if not admin
@@ -260,6 +265,7 @@ const AdminDashboard: React.FC = () => {
     e.preventDefault();
 
     try {
+      const vanSeats = newRoute.van_type === '12_seats' ? 12 : 13;
       await createRoute.mutateAsync({
         origin: newRoute.origin,
         destination: newRoute.destination,
@@ -269,8 +275,8 @@ const AdminDashboard: React.FC = () => {
         date: newRoute.date,
         driver_name: newRoute.driver_name,
         van_number: newRoute.van_number,
-        available_seats: 14,
-        total_seats: 14,
+        available_seats: vanSeats,
+        total_seats: vanSeats,
       });
 
       setIsRouteDialogOpen(false);
@@ -321,6 +327,7 @@ const AdminDashboard: React.FC = () => {
       date: route.date,
       driver_name: route.driver_name,
       van_number: route.van_number,
+      van_type: route.total_seats <= 12 ? '12_seats' : '13_seats',
     });
     setIsRouteDialogOpen(true);
   };
@@ -335,6 +342,7 @@ const AdminDashboard: React.FC = () => {
       date: "",
       driver_name: "",
       van_number: "",
+      van_type: "13_seats",
     });
     setEditingRoute(null);
   };
@@ -858,6 +866,25 @@ const AdminDashboard: React.FC = () => {
                             required
                           />
                         </div>
+                      </div>
+
+                      {/* Van Type Selection */}
+                      <div className="space-y-2">
+                        <Label>Van Type</Label>
+                        <Select
+                          value={newRoute.van_type}
+                          onValueChange={(v: '13_seats' | '12_seats') =>
+                            setNewRoute((prev) => ({ ...prev, van_type: v }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="13_seats">13 Seats (with seat 4)</SelectItem>
+                            <SelectItem value="12_seats">12 Seats (without seat 4)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <Button
