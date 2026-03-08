@@ -73,6 +73,7 @@ interface RouteFormData {
   date: string;
   driver_name: string;
   van_number: string;
+  van_type: '13_seats' | '12_seats';
 }
 
 const AdminDashboard: React.FC = () => {

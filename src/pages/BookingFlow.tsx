@@ -288,6 +288,12 @@ const BookingFlow: React.FC = () => {
                       />
                     </div>
 
+                    {/* Payment Upload */}
+                    <PaymentUpload
+                      onUploadComplete={setPaymentScreenshotUrl}
+                      uploadedUrl={paymentScreenshotUrl}
+                    />
+
                     <Button
                       type="submit"
                       disabled={isSubmitting}
