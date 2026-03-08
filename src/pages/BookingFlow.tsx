@@ -40,6 +40,7 @@ const BookingFlow: React.FC = () => {
   const { data: route, isLoading: routeLoading } = useRoute(routeId);
   const { data: bookedSeats = [] } = useBookedSeats(routeId);
   const createBooking = useCreateBooking();
+  const { data: allStops = [] } = useStops();
   const incrementPromoUsage = useIncrementPromoCodeUsage();
 
   const [seats, setSeats] = useState<Seat[]>([]);
