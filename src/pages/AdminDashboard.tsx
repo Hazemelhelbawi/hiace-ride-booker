@@ -492,6 +492,10 @@ const AdminDashboard: React.FC = () => {
               <RouteIcon className="w-3 h-3 sm:w-4 sm:h-4" />
               Templates
             </TabsTrigger>
+            <TabsTrigger value="schedules" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              Schedules
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
