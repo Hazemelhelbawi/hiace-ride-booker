@@ -280,7 +280,8 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               {schedule.route_template?.name || 'Unknown Route'} •{' '}
               {schedule.start_date} → {schedule.end_date} •{' '}
               {schedule.vehicle_count} vehicles × {schedule.seats_per_vehicle} seats = {totalSeats} total •{' '}
-              {schedule.price} LE
+              {schedule.price} LE • {schedule.van_type === '12_seats' ? '12-seat van' : '13-seat van'} •{' '}
+              {schedule.daily_repeats > 1 ? `${schedule.daily_repeats}x daily` : 'Once daily'}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
