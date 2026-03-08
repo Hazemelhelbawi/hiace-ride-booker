@@ -57,6 +57,7 @@ import {
   FileSpreadsheet,
   Calendar,
   Tag,
+  Car,
   Route as RouteIcon,
 } from "lucide-react";
 import { toast } from "sonner";
