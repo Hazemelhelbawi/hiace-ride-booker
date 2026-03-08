@@ -36,7 +36,7 @@ const Navbar: React.FC = () => {
       </Link>
       {!user?.isAdmin && (
         <>
-          <Link
+           <Link
             to="/destinations"
             onClick={() => setMobileOpen(false)}
             className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -44,6 +44,15 @@ const Navbar: React.FC = () => {
             }`}
           >
             {t('nav.destinations')}
+          </Link>
+          <Link
+            to="/private-trip"
+            onClick={() => setMobileOpen(false)}
+            className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
+              isActive('/private-trip') ? 'text-primary' : 'text-foreground'
+            }`}
+          >
+            <Car className="w-3.5 h-3.5" /> Private Trip
           </Link>
           <Link
             to="/about"
