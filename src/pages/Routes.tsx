@@ -24,6 +24,7 @@ import {
   Clock,
   ThumbsUp,
   Loader2,
+  Car,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 // import heroImage from "@/assets/hero-van.jpg";
