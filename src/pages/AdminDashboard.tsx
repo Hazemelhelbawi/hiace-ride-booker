@@ -506,6 +506,10 @@ const AdminDashboard: React.FC = () => {
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
               Schedules
             </TabsTrigger>
+            <TabsTrigger value="private-requests" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Car className="w-3 h-3 sm:w-4 sm:h-4" />
+              Private Trips
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
