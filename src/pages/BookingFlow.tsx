@@ -124,6 +124,12 @@ const BookingFlow: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      const notesWithStops = [
+        passengerInfo.pickupPoint ? `Pickup: ${passengerInfo.pickupPoint}` : '',
+        passengerInfo.dropoffPoint ? `Dropoff: ${passengerInfo.dropoffPoint}` : '',
+        passengerInfo.notes || '',
+      ].filter(Boolean).join(' | ');
+
       const bookingData = {
         user_id: user.id,
         route_id: route.id,
@@ -131,7 +137,7 @@ const BookingFlow: React.FC = () => {
         passenger_name: passengerInfo.name,
         passenger_phone: passengerInfo.phone,
         passenger_email: passengerInfo.email,
-        passenger_notes: passengerInfo.notes || null,
+        passenger_notes: notesWithStops || null,
         total_price: totalPrice,
         promo_code: appliedPromoCode?.code || null,
         discount_amount: discountAmount,
