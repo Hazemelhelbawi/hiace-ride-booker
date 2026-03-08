@@ -537,7 +537,8 @@ const AdminDashboard: React.FC = () => {
                         <TableHead>{t("admin.route")}</TableHead>
                         <TableHead>{t("admin.date")}</TableHead>
                         <TableHead>{t("admin.seats")}</TableHead>
-                        <TableHead>{t("admin.total")}</TableHead>
+                         <TableHead>{t("admin.total")}</TableHead>
+                        <TableHead>Screenshot</TableHead>
                         <TableHead>{t("admin.paid")}</TableHead>
                         <TableHead>{t("admin.status")}</TableHead>
                         <TableHead>{t("admin.actions")}</TableHead>
