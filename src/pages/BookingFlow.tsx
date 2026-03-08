@@ -43,6 +43,31 @@ const BookingFlow: React.FC = () => {
   const { data: allStops = [] } = useStops();
   const incrementPromoUsage = useIncrementPromoCodeUsage();
 
+  // Filter stops for pickup (matching route origin) and dropoff (matching route destination)
+  const pickupStops = useMemo(() => {
+    if (!route) return [];
+    const originLower = route.origin.toLowerCase();
+    const matched = allStops.filter(stop =>
+      stop.region.toLowerCase() === originLower ||
+      stop.city.toLowerCase() === originLower ||
+      stop.name_en.toLowerCase() === originLower ||
+      stop.name_ar === route.origin
+    );
+    return matched;
+  }, [allStops, route]);
+
+  const dropoffStops = useMemo(() => {
+    if (!route) return [];
+    const destLower = route.destination.toLowerCase();
+    const matched = allStops.filter(stop =>
+      stop.region.toLowerCase() === destLower ||
+      stop.city.toLowerCase() === destLower ||
+      stop.name_en.toLowerCase() === destLower ||
+      stop.name_ar === route.destination
+    );
+    return matched;
+  }, [allStops, route]);
+
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
