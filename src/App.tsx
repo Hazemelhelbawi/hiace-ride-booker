@@ -96,6 +96,7 @@ const App = () => {
                   }
                 />
                 <Route path="/destinations" element={<Destinations />} />
+                <Route path="/private-trip" element={<PrivateTripRequest />} />
                 <Route path="/about" element={<About />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
