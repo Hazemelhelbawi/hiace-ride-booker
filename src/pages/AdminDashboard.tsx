@@ -262,6 +262,7 @@ const AdminDashboard: React.FC = () => {
     e.preventDefault();
 
     try {
+      const vanSeats = newRoute.van_type === '12_seats' ? 12 : 13;
       await createRoute.mutateAsync({
         origin: newRoute.origin,
         destination: newRoute.destination,
@@ -271,8 +272,8 @@ const AdminDashboard: React.FC = () => {
         date: newRoute.date,
         driver_name: newRoute.driver_name,
         van_number: newRoute.van_number,
-        available_seats: 14,
-        total_seats: 14,
+        available_seats: vanSeats,
+        total_seats: vanSeats,
       });
 
       setIsRouteDialogOpen(false);
