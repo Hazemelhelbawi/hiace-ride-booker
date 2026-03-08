@@ -865,6 +865,25 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Van Type Selection */}
+                      <div className="space-y-2">
+                        <Label>Van Type</Label>
+                        <Select
+                          value={newRoute.van_type}
+                          onValueChange={(v: '13_seats' | '12_seats') =>
+                            setNewRoute((prev) => ({ ...prev, van_type: v }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="13_seats">13 Seats (with seat 4)</SelectItem>
+                            <SelectItem value="12_seats">12 Seats (without seat 4)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <Button
                         type="submit"
                         className="w-full bg-primary hover:bg-primary-dark text-white"
