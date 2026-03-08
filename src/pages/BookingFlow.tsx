@@ -43,30 +43,8 @@ const BookingFlow: React.FC = () => {
   const { data: allStops = [] } = useStops();
   const incrementPromoUsage = useIncrementPromoCodeUsage();
 
-  // Filter stops for pickup (matching route origin) and dropoff (matching route destination)
-  const pickupStops = useMemo(() => {
-    if (!route) return [];
-    const originLower = route.origin.toLowerCase();
-    const matched = allStops.filter(stop =>
-      stop.region.toLowerCase() === originLower ||
-      stop.city.toLowerCase() === originLower ||
-      stop.name_en.toLowerCase() === originLower ||
-      stop.name_ar === route.origin
-    );
-    return matched;
-  }, [allStops, route]);
 
-  const dropoffStops = useMemo(() => {
-    if (!route) return [];
-    const destLower = route.destination.toLowerCase();
-    const matched = allStops.filter(stop =>
-      stop.region.toLowerCase() === destLower ||
-      stop.city.toLowerCase() === destLower ||
-      stop.name_en.toLowerCase() === destLower ||
-      stop.name_ar === route.destination
-    );
-    return matched;
-  }, [allStops, route]);
+
 
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
@@ -287,17 +265,11 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {pickupStops.length > 0 ? (
-                              pickupStops.map(stop => (
-                                <SelectItem key={stop.id} value={stop.name_en}>
-                                  {stop.name_en} - {stop.name_ar}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value={route.origin}>
-                                {route.origin}
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
                               </SelectItem>
-                            )}
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -311,17 +283,11 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {dropoffStops.length > 0 ? (
-                              dropoffStops.map(stop => (
-                                <SelectItem key={stop.id} value={stop.name_en}>
-                                  {stop.name_en} - {stop.name_ar}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value={route.destination}>
-                                {route.destination}
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
                               </SelectItem>
-                            )}
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
