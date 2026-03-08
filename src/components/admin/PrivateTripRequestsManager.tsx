@@ -10,7 +10,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Car, Trash2 } from 'lucide-react';
+import { Car, Trash2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -135,7 +135,7 @@ const PrivateTripRequestsManager: React.FC = () => {
                       <Badge className={statusColor(req.status)}>{req.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Select
                           value={req.status}
                           onValueChange={v => updateStatus.mutate({ id: req.id, status: v })}
@@ -150,6 +150,19 @@ const PrivateTripRequestsManager: React.FC = () => {
                             <SelectItem value="rejected">Rejected</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 w-7 p-0 text-success hover:text-success"
+                          onClick={() => {
+                            const phone = req.phone.replace(/[^0-9]/g, '');
+                            const msg = encodeURIComponent(`Hi ${req.name}, regarding your private trip request from ${req.pickup_location} to ${req.dropoff_location}...`);
+                            window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+                          }}
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="destructive"
