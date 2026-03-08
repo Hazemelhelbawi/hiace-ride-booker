@@ -56,6 +56,12 @@ const mapBooking = (booking: Record<string, unknown>): Booking => ({
   created_at: booking.created_at as string,
   updated_at: booking.updated_at as string,
   route: booking.route as Route | undefined,
+  trip_instance_id: booking.trip_instance_id as string | null | undefined,
+  pickup_stop_id: booking.pickup_stop_id as string | null | undefined,
+  dropoff_stop_id: booking.dropoff_stop_id as string | null | undefined,
+  payment_screenshot_url: booking.payment_screenshot_url as string | null | undefined,
+  promo_code: booking.promo_code as string | null | undefined,
+  discount_amount: booking.discount_amount as number | null | undefined,
 });
 
 // Routes
