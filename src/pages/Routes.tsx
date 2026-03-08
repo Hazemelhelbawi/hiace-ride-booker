@@ -364,6 +364,24 @@ const Routes: React.FC = () => {
         </div>
       </section>
 
+      {/* Private Trip CTA */}
+      <section className="py-16 bg-primary/5">
+        <div className="container mx-auto px-4 text-center">
+          <Car className="w-12 h-12 text-primary mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-foreground mb-3">Need a Private Trip?</h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-6">
+            Planning a group trip or need a custom route? Request a private trip and we'll arrange everything for you.
+          </p>
+          <Button
+            size="lg"
+            className="font-bold text-lg px-8 py-6 h-auto rounded-xl shadow-lg"
+            onClick={() => navigate('/private-trip')}
+          >
+            <Car className="w-5 h-5 mr-2" /> Request Private Trip
+          </Button>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <Testimonials />
 
