@@ -262,6 +262,51 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_stop_times: {
+        Row: {
+          arrival_time: string
+          created_at: string
+          departure_time: string | null
+          id: string
+          schedule_id: string
+          sequence_order: number
+          stop_id: string
+        }
+        Insert: {
+          arrival_time: string
+          created_at?: string
+          departure_time?: string | null
+          id?: string
+          schedule_id: string
+          sequence_order: number
+          stop_id: string
+        }
+        Update: {
+          arrival_time?: string
+          created_at?: string
+          departure_time?: string | null
+          id?: string
+          schedule_id?: string
+          sequence_order?: number
+          stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_stop_times_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "trip_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_stop_times_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stops: {
         Row: {
           address: string | null
@@ -303,6 +348,103 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      trip_instances: {
+        Row: {
+          available_seats: number
+          created_at: string
+          id: string
+          schedule_id: string
+          status: string
+          total_seats: number
+          trip_date: string
+          updated_at: string
+        }
+        Insert: {
+          available_seats: number
+          created_at?: string
+          id?: string
+          schedule_id: string
+          status?: string
+          total_seats: number
+          trip_date: string
+          updated_at?: string
+        }
+        Update: {
+          available_seats?: number
+          created_at?: string
+          id?: string
+          schedule_id?: string
+          status?: string
+          total_seats?: number
+          trip_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_instances_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "trip_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_schedules: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          price: number
+          recurrence_type: string
+          route_template_id: string
+          seats_per_vehicle: number
+          start_date: string
+          title: string
+          updated_at: string
+          vehicle_count: number
+          weekdays: number[] | null
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          recurrence_type?: string
+          route_template_id: string
+          seats_per_vehicle?: number
+          start_date: string
+          title: string
+          updated_at?: string
+          vehicle_count?: number
+          weekdays?: number[] | null
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          recurrence_type?: string
+          route_template_id?: string
+          seats_per_vehicle?: number
+          start_date?: string
+          title?: string
+          updated_at?: string
+          vehicle_count?: number
+          weekdays?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_schedules_route_template_id_fkey"
+            columns: ["route_template_id"]
+            isOneToOne: false
+            referencedRelation: "route_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
