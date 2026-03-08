@@ -67,11 +67,12 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
 
       {/* Payment Methods */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* InstaPay */}
         <Card className="border-2">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">InstaPay</span>
+              <span className="font-medium text-foreground">InstaPay / حساب بنكي</span>
             </div>
             <p className="text-sm text-muted-foreground mb-2 font-mono">{INSTAPAY_NUMBER}</p>
             <Button
@@ -86,21 +87,66 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
           </CardContent>
         </Card>
 
+        {/* Vodafone Cash */}
         <Card className="border-2">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Wallet className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">محفظة (Wallet)</span>
+              <span className="font-medium text-foreground">Vodafone Cash</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-2 font-mono">{WALLET_NUMBER}</p>
+            {VODAFONE_CASH_NUMBERS.map((num, i) => (
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <p className="text-sm text-muted-foreground font-mono flex-1">{num}</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => copyToClipboard(num, 'Vodafone Cash number')}
+                  className="gap-1 h-7 px-2"
+                >
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* CIB Account */}
+        <Card className="border-2">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              <span className="font-medium text-foreground">CIB حساب بنكي</span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2 font-mono">{CIB_ACCOUNT}</p>
             <Button
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => copyToClipboard(WALLET_NUMBER, 'Wallet number')}
+              onClick={() => copyToClipboard(CIB_ACCOUNT, 'CIB account')}
               className="gap-1 w-full"
             >
               <Copy className="w-3 h-3" /> Copy Number
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* WhatsApp */}
+        <Card className="border-2">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageCircle className="w-5 h-5 text-primary" />
+              <span className="font-medium text-foreground">WhatsApp</span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2 font-mono">{WHATSAPP_NUMBER}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`, '_blank')}
+              className="gap-1 w-full"
+            >
+              <MessageCircle className="w-3 h-3" /> Chat on WhatsApp
             </Button>
           </CardContent>
         </Card>
