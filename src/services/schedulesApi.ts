@@ -60,6 +60,7 @@ export const getSchedules = async (): Promise<TripSchedule[]> => {
   if (error) { console.error('Error fetching schedules:', error); return []; }
   return (data || []).map(item => ({
     ...item,
+    recurrence_type: item.recurrence_type as TripSchedule['recurrence_type'],
     route_template: item.route_template as unknown as TripSchedule['route_template'],
   }));
 };
