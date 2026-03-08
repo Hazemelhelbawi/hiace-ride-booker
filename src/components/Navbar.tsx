@@ -52,7 +52,7 @@ const Navbar: React.FC = () => {
               isActive('/private-trip') ? 'text-primary' : 'text-foreground'
             }`}
           >
-            <Car className="w-3.5 h-3.5" /> Private Trip
+            <Car className="w-3.5 h-3.5" /> {t('nav.privateTrip') || 'Private Trip'}
           </Link>
           <Link
             to="/about"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
+import { useStops } from '@/hooks/useStopsData';
 import { useIncrementPromoCodeUsage, type PromoCode } from '@/hooks/usePromoCodes';
 import { sendBookingEmail } from '@/services/emailService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { ArrowLeft, Check, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Seat } from '@/types';
@@ -36,6 +40,7 @@ const BookingFlow: React.FC = () => {
   const { data: route, isLoading: routeLoading } = useRoute(routeId);
   const { data: bookedSeats = [] } = useBookedSeats(routeId);
   const createBooking = useCreateBooking();
+  const { data: allStops = [] } = useStops();
   const incrementPromoUsage = useIncrementPromoCodeUsage();
 
   const [seats, setSeats] = useState<Seat[]>([]);
@@ -248,28 +253,40 @@ const BookingFlow: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="pickupPoint">Pickup Point *</Label>
-                        <Input
-                          id="pickupPoint"
+                        <Label>{t('booking.pickupPoint') || 'Pickup Point'} *</Label>
+                        <Select
                           value={passengerInfo.pickupPoint}
-                          onChange={(e) =>
-                            setPassengerInfo((prev) => ({ ...prev, pickupPoint: e.target.value }))
-                          }
-                          placeholder="e.g., Dokki, Cairo"
-                          required
-                        />
+                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, pickupPoint: v }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="dropoffPoint">Dropoff Point *</Label>
-                        <Input
-                          id="dropoffPoint"
+                        <Label>{t('booking.dropoffPoint') || 'Dropoff Point'} *</Label>
+                        <Select
                           value={passengerInfo.dropoffPoint}
-                          onChange={(e) =>
-                            setPassengerInfo((prev) => ({ ...prev, dropoffPoint: e.target.value }))
-                          }
-                          placeholder="e.g., Dahab, Sinai"
-                          required
-                        />
+                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, dropoffPoint: v }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
