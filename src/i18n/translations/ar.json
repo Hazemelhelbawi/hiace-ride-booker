@@ -25,7 +25,8 @@
     "dashboard": "لوحة التحكم",
     "profile": "الملف الشخصي",
     "login": "تسجيل الدخول",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "privateTrip": "رحلة خاصة"
   },
   "hero": {
     "welcome": "Everyday BUS",
