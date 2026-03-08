@@ -129,6 +129,7 @@ const BookingFlow: React.FC = () => {
         total_price: totalPrice,
         promo_code: appliedPromoCode?.code || null,
         discount_amount: discountAmount,
+        payment_screenshot_url: paymentScreenshotUrl || null,
         status: 'pending',
         is_paid: false,
       };
