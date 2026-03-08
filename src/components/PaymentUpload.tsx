@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Copy, Upload, Check, Wallet, CreditCard, Loader2 } from 'lucide-react';
+import { Copy, Upload, Check, Wallet, CreditCard, Loader2, Building2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PaymentUploadProps {
@@ -10,8 +10,10 @@ interface PaymentUploadProps {
   uploadedUrl: string;
 }
 
-const INSTAPAY_NUMBER = '01XXXXXXXXX'; // Admin should configure this
-const WALLET_NUMBER = '01XXXXXXXXX'; // Admin should configure this
+const INSTAPAY_NUMBER = '01019533315';
+const VODAFONE_CASH_NUMBERS = ['01006805717', '01019533315'];
+const CIB_ACCOUNT = '0100063671667';
+const WHATSAPP_NUMBER = '+201002178764';
 
 const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) => {
   const [isUploading, setIsUploading] = useState(false);
