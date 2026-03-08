@@ -63,7 +63,7 @@ const SchedulesManager: React.FC = () => {
     try {
       await createSchedule.mutateAsync({ ...form, is_active: true });
       setIsDialogOpen(false);
-      setForm({ route_template_id: '', title: '', start_date: '', end_date: '', recurrence_type: 'daily', weekdays: [], vehicle_count: 1, seats_per_vehicle: 12, price: 0 });
+      setForm({ route_template_id: '', title: '', start_date: '', end_date: '', recurrence_type: 'daily', weekdays: [], vehicle_count: 1, seats_per_vehicle: 12, price: 0, van_type: '13_seats', daily_repeats: 1 });
       toast.success('Schedule created');
     } catch { toast.error('Failed to create schedule'); }
   };
