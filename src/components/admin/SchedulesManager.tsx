@@ -50,6 +50,8 @@ const SchedulesManager: React.FC = () => {
     vehicle_count: 1,
     seats_per_vehicle: 12,
     price: 0,
+    van_type: '13_seats' as '13_seats' | '12_seats',
+    daily_repeats: 1,
   });
 
   const handleCreate = async (e: React.FormEvent) => {
