@@ -253,28 +253,40 @@ const BookingFlow: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="pickupPoint">Pickup Point *</Label>
-                        <Input
-                          id="pickupPoint"
+                        <Label>{t('booking.pickupPoint') || 'Pickup Point'} *</Label>
+                        <Select
                           value={passengerInfo.pickupPoint}
-                          onChange={(e) =>
-                            setPassengerInfo((prev) => ({ ...prev, pickupPoint: e.target.value }))
-                          }
-                          placeholder="e.g., Dokki, Cairo"
-                          required
-                        />
+                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, pickupPoint: v }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="dropoffPoint">Dropoff Point *</Label>
-                        <Input
-                          id="dropoffPoint"
+                        <Label>{t('booking.dropoffPoint') || 'Dropoff Point'} *</Label>
+                        <Select
                           value={passengerInfo.dropoffPoint}
-                          onChange={(e) =>
-                            setPassengerInfo((prev) => ({ ...prev, dropoffPoint: e.target.value }))
-                          }
-                          placeholder="e.g., Dahab, Sinai"
-                          required
-                        />
+                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, dropoffPoint: v }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allStops.map(stop => (
+                              <SelectItem key={stop.id} value={stop.name_en}>
+                                {stop.name_en} - {stop.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
