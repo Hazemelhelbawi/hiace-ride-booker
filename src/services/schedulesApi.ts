@@ -141,6 +141,7 @@ export const getTripInstances = async (scheduleId?: string): Promise<TripInstanc
   if (error) { console.error('Error fetching trip instances:', error); return []; }
   return (data || []).map(item => ({
     ...item,
+    status: item.status as TripInstance['status'],
     schedule: item.schedule as unknown as TripSchedule,
   }));
 };
