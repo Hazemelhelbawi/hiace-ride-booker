@@ -33,6 +33,12 @@ export interface Booking {
   created_at: string;
   updated_at: string;
   route?: Route;
+  trip_instance_id?: string | null;
+  pickup_stop_id?: string | null;
+  dropoff_stop_id?: string | null;
+  payment_screenshot_url?: string | null;
+  promo_code?: string | null;
+  discount_amount?: number | null;
 }
 
 const mapBooking = (booking: Record<string, unknown>): Booking => ({
