@@ -61,6 +61,7 @@ import BookingCalendar from "@/components/BookingCalendar";
 import PromoCodeManager from "@/components/admin/PromoCodeManager";
 import StopsManager from "@/components/admin/StopsManager";
 import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
+import SchedulesManager from "@/components/admin/SchedulesManager";
 import { format } from "date-fns";
 
 interface RouteFormData {
@@ -491,6 +492,10 @@ const AdminDashboard: React.FC = () => {
             <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <RouteIcon className="w-3 h-3 sm:w-4 sm:h-4" />
               Templates
+            </TabsTrigger>
+            <TabsTrigger value="schedules" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              Schedules
             </TabsTrigger>
           </TabsList>
 
@@ -939,6 +944,10 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="templates">
             <RouteTemplatesManager />
+          </TabsContent>
+
+          <TabsContent value="schedules">
+            <SchedulesManager />
           </TabsContent>
         </Tabs>
       </div>
