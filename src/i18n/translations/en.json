@@ -33,7 +33,8 @@
     "dashboard": "Dashboard",
     "profile": "Profile",
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "privateTrip": "Private Trip"
   },
 
   "hero": {
