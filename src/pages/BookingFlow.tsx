@@ -48,6 +48,8 @@ const BookingFlow: React.FC = () => {
     phone: user?.phone || '',
     email: user?.email || '',
     notes: '',
+    pickupPoint: '',
+    dropoffPoint: '',
   });
 
   useEffect(() => {
