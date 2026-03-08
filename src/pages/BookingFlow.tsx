@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
 import { useIncrementPromoCodeUsage, type PromoCode } from '@/hooks/usePromoCodes';
