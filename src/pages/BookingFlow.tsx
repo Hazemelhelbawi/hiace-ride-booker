@@ -246,6 +246,33 @@ const BookingFlow: React.FC = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="pickupPoint">Pickup Point *</Label>
+                        <Input
+                          id="pickupPoint"
+                          value={passengerInfo.pickupPoint}
+                          onChange={(e) =>
+                            setPassengerInfo((prev) => ({ ...prev, pickupPoint: e.target.value }))
+                          }
+                          placeholder="e.g., Dokki, Cairo"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="dropoffPoint">Dropoff Point *</Label>
+                        <Input
+                          id="dropoffPoint"
+                          value={passengerInfo.dropoffPoint}
+                          onChange={(e) =>
+                            setPassengerInfo((prev) => ({ ...prev, dropoffPoint: e.target.value }))
+                          }
+                          placeholder="e.g., Dahab, Sinai"
+                          required
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="name">{t('booking.fullName')} *</Label>
                       <Input
