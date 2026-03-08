@@ -24,6 +24,8 @@ interface PassengerInfo {
   phone: string;
   email: string;
   notes: string;
+  pickupPoint: string;
+  dropoffPoint: string;
 }
 
 const BookingFlow: React.FC = () => {
