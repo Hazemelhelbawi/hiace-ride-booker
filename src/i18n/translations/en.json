@@ -131,7 +131,31 @@
       "selected": "Selected",
       "booked": "Booked",
       "premium": "Premium (+100 LE)"
-    }
+    },
+    "pickupPoint": "Pickup Point",
+    "dropoffPoint": "Dropoff Point",
+    "selectPickup": "Select pickup stop",
+    "selectDropoff": "Select dropoff stop"
+  },
+  "privateTrip": {
+    "title": "Request a Private Trip",
+    "subtitle": "Need a private trip? Fill out this form and we'll get back to you with a quote.",
+    "name": "Name",
+    "phone": "Phone",
+    "passengers": "Number of Passengers",
+    "pickup": "Pickup Location",
+    "dropoff": "Dropoff Location",
+    "preferredDate": "Preferred Date",
+    "notes": "Additional Notes",
+    "notesPlaceholder": "Any special requirements...",
+    "submit": "Submit Request",
+    "submitting": "Submitting...",
+    "successTitle": "Request Submitted!",
+    "successMessage": "We've received your private trip request. Our team will contact you soon to confirm the details.",
+    "submitAnother": "Submit Another Request",
+    "ctaTitle": "Need a Private Trip?",
+    "ctaDescription": "Planning a group trip or need a custom route? Request a private trip and we'll arrange everything for you.",
+    "ctaButton": "Request Private Trip"
   },
   "auth": {
     "login": "Login",
