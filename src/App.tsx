@@ -42,7 +42,9 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
 };
 
 const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: { queries: { retry: 1 } },
+  }));
 
   return (
     <QueryClientProvider client={queryClient}>
