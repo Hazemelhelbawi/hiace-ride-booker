@@ -28,7 +28,7 @@ export type Database = {
           payment_screenshot_url: string | null
           pickup_stop_id: string | null
           promo_code: string | null
-          route_id: string
+          route_id: string | null
           seats: number[]
           status: string
           total_price: number
@@ -49,7 +49,7 @@ export type Database = {
           payment_screenshot_url?: string | null
           pickup_stop_id?: string | null
           promo_code?: string | null
-          route_id: string
+          route_id?: string | null
           seats: number[]
           status?: string
           total_price: number
@@ -70,7 +70,7 @@ export type Database = {
           payment_screenshot_url?: string | null
           pickup_stop_id?: string | null
           promo_code?: string | null
-          route_id?: string
+          route_id?: string | null
           seats?: number[]
           status?: string
           total_price?: number
