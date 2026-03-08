@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import RoutesPage from "./pages/Routes";
 import BookingFlow from "./pages/BookingFlow";
+import TripBookingFlow from "./pages/TripBookingFlow";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -58,6 +59,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <BookingFlow />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/book"
+                  element={
+                    <ProtectedRoute>
+                      <TripBookingFlow />
                     </ProtectedRoute>
                   }
                 />

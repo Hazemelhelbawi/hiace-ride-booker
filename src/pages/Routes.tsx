@@ -250,16 +250,25 @@ const Routes: React.FC = () => {
                 </div>
               </div>
 
-              <Button
-                className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg w-full rounded-xl shadow-lg hover:shadow-xl transition-all"
-                onClick={() =>
-                  document
-                    .getElementById("routes")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                {t("hero.findTransfer")}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg flex-1 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  onClick={() => navigate('/book')}
+                >
+                  {t("hero.findTransfer")}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 font-bold text-lg flex-1 rounded-xl"
+                  onClick={() =>
+                    document
+                      .getElementById("routes")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  View Legacy Routes
+                </Button>
+              </div>
             </div>
           </Card>
         </div>

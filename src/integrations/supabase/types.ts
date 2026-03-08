@@ -18,60 +18,93 @@ export type Database = {
         Row: {
           created_at: string
           discount_amount: number | null
+          dropoff_stop_id: string | null
           id: string
           is_paid: boolean
           passenger_email: string
           passenger_name: string
           passenger_notes: string | null
           passenger_phone: string
+          payment_screenshot_url: string | null
+          pickup_stop_id: string | null
           promo_code: string | null
-          route_id: string
+          route_id: string | null
           seats: number[]
           status: string
           total_price: number
+          trip_instance_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           discount_amount?: number | null
+          dropoff_stop_id?: string | null
           id?: string
           is_paid?: boolean
           passenger_email: string
           passenger_name: string
           passenger_notes?: string | null
           passenger_phone: string
+          payment_screenshot_url?: string | null
+          pickup_stop_id?: string | null
           promo_code?: string | null
-          route_id: string
+          route_id?: string | null
           seats: number[]
           status?: string
           total_price: number
+          trip_instance_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           discount_amount?: number | null
+          dropoff_stop_id?: string | null
           id?: string
           is_paid?: boolean
           passenger_email?: string
           passenger_name?: string
           passenger_notes?: string | null
           passenger_phone?: string
+          payment_screenshot_url?: string | null
+          pickup_stop_id?: string | null
           promo_code?: string | null
-          route_id?: string
+          route_id?: string | null
           seats?: number[]
           status?: string
           total_price?: number
+          trip_instance_id?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_dropoff_stop_id_fkey"
+            columns: ["dropoff_stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_pickup_stop_id_fkey"
+            columns: ["pickup_stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_route_id_fkey"
             columns: ["route_id"]
             isOneToOne: false
             referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_trip_instance_id_fkey"
+            columns: ["trip_instance_id"]
+            isOneToOne: false
+            referencedRelation: "trip_instances"
             referencedColumns: ["id"]
           },
         ]
@@ -393,6 +426,7 @@ export type Database = {
       trip_schedules: {
         Row: {
           created_at: string
+          daily_repeats: number
           end_date: string
           id: string
           is_active: boolean
@@ -403,11 +437,13 @@ export type Database = {
           start_date: string
           title: string
           updated_at: string
+          van_type: string
           vehicle_count: number
           weekdays: number[] | null
         }
         Insert: {
           created_at?: string
+          daily_repeats?: number
           end_date: string
           id?: string
           is_active?: boolean
@@ -418,11 +454,13 @@ export type Database = {
           start_date: string
           title: string
           updated_at?: string
+          van_type?: string
           vehicle_count?: number
           weekdays?: number[] | null
         }
         Update: {
           created_at?: string
+          daily_repeats?: number
           end_date?: string
           id?: string
           is_active?: boolean
@@ -433,6 +471,7 @@ export type Database = {
           start_date?: string
           title?: string
           updated_at?: string
+          van_type?: string
           vehicle_count?: number
           weekdays?: number[] | null
         }

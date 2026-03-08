@@ -157,12 +157,13 @@ export const generateTripInstances = async (scheduleId: string): Promise<number>
   if (schedErr || !schedule) throw new Error('Schedule not found');
 
   const totalSeats = schedule.vehicle_count * schedule.seats_per_vehicle;
+  const dailyRepeats = (schedule as any).daily_repeats || 1;
   const start = new Date(schedule.start_date);
   const end = new Date(schedule.end_date);
   const instances: { schedule_id: string; trip_date: string; available_seats: number; total_seats: number }[] = [];
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const dayOfWeek = d.getDay(); // 0=Sun ... 6=Sat
+    const dayOfWeek = d.getDay();
     let include = false;
 
     if (schedule.recurrence_type === 'daily') {
@@ -172,22 +173,33 @@ export const generateTripInstances = async (scheduleId: string): Promise<number>
     }
 
     if (include) {
-      instances.push({
-        schedule_id: scheduleId,
-        trip_date: d.toISOString().split('T')[0],
-        available_seats: totalSeats,
-        total_seats: totalSeats,
-      });
+      // Generate multiple instances per day based on daily_repeats
+      for (let r = 0; r < dailyRepeats; r++) {
+        instances.push({
+          schedule_id: scheduleId,
+          trip_date: d.toISOString().split('T')[0],
+          available_seats: totalSeats,
+          total_seats: totalSeats,
+        });
+      }
     }
   }
 
   if (instances.length === 0) return 0;
 
-  // Upsert to avoid duplicates
-  const { error } = await supabase
-    .from('trip_instances')
-    .upsert(instances, { onConflict: 'schedule_id,trip_date', ignoreDuplicates: true });
-  if (error) { console.error('Error generating trips:', error); throw error; }
+  // For daily_repeats > 1, we can't use upsert with unique constraint on (schedule_id, trip_date)
+  // So we'll insert and ignore duplicates
+  if (dailyRepeats > 1) {
+    const { error } = await supabase
+      .from('trip_instances')
+      .insert(instances);
+    if (error) { console.error('Error generating trips:', error); throw error; }
+  } else {
+    const { error } = await supabase
+      .from('trip_instances')
+      .upsert(instances, { onConflict: 'schedule_id,trip_date', ignoreDuplicates: true });
+    if (error) { console.error('Error generating trips:', error); throw error; }
+  }
   return instances.length;
 };
 
