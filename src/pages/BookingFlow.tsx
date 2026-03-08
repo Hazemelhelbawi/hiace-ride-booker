@@ -262,13 +262,27 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {allStops
-                              .filter(stop => stop.region.toLowerCase() === route.origin.toLowerCase())
-                              .map(stop => (
-                                <SelectItem key={stop.id} value={stop.name_en}>
-                                  {stop.name_en} - {stop.name_ar}
+                            {(() => {
+                              const originLower = route.origin.toLowerCase();
+                              const matchedStops = allStops.filter(stop =>
+                                stop.region.toLowerCase() === originLower ||
+                                stop.city.toLowerCase() === originLower ||
+                                stop.name_en.toLowerCase() === originLower ||
+                                stop.name_ar === route.origin
+                              );
+                              if (matchedStops.length > 0) {
+                                return matchedStops.map(stop => (
+                                  <SelectItem key={stop.id} value={stop.name_en}>
+                                    {stop.name_en} - {stop.name_ar}
+                                  </SelectItem>
+                                ));
+                              }
+                              return (
+                                <SelectItem value={route.origin}>
+                                  {route.origin}
                                 </SelectItem>
-                              ))}
+                              );
+                            })()}
                           </SelectContent>
                         </Select>
                       </div>
@@ -282,13 +296,27 @@ const BookingFlow: React.FC = () => {
                             <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {allStops
-                              .filter(stop => stop.region.toLowerCase() === route.destination.toLowerCase())
-                              .map(stop => (
-                                <SelectItem key={stop.id} value={stop.name_en}>
-                                  {stop.name_en} - {stop.name_ar}
+                            {(() => {
+                              const destLower = route.destination.toLowerCase();
+                              const matchedStops = allStops.filter(stop =>
+                                stop.region.toLowerCase() === destLower ||
+                                stop.city.toLowerCase() === destLower ||
+                                stop.name_en.toLowerCase() === destLower ||
+                                stop.name_ar === route.destination
+                              );
+                              if (matchedStops.length > 0) {
+                                return matchedStops.map(stop => (
+                                  <SelectItem key={stop.id} value={stop.name_en}>
+                                    {stop.name_en} - {stop.name_ar}
+                                  </SelectItem>
+                                ));
+                              }
+                              return (
+                                <SelectItem value={route.destination}>
+                                  {route.destination}
                                 </SelectItem>
-                              ))}
+                              );
+                            })()}
                           </SelectContent>
                         </Select>
                       </div>
