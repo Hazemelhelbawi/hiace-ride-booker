@@ -339,6 +339,7 @@ const AdminDashboard: React.FC = () => {
       date: "",
       driver_name: "",
       van_number: "",
+      van_type: "13_seats",
     });
     setEditingRoute(null);
   };

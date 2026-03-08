@@ -290,7 +290,7 @@ const BookingFlow: React.FC = () => {
 
                     {/* Payment Upload */}
                     <PaymentUpload
-                      onUploadComplete={setPaymentScreenshotUrl}
+                      onUpload={setPaymentScreenshotUrl}
                       uploadedUrl={paymentScreenshotUrl}
                     />
 
