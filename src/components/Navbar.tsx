@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { LogOut, User, Loader2, Menu } from 'lucide-react';
+import { LogOut, User, Loader2, Menu, Car } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 const Navbar: React.FC = () => {
