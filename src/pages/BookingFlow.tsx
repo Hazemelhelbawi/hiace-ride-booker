@@ -40,6 +40,7 @@ const BookingFlow: React.FC = () => {
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState<string>('');
   const [passengerInfo, setPassengerInfo] = useState<PassengerInfo>({
     name: user?.name || '',
     phone: user?.phone || '',
