@@ -27,7 +27,7 @@ const PrivateTripRequest: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim() || !form.pickup_location.trim() || !form.dropoff_location.trim()) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('booking.fillRequired') || 'Please fill in all required fields');
       return;
     }
     if (form.number_of_passengers < 1 || form.number_of_passengers > 50) {
@@ -51,10 +51,10 @@ const PrivateTripRequest: React.FC = () => {
 
       if (error) throw error;
       setSubmitted(true);
-      toast.success('Request submitted successfully!');
+      toast.success(t('common.success') || 'Request submitted successfully!');
     } catch (error) {
       console.error('Error submitting request:', error);
-      toast.error('Failed to submit request. Please try again.');
+      toast.error(t('common.error') || 'Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -70,12 +70,15 @@ const PrivateTripRequest: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto">
                 <Check className="w-8 h-8 text-success" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">Request Submitted!</h2>
+              <h2 className="text-2xl font-bold text-foreground">
+                {t('privateTrip.successTitle') || 'Request Submitted!'}
+              </h2>
               <p className="text-muted-foreground">
-                We've received your private trip request. Our team will contact you soon on <strong>{form.phone}</strong> to confirm the details.
+                {t('privateTrip.successMessage') || "We've received your private trip request. Our team will contact you soon to confirm the details."}
+                {' '}<strong>{form.phone}</strong>
               </p>
               <Button onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', number_of_passengers: 1, pickup_location: '', dropoff_location: '', preferred_date: '', notes: '' }); }} variant="outline">
-                Submit Another Request
+                {t('privateTrip.submitAnother') || 'Submit Another Request'}
               </Button>
             </CardContent>
           </Card>
@@ -91,28 +94,28 @@ const PrivateTripRequest: React.FC = () => {
         <Card className="border-2 shadow-lg">
           <CardHeader className="border-b bg-primary text-primary-foreground">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Car className="w-5 h-5" /> Request a Private Trip
+              <Car className="w-5 h-5" /> {t('privateTrip.title') || 'Request a Private Trip'}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <p className="text-sm text-muted-foreground mb-6">
-              Need a private trip? Fill out this form and we'll get back to you with a quote.
+              {t('privateTrip.subtitle') || "Need a private trip? Fill out this form and we'll get back to you with a quote."}
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">{t('privateTrip.name') || 'Name'} *</Label>
                 <Input
                   id="name"
                   value={form.name}
                   onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="Your full name"
+                  placeholder={t('booking.enterName') || 'Your full name'}
                   maxLength={100}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone *</Label>
+                <Label htmlFor="phone">{t('privateTrip.phone') || 'Phone'} *</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -125,7 +128,7 @@ const PrivateTripRequest: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="passengers">Number of Passengers *</Label>
+                <Label htmlFor="passengers">{t('privateTrip.passengers') || 'Number of Passengers'} *</Label>
                 <Input
                   id="passengers"
                   type="number"
@@ -138,31 +141,31 @@ const PrivateTripRequest: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pickup">Pickup Location *</Label>
+                <Label htmlFor="pickup">{t('privateTrip.pickup') || 'Pickup Location'} *</Label>
                 <Input
                   id="pickup"
                   value={form.pickup_location}
                   onChange={e => setForm(p => ({ ...p, pickup_location: e.target.value }))}
-                  placeholder="e.g., Cairo, Dokki"
+                  placeholder={t('search.pickupLocation') || 'e.g., Cairo, Dokki'}
                   maxLength={200}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dropoff">Dropoff Location *</Label>
+                <Label htmlFor="dropoff">{t('privateTrip.dropoff') || 'Dropoff Location'} *</Label>
                 <Input
                   id="dropoff"
                   value={form.dropoff_location}
                   onChange={e => setForm(p => ({ ...p, dropoff_location: e.target.value }))}
-                  placeholder="e.g., Dahab, South Sinai"
+                  placeholder={t('search.dropoffLocation') || 'e.g., Dahab, South Sinai'}
                   maxLength={200}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="date">Preferred Date</Label>
+                <Label htmlFor="date">{t('privateTrip.preferredDate') || 'Preferred Date'}</Label>
                 <Input
                   id="date"
                   type="date"
@@ -173,12 +176,12 @@ const PrivateTripRequest: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes</Label>
+                <Label htmlFor="notes">{t('privateTrip.notes') || 'Additional Notes'}</Label>
                 <Textarea
                   id="notes"
                   value={form.notes}
                   onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Any special requirements..."
+                  placeholder={t('privateTrip.notesPlaceholder') || 'Any special requirements...'}
                   maxLength={500}
                   rows={3}
                 />
@@ -190,9 +193,9 @@ const PrivateTripRequest: React.FC = () => {
                 className="w-full h-12 text-base font-semibold gap-2"
               >
                 {isSubmitting ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</>
+                  <><Loader2 className="w-5 h-5 animate-spin" /> {t('privateTrip.submitting') || 'Submitting...'}</>
                 ) : (
-                  <><Car className="w-5 h-5" /> Submit Request</>
+                  <><Car className="w-5 h-5" /> {t('privateTrip.submit') || 'Submit Request'}</>
                 )}
               </Button>
             </form>
