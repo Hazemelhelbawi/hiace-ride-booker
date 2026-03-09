@@ -131,7 +131,7 @@ export const useUpdatePromoCode = () => {
         .single();
 
       if (error) {
-        console.error('Error updating promo code:', error);
+        logger.error('Error updating promo code:', error);
         throw error;
       }
 
