@@ -144,7 +144,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`, '_blank')}
+              onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}
               className="gap-1 w-full"
             >
               <MessageCircle className="w-3 h-3" /> Chat on WhatsApp
