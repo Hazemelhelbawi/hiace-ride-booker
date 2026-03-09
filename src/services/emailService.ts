@@ -58,7 +58,7 @@ export const sendBookingEmail = async ({ booking, route, status, isPaid }: SendE
     logger.log("Email sent successfully");
     return true;
   } catch (error) {
-    console.error("Error sending email:", error);
+    logger.error("Error sending email:", error);
     return false;
   }
 };
