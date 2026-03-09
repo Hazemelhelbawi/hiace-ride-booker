@@ -358,11 +358,17 @@ const AdminDashboard: React.FC = () => {
 
   const handleDeleteRoute = async (routeId: string) => {
     const relatedBookings = bookings.filter(b => b.route_id === routeId);
-    const warningMsg = relatedBookings.length > 0
-      ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. Are you sure?`
-      : t("admin.confirmDeleteRoute");
+    const description = relatedBookings.length > 0
+      ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. This action cannot be undone.`
+      : 'This route will be permanently deleted. This action cannot be undone.';
     
-    if (!confirm(warningMsg)) return;
+    const confirmed = await confirm({
+      title: 'Delete Route',
+      description,
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     try {
       await deleteRoute.mutateAsync(routeId);
