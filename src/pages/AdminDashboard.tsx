@@ -165,7 +165,13 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm(t("admin.confirmCancel"))) return;
+    const confirmed = await confirm({
+      title: t("admin.confirmCancel"),
+      description: 'This booking will be cancelled and the passenger will be notified.',
+      confirmLabel: 'Cancel Booking',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking) return;
