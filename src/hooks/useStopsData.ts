@@ -77,7 +77,20 @@ export const useDeleteRouteTemplate = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.deleteRouteTemplate(id),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['route-templates'] });
+      const previousTemplates = qc.getQueryData<RouteTemplate[]>(['route-templates']);
+      qc.setQueryData<RouteTemplate[]>(['route-templates'], (old) =>
+        old?.filter(tmpl => tmpl.id !== id) ?? []
+      );
+      return { previousTemplates };
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['route-templates'] }),
+    onError: (_err, _id, context) => {
+      if (context?.previousTemplates) {
+        qc.setQueryData(['route-templates'], context.previousTemplates);
+      }
+    },
   });
 };
 

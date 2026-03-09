@@ -45,8 +45,22 @@ export const useDeleteRoute = () => {
 
   return useMutation({
     mutationFn: (id: string) => api.deleteRoute(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['routes'] });
+      const previousRoutes = queryClient.getQueryData<Route[]>(['routes']);
+      queryClient.setQueryData<Route[]>(['routes'], (old) =>
+        old?.filter(route => route.id !== id) ?? []
+      );
+      return { previousRoutes };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousRoutes) {
+        queryClient.setQueryData(['routes'], context.previousRoutes);
+      }
     },
   });
 };
