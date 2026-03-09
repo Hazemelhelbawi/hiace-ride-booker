@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', supabaseUser.id);
 
       if (roleError) {
-        console.error('Error fetching role:', roleError);
+        logger.error('Error fetching role:', roleError);
       }
 
       // Check if user has admin role (handles multiple roles)
