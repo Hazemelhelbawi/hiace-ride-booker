@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { logger } from '@/lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -268,7 +269,7 @@ const TripBookingFlow: React.FC = () => {
         replace: true,
       });
     } catch (error) {
-      console.error('Booking error:', error);
+      logger.error('Booking error:', error);
       toast.error(t('booking.error') || 'Failed to create booking');
     } finally {
       setIsSubmitting(false);

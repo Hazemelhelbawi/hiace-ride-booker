@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logger.error('Error fetching profile:', profileError);
       }
 
       // Fetch role - get all roles and check for admin
@@ -59,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', supabaseUser.id);
 
       if (roleError) {
-        console.error('Error fetching role:', roleError);
+        logger.error('Error fetching role:', roleError);
       }
 
       // Check if user has admin role (handles multiple roles)
@@ -74,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
       };
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      logger.error('Error in fetchUserData:', error);
       return null;
     }
   }, []);

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface PromoCode {
   id: string;
@@ -24,7 +25,7 @@ export const usePromoCodes = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching promo codes:', error);
+        logger.error('Error fetching promo codes:', error);
         throw error;
       }
 
@@ -48,7 +49,7 @@ export const useActivePromoCode = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching active promo code:', error);
+        logger.error('Error fetching active promo code:', error);
         return null;
       }
 
@@ -69,7 +70,7 @@ export const useValidatePromoCode = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error validating promo code:', error);
+        logger.error('Error validating promo code:', error);
         return null;
       }
 
@@ -103,7 +104,7 @@ export const useCreatePromoCode = () => {
         .single();
 
       if (error) {
-        console.error('Error creating promo code:', error);
+        logger.error('Error creating promo code:', error);
         throw error;
       }
 
@@ -130,7 +131,7 @@ export const useUpdatePromoCode = () => {
         .single();
 
       if (error) {
-        console.error('Error updating promo code:', error);
+        logger.error('Error updating promo code:', error);
         throw error;
       }
 
@@ -154,7 +155,7 @@ export const useDeletePromoCode = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting promo code:', error);
+        logger.error('Error deleting promo code:', error);
         throw error;
       }
     },

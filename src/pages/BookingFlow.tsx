@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
@@ -198,7 +199,7 @@ const BookingFlow: React.FC = () => {
         replace: true,
       });
     } catch (error) {
-      console.error('Booking error:', error);
+      logger.error('Booking error:', error);
       toast.error(t('booking.error') || 'Failed to create booking');
     } finally {
       setIsSubmitting(false);
