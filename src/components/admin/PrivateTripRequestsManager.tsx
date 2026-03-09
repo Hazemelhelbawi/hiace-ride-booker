@@ -168,8 +168,14 @@ const PrivateTripRequestsManager: React.FC = () => {
                           size="sm"
                           variant="destructive"
                           className="h-7 w-7 p-0"
-                          onClick={() => {
-                            if (confirm('Delete this request?')) deleteRequest.mutate(req.id);
+                          onClick={async () => {
+                            const confirmed = await confirm({
+                              title: 'Delete Request',
+                              description: 'This private trip request will be permanently deleted.',
+                              confirmLabel: 'Delete',
+                              variant: 'destructive',
+                            });
+                            if (confirmed) deleteRequest.mutate(req.id);
                           }}
                         >
                           <Trash2 className="w-3 h-3" />

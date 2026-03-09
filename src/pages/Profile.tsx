@@ -76,7 +76,13 @@ const Profile: React.FC = () => {
   };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm(t('profile.cancelBooking') + '?')) return;
+    const confirmed = await confirm({
+      title: t('profile.cancelBooking'),
+      description: 'Are you sure you want to cancel this booking? This action cannot be undone.',
+      confirmLabel: 'Cancel Booking',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     
     const booking = bookings.find(b => b.id === bookingId);
     
