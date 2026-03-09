@@ -61,6 +61,7 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { data: bookings = [], refetch } = useUserBookings(user?.id);
   const cancelBookingMutation = useCancelBooking();
+  const { confirm } = useConfirmDialog();
   const [selectedBooking, setSelectedBooking] = useState<{ booking: Booking; route: Route } | null>(null);
 
   useEffect(() => {
