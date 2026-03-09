@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface TripSchedule {
   id: string;
@@ -57,7 +58,7 @@ export const getSchedules = async (): Promise<TripSchedule[]> => {
     .from('trip_schedules')
     .select('*, route_template:route_templates(id, name, origin_region, destination_region)')
     .order('created_at', { ascending: false });
-  if (error) { console.error('Error fetching schedules:', error); return []; }
+  if (error) { logger.error('Error fetching schedules:', error); return []; }
   return (data || []).map(item => ({
     ...item,
     recurrence_type: item.recurrence_type as TripSchedule['recurrence_type'],
@@ -73,7 +74,7 @@ export const createSchedule = async (
     .insert([schedule])
     .select('*, route_template:route_templates(id, name, origin_region, destination_region)')
     .single();
-  if (error) { console.error('Error creating schedule:', error); throw error; }
+  if (error) { logger.error('Error creating schedule:', error); throw error; }
   return data as unknown as TripSchedule;
 };
 
@@ -87,13 +88,13 @@ export const updateSchedule = async (
     .eq('id', id)
     .select()
     .single();
-  if (error) { console.error('Error updating schedule:', error); throw error; }
+  if (error) { logger.error('Error updating schedule:', error); throw error; }
   return data as unknown as TripSchedule;
 };
 
 export const deleteSchedule = async (id: string): Promise<boolean> => {
   const { error } = await supabase.from('trip_schedules').delete().eq('id', id);
-  if (error) { console.error('Error deleting schedule:', error); return false; }
+  if (error) { logger.error('Error deleting schedule:', error); return false; }
   return true;
 };
 
@@ -105,7 +106,7 @@ export const getScheduleStopTimes = async (scheduleId: string): Promise<Schedule
     .select('*, stop:stops(id, name_en, name_ar, region)')
     .eq('schedule_id', scheduleId)
     .order('sequence_order');
-  if (error) { console.error('Error fetching stop times:', error); return []; }
+  if (error) { logger.error('Error fetching stop times:', error); return []; }
   return (data || []).map(item => ({
     ...item,
     stop: item.stop as unknown as ScheduleStopTime['stop'],
@@ -120,13 +121,13 @@ export const setScheduleStopTimes = async (
     .from('schedule_stop_times')
     .delete()
     .eq('schedule_id', scheduleId);
-  if (deleteError) { console.error('Error clearing stop times:', deleteError); return false; }
+  if (deleteError) { logger.error('Error clearing stop times:', deleteError); return false; }
 
   if (stopTimes.length === 0) return true;
 
   const rows = stopTimes.map(s => ({ schedule_id: scheduleId, ...s }));
   const { error: insertError } = await supabase.from('schedule_stop_times').insert(rows);
-  if (insertError) { console.error('Error setting stop times:', insertError); return false; }
+  if (insertError) { logger.error('Error setting stop times:', insertError); return false; }
   return true;
 };
 
@@ -139,7 +140,7 @@ export const getTripInstances = async (scheduleId?: string): Promise<TripInstanc
     .order('trip_date', { ascending: true });
   if (scheduleId) query = query.eq('schedule_id', scheduleId);
   const { data, error } = await query;
-  if (error) { console.error('Error fetching trip instances:', error); return []; }
+  if (error) { logger.error('Error fetching trip instances:', error); return []; }
   return (data || []).map(item => ({
     ...item,
     status: item.status as TripInstance['status'],
@@ -148,7 +149,6 @@ export const getTripInstances = async (scheduleId?: string): Promise<TripInstanc
 };
 
 export const generateTripInstances = async (scheduleId: string): Promise<number> => {
-  // Fetch the schedule
   const { data: schedule, error: schedErr } = await supabase
     .from('trip_schedules')
     .select('*')
@@ -173,7 +173,6 @@ export const generateTripInstances = async (scheduleId: string): Promise<number>
     }
 
     if (include) {
-      // Generate multiple instances per day based on daily_repeats
       for (let r = 0; r < dailyRepeats; r++) {
         instances.push({
           schedule_id: scheduleId,
@@ -187,11 +186,10 @@ export const generateTripInstances = async (scheduleId: string): Promise<number>
 
   if (instances.length === 0) return 0;
 
-  // Insert all instances (unique constraint was removed to allow daily_repeats > 1)
   const { error } = await supabase
     .from('trip_instances')
     .insert(instances);
-  if (error) { console.error('Error generating trips:', error); throw error; }
+  if (error) { logger.error('Error generating trips:', error); throw error; }
   return instances.length;
 };
 
@@ -205,6 +203,6 @@ export const updateTripInstance = async (
     .eq('id', id)
     .select()
     .single();
-  if (error) { console.error('Error updating trip instance:', error); throw error; }
+  if (error) { logger.error('Error updating trip instance:', error); throw error; }
   return data as unknown as TripInstance;
 };

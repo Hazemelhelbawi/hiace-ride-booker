@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface Route {
   id: string;
@@ -72,7 +73,7 @@ export const getRoutes = async (): Promise<Route[]> => {
     .order('date', { ascending: true });
 
   if (error) {
-    console.error('Error fetching routes:', error);
+    logger.error('Error fetching routes:', error);
     return [];
   }
 
@@ -90,7 +91,7 @@ export const getRouteById = async (id: string): Promise<Route | null> => {
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching route:', error);
+    logger.error('Error fetching route:', error);
     return null;
   }
 
@@ -105,7 +106,7 @@ export const createRoute = async (route: Omit<Route, 'id' | 'created_at' | 'upda
     .single();
 
   if (error) {
-    console.error('Error creating route:', error);
+    logger.error('Error creating route:', error);
     return null;
   }
 
@@ -121,7 +122,7 @@ export const updateRoute = async (id: string, updates: Partial<Route>): Promise<
     .single();
 
   if (error) {
-    console.error('Error updating route:', error);
+    logger.error('Error updating route:', error);
     return null;
   }
 
@@ -135,7 +136,7 @@ export const deleteRoute = async (id: string): Promise<boolean> => {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting route:', error);
+    logger.error('Error deleting route:', error);
     return false;
   }
 
@@ -153,7 +154,7 @@ export const getBookings = async (): Promise<Booking[]> => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching bookings:', error);
+    logger.error('Error fetching bookings:', error);
     return [];
   }
 
@@ -171,7 +172,7 @@ export const getUserBookings = async (userId: string): Promise<Booking[]> => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching user bookings:', error);
+    logger.error('Error fetching user bookings:', error);
     return [];
   }
 
@@ -202,7 +203,7 @@ export const createBooking = async (booking: {
     .single();
 
   if (error) {
-    console.error('Error creating booking:', error);
+    logger.error('Error creating booking:', error);
     return null;
   }
 
@@ -231,7 +232,7 @@ export const updateBooking = async (id: string, updates: Partial<Booking>): Prom
     .single();
 
   if (error) {
-    console.error('Error updating booking:', error);
+    logger.error('Error updating booking:', error);
     return null;
   }
 
@@ -247,7 +248,7 @@ export const cancelBooking = async (id: string): Promise<Booking | null> => {
     .single();
 
   if (fetchError || !booking) {
-    console.error('Error fetching booking:', fetchError);
+    logger.error('Error fetching booking:', fetchError);
     return null;
   }
 
@@ -267,7 +268,7 @@ export const cancelBooking = async (id: string): Promise<Booking | null> => {
     .single();
 
   if (updateError) {
-    console.error('Error cancelling booking:', updateError);
+    logger.error('Error cancelling booking:', updateError);
     return null;
   }
 
@@ -292,7 +293,7 @@ export const getBookedSeats = async (routeId: string): Promise<number[]> => {
     .neq('status', 'cancelled');
 
   if (error) {
-    console.error('Error fetching booked seats:', error);
+    logger.error('Error fetching booked seats:', error);
     return [];
   }
 
