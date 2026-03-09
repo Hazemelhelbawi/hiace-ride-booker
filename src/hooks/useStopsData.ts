@@ -31,7 +31,20 @@ export const useDeleteStop = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.deleteStop(id),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['stops'] });
+      const previousStops = qc.getQueryData<Stop[]>(['stops']);
+      qc.setQueryData<Stop[]>(['stops'], (old) =>
+        old?.filter(stop => stop.id !== id) ?? []
+      );
+      return { previousStops };
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stops'] }),
+    onError: (_err, _id, context) => {
+      if (context?.previousStops) {
+        qc.setQueryData(['stops'], context.previousStops);
+      }
+    },
   });
 };
 
