@@ -86,6 +86,8 @@ const RouteCard = React.forwardRef<HTMLDivElement, RouteCardProps>(({ route, onB
       </CardFooter>
     </Card>
   );
-};
+});
+
+RouteCard.displayName = 'RouteCard';
 
 export default RouteCard;
