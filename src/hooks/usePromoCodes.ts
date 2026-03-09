@@ -70,7 +70,7 @@ export const useValidatePromoCode = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error validating promo code:', error);
+        logger.error('Error validating promo code:', error);
         return null;
       }
 
