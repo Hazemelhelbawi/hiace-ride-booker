@@ -64,7 +64,7 @@ const testimonials: Testimonial[] = [
   }
 ];
 
-const Testimonials: React.FC = () => {
+const Testimonials = React.forwardRef<HTMLElement, {}>((_, ref) => {
   const { t, language } = useLanguage();
 
   const renderStars = (rating: number) => {
