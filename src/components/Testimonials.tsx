@@ -64,7 +64,7 @@ const testimonials: Testimonial[] = [
   }
 ];
 
-const Testimonials: React.FC = () => {
+const Testimonials = React.forwardRef<HTMLElement, {}>((_, ref) => {
   const { t, language } = useLanguage();
 
   const renderStars = (rating: number) => {
@@ -81,7 +81,7 @@ const Testimonials: React.FC = () => {
   };
 
   return (
-    <section className="py-24 bg-secondary">
+    <section ref={ref} className="py-24 bg-secondary">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 font-medium">
@@ -160,6 +160,8 @@ const Testimonials: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+
+Testimonials.displayName = 'Testimonials';
 
 export default Testimonials;

@@ -31,7 +31,20 @@ export const useDeleteSchedule = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.deleteSchedule(id),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['trip-schedules'] });
+      const previousSchedules = qc.getQueryData<TripSchedule[]>(['trip-schedules']);
+      qc.setQueryData<TripSchedule[]>(['trip-schedules'], (old) =>
+        old?.filter(schedule => schedule.id !== id) ?? []
+      );
+      return { previousSchedules };
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['trip-schedules'] }),
+    onError: (_err, _id, context) => {
+      if (context?.previousSchedules) {
+        qc.setQueryData(['trip-schedules'], context.previousSchedules);
+      }
+    },
   });
 };
 

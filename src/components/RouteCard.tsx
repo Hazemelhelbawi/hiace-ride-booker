@@ -11,12 +11,12 @@ interface RouteCardProps {
   onBook: (route: Route) => void;
 }
 
-const RouteCard: React.FC<RouteCardProps> = ({ route, onBook }) => {
+const RouteCard = React.forwardRef<HTMLDivElement, RouteCardProps>(({ route, onBook }, ref) => {
   const { t } = useLanguage();
   const formattedDate = format(new Date(route.date), 'MMM dd, yyyy');
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary group">
+    <Card ref={ref} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary group">
       <div className="h-2 bg-primary group-hover:h-3 transition-all duration-300" />
       <CardContent className="p-6 space-y-4">
         <div className="flex items-start justify-between">
@@ -86,6 +86,8 @@ const RouteCard: React.FC<RouteCardProps> = ({ route, onBook }) => {
       </CardFooter>
     </Card>
   );
-};
+});
+
+RouteCard.displayName = 'RouteCard';
 
 export default RouteCard;
