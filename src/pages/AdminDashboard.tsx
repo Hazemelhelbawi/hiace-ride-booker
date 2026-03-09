@@ -350,7 +350,12 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleDeleteRoute = async (routeId: string) => {
-    if (!confirm(t("admin.confirmDeleteRoute"))) return;
+    const relatedBookings = bookings.filter(b => b.route_id === routeId);
+    const warningMsg = relatedBookings.length > 0
+      ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. Are you sure?`
+      : t("admin.confirmDeleteRoute");
+    
+    if (!confirm(warningMsg)) return;
 
     try {
       await deleteRoute.mutateAsync(routeId);
