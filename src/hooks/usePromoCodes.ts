@@ -104,7 +104,7 @@ export const useCreatePromoCode = () => {
         .single();
 
       if (error) {
-        console.error('Error creating promo code:', error);
+        logger.error('Error creating promo code:', error);
         throw error;
       }
 
