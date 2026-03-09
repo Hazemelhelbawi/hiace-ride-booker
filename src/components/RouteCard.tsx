@@ -11,7 +11,7 @@ interface RouteCardProps {
   onBook: (route: Route) => void;
 }
 
-const RouteCard: React.FC<RouteCardProps> = ({ route, onBook }) => {
+const RouteCard = React.forwardRef<HTMLDivElement, RouteCardProps>(({ route, onBook }, ref) => {
   const { t } = useLanguage();
   const formattedDate = format(new Date(route.date), 'MMM dd, yyyy');
 
