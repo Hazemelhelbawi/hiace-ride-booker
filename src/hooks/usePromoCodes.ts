@@ -143,7 +143,6 @@ export const useUpdatePromoCode = () => {
   });
 };
 
-// Delete promo code (admin)
 export const useDeletePromoCode = () => {
   const queryClient = useQueryClient();
 
@@ -159,9 +158,22 @@ export const useDeletePromoCode = () => {
         throw error;
       }
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['promo-codes'] });
+      const previousPromoCodes = queryClient.getQueryData<PromoCode[]>(['promo-codes']);
+      queryClient.setQueryData<PromoCode[]>(['promo-codes'], (old) =>
+        old?.filter(promo => promo.id !== id) ?? []
+      );
+      return { previousPromoCodes };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promo-codes'] });
       queryClient.invalidateQueries({ queryKey: ['active-promo-code'] });
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousPromoCodes) {
+        queryClient.setQueryData(['promo-codes'], context.previousPromoCodes);
+      }
     },
   });
 };
