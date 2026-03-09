@@ -49,7 +49,7 @@ export const useActivePromoCode = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching active promo code:', error);
+        logger.error('Error fetching active promo code:', error);
         return null;
       }
 
