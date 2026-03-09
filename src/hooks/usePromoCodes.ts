@@ -25,7 +25,7 @@ export const usePromoCodes = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching promo codes:', error);
+        logger.error('Error fetching promo codes:', error);
         throw error;
       }
 
