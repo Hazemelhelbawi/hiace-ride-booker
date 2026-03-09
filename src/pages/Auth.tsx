@@ -81,7 +81,7 @@ const Auth: React.FC = () => {
     try {
       await signInWithGoogle();
     } catch (error) {
-      console.error("Google sign-in error:", error);
+      logger.error("Google sign-in error:", error);
     } finally {
       setIsGoogleLoading(false);
     }

@@ -198,7 +198,7 @@ const BookingFlow: React.FC = () => {
         replace: true,
       });
     } catch (error) {
-      console.error('Booking error:', error);
+      logger.error('Booking error:', error);
       toast.error(t('booking.error') || 'Failed to create booking');
     } finally {
       setIsSubmitting(false);

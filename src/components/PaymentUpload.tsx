@@ -54,7 +54,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
       onUpload(publicUrl);
       toast.success('Screenshot uploaded successfully');
     } catch (err) {
-      console.error('Upload error:', err);
+      logger.error('Upload error:', err);
       toast.error('Failed to upload screenshot');
     } finally {
       setIsUploading(false);

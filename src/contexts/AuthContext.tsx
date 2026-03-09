@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
       };
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      logger.error('Error in fetchUserData:', error);
       return null;
     }
   }, []);

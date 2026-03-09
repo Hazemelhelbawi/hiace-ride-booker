@@ -155,7 +155,7 @@ export const useDeletePromoCode = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting promo code:', error);
+        logger.error('Error deleting promo code:', error);
         throw error;
       }
     },

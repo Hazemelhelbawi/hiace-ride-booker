@@ -53,7 +53,7 @@ const PrivateTripRequest: React.FC = () => {
       setSubmitted(true);
       toast.success(t('common.success') || 'Request submitted successfully!');
     } catch (error) {
-      console.error('Error submitting request:', error);
+      logger.error('Error submitting request:', error);
       toast.error(t('common.error') || 'Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);
