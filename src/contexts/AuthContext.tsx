@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logger.error('Error fetching profile:', profileError);
       }
 
       // Fetch role - get all roles and check for admin
