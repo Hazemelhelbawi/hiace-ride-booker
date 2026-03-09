@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useConfirmDialog } from '@/components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ const SchedulesManager: React.FC = () => {
   const deleteSchedule = useDeleteSchedule();
   const updateSchedule = useUpdateSchedule();
   const generateTrips = useGenerateTripInstances();
+  const { confirm } = useConfirmDialog();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [expandedSchedule, setExpandedSchedule] = useState<string | null>(null);
@@ -69,7 +71,13 @@ const SchedulesManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this schedule and all its trips?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Schedule',
+      description: 'This schedule and all its trip instances will be permanently deleted.',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await deleteSchedule.mutateAsync(id);
       toast.success('Schedule deleted');

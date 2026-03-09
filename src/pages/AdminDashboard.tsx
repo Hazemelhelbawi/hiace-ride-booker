@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -97,6 +98,7 @@ const AdminDashboard: React.FC = () => {
   const deleteRoute = useDeleteRoute();
   const updateBooking = useUpdateBooking();
   const cancelBooking = useCancelBooking();
+  const { confirm } = useConfirmDialog();
 
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
@@ -164,7 +166,13 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm(t("admin.confirmCancel"))) return;
+    const confirmed = await confirm({
+      title: t("admin.confirmCancel"),
+      description: 'This booking will be cancelled and the passenger will be notified.',
+      confirmLabel: 'Cancel Booking',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking) return;
@@ -351,11 +359,17 @@ const AdminDashboard: React.FC = () => {
 
   const handleDeleteRoute = async (routeId: string) => {
     const relatedBookings = bookings.filter(b => b.route_id === routeId);
-    const warningMsg = relatedBookings.length > 0
-      ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. Are you sure?`
-      : t("admin.confirmDeleteRoute");
+    const description = relatedBookings.length > 0
+      ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. This action cannot be undone.`
+      : 'This route will be permanently deleted. This action cannot be undone.';
     
-    if (!confirm(warningMsg)) return;
+    const confirmed = await confirm({
+      title: 'Delete Route',
+      description,
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     try {
       await deleteRoute.mutateAsync(routeId);

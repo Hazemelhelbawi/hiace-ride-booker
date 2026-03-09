@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useConfirmDialog } from '@/components/ConfirmDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   useRouteTemplates,
@@ -79,6 +80,7 @@ const RouteTemplatesManager: React.FC = () => {
   const updateTemplate = useUpdateRouteTemplate();
   const deleteTemplate = useDeleteRouteTemplate();
   const setTemplateStops = useSetRouteTemplateStops();
+  const { confirm } = useConfirmDialog();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<RouteTemplate | null>(null);
@@ -164,7 +166,13 @@ const RouteTemplatesManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this route template?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Route Template',
+      description: 'This template and all its schedules, stops, and trip instances will be permanently deleted.',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await deleteTemplate.mutateAsync(id);
       toast.success('Route template deleted');

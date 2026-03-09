@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useConfirmDialog } from '@/components/ConfirmDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   useStops,
@@ -75,6 +76,7 @@ const StopsManager: React.FC = () => {
   const createStop = useCreateStop();
   const updateStop = useUpdateStop();
   const deleteStop = useDeleteStop();
+  const { confirm } = useConfirmDialog();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStop, setEditingStop] = useState<Stop | null>(null);
@@ -144,7 +146,13 @@ const StopsManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this stop?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Stop',
+      description: 'This stop and all its associations will be permanently deleted.',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await deleteStop.mutateAsync(id);
       toast.success('Stop deleted');

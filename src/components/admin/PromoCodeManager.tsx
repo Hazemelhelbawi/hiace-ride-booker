@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useConfirmDialog } from '@/components/ConfirmDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   usePromoCodes,
@@ -46,6 +47,7 @@ const PromoCodeManager: React.FC = () => {
   const createPromoCode = useCreatePromoCode();
   const updatePromoCode = useUpdatePromoCode();
   const deletePromoCode = useDeletePromoCode();
+  const { confirm } = useConfirmDialog();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
@@ -108,7 +110,13 @@ const PromoCodeManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.confirmDeletePromo'))) return;
+    const confirmed = await confirm({
+      title: t('admin.confirmDeletePromo'),
+      description: 'This promo code will be permanently deleted.',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     try {
       await deletePromoCode.mutateAsync(id);

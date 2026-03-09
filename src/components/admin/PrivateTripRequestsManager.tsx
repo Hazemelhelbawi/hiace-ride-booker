@@ -1,4 +1,5 @@
 import React from 'react';
+import { useConfirmDialog } from '@/components/ConfirmDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ interface PrivateTripRequest {
 
 const PrivateTripRequestsManager: React.FC = () => {
   const queryClient = useQueryClient();
+  const { confirm } = useConfirmDialog();
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['private-trip-requests'],
@@ -167,8 +169,14 @@ const PrivateTripRequestsManager: React.FC = () => {
                           size="sm"
                           variant="destructive"
                           className="h-7 w-7 p-0"
-                          onClick={() => {
-                            if (confirm('Delete this request?')) deleteRequest.mutate(req.id);
+                          onClick={async () => {
+                            const confirmed = await confirm({
+                              title: 'Delete Request',
+                              description: 'This private trip request will be permanently deleted.',
+                              confirmLabel: 'Delete',
+                              variant: 'destructive',
+                            });
+                            if (confirmed) deleteRequest.mutate(req.id);
                           }}
                         >
                           <Trash2 className="w-3 h-3" />

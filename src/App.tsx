@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ConfirmDialogProvider } from "./components/ConfirmDialog";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,6 +52,7 @@ const App = () => {
       <TooltipProvider>
         <LanguageProvider>
           <AuthProvider>
+            <ConfirmDialogProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -104,6 +106,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </ConfirmDialogProvider>
           </AuthProvider>
         </LanguageProvider>
       </TooltipProvider>

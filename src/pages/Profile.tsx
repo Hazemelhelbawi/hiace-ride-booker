@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useConfirmDialog } from '@/components/ConfirmDialog';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -60,6 +61,7 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { data: bookings = [], refetch } = useUserBookings(user?.id);
   const cancelBookingMutation = useCancelBooking();
+  const { confirm } = useConfirmDialog();
   const [selectedBooking, setSelectedBooking] = useState<{ booking: Booking; route: Route } | null>(null);
 
   useEffect(() => {
@@ -75,7 +77,13 @@ const Profile: React.FC = () => {
   };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm(t('profile.cancelBooking') + '?')) return;
+    const confirmed = await confirm({
+      title: t('profile.cancelBooking'),
+      description: 'Are you sure you want to cancel this booking? This action cannot be undone.',
+      confirmLabel: 'Cancel Booking',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     
     const booking = bookings.find(b => b.id === bookingId);
     
