@@ -80,6 +80,7 @@ const RouteTemplatesManager: React.FC = () => {
   const updateTemplate = useUpdateRouteTemplate();
   const deleteTemplate = useDeleteRouteTemplate();
   const setTemplateStops = useSetRouteTemplateStops();
+  const { confirm } = useConfirmDialog();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<RouteTemplate | null>(null);

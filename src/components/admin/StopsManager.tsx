@@ -76,6 +76,7 @@ const StopsManager: React.FC = () => {
   const createStop = useCreateStop();
   const updateStop = useUpdateStop();
   const deleteStop = useDeleteStop();
+  const { confirm } = useConfirmDialog();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStop, setEditingStop] = useState<Stop | null>(null);

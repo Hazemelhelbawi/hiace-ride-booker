@@ -38,6 +38,7 @@ const SchedulesManager: React.FC = () => {
   const deleteSchedule = useDeleteSchedule();
   const updateSchedule = useUpdateSchedule();
   const generateTrips = useGenerateTripInstances();
+  const { confirm } = useConfirmDialog();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [expandedSchedule, setExpandedSchedule] = useState<string | null>(null);

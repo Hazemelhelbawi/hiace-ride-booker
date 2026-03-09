@@ -47,6 +47,7 @@ const PromoCodeManager: React.FC = () => {
   const createPromoCode = useCreatePromoCode();
   const updatePromoCode = useUpdatePromoCode();
   const deletePromoCode = useDeletePromoCode();
+  const { confirm } = useConfirmDialog();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);

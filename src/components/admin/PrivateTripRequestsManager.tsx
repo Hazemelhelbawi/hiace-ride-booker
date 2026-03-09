@@ -30,6 +30,7 @@ interface PrivateTripRequest {
 
 const PrivateTripRequestsManager: React.FC = () => {
   const queryClient = useQueryClient();
+  const { confirm } = useConfirmDialog();
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['private-trip-requests'],

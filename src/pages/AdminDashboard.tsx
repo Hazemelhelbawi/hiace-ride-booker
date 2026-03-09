@@ -98,6 +98,7 @@ const AdminDashboard: React.FC = () => {
   const deleteRoute = useDeleteRoute();
   const updateBooking = useUpdateBooking();
   const cancelBooking = useCancelBooking();
+  const { confirm } = useConfirmDialog();
 
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
