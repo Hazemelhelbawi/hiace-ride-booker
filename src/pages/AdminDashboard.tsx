@@ -60,6 +60,7 @@ import {
   Tag,
   Car,
   Route as RouteIcon,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import BookingCalendar from "@/components/BookingCalendar";
