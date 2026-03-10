@@ -558,7 +558,7 @@ const TripBookingFlow: React.FC = () => {
                 )}
                 {selectedDate && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Date</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.date')}</div>
                     <div className="font-semibold text-foreground">{selectedDate}</div>
                   </div>
                 )}
