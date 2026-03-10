@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { formatTime12h } from '@/lib/timeFormat';
 import type { Route, Booking } from '@/services/api';
 
 interface BookingCalendarProps {

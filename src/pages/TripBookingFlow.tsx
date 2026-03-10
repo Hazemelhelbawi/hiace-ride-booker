@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { logger } from '@/lib/logger';
+import { formatTime12h } from '@/lib/timeFormat';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
