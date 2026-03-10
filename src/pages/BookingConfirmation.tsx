@@ -49,7 +49,7 @@ const BookingConfirmation: React.FC = () => {
 
 🗺️ ${t('booking.route')}: ${route.origin} → ${route.destination}
 📅 ${t('booking.date')}: ${route.date}
-🕐 ${t('admin.departureTime')}: ${route.departure_time}
+🕐 ${t('admin.departureTime')}: ${formatTime12h(route.departure_time)}
 
 💺 ${t('booking.seats')}: ${booking.seats.join(', ')}
 💰 ${t('booking.total')}: ${booking.total_price} ${t('common.currency')}
