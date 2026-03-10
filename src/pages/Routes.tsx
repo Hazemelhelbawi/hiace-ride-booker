@@ -129,7 +129,7 @@ const Routes: React.FC = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative h-[650px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[650px] py-8 flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${hero})` }}
