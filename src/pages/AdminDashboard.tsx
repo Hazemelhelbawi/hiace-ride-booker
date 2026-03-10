@@ -174,33 +174,7 @@ const AdminDashboard: React.FC = () => {
       toast.success(isPaid ? t("admin.markedPaid") : t("admin.markedUnpaid"));
 
       // Send email notification
-      const route = routes.find((r) => r.id === booking.route_id);
-      if (route) {
-        sendBookingEmail({
-          booking: {
-            id: booking.id,
-            seats: booking.seats,
-            passenger: {
-              name: booking.passenger_name,
-              phone: booking.passenger_phone,
-              email: booking.passenger_email,
-              notes: booking.passenger_notes || "",
-            },
-            totalPrice: booking.total_price,
-            status: booking.status,
-            isPaid,
-            createdAt: booking.created_at,
-          },
-          route: {
-            origin: route.origin,
-            destination: route.destination,
-            date: route.date,
-            departureTime: route.departure_time,
-          },
-          status: booking.status as "pending" | "confirmed" | "cancelled",
-          isPaid,
-        });
-      }
+      sendBookingEmail(booking.id);
     } catch (error) {
       toast.error(t("common.error"));
     }

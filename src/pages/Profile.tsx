@@ -93,14 +93,7 @@ const Profile: React.FC = () => {
       refetch();
 
       // Send cancellation email
-      if (booking?.route) {
-        sendBookingEmail({
-          booking: mapToLegacyBooking(booking),
-          route: mapToLegacyRoute(booking.route),
-          status: 'cancelled',
-          isPaid: booking.is_paid,
-        });
-      }
+      sendBookingEmail(bookingId);
     } catch (error) {
       toast.error(t('common.error'));
     }
