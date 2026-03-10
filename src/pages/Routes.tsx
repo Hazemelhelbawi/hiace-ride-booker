@@ -383,6 +383,9 @@ const Routes: React.FC = () => {
         </div>
       </section>
 
+      {/* Gallery Section */}
+      <Gallery />
+
       {/* Testimonials Section */}
       <Testimonials />
 
