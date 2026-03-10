@@ -153,7 +153,7 @@ const TripBookingFlow: React.FC = () => {
         number: num,
         isAvailable: !booked.includes(num),
         isSelected: false,
-        price: num === 1 ? price + 100 : price,
+        price: num === 1 ? price + 50 : price,
       }));
       setSeats(initialSeats);
     };

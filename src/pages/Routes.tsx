@@ -129,7 +129,7 @@ const Routes: React.FC = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative h-[650px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[650px] py-8 flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${hero})` }}
@@ -160,8 +160,8 @@ const Routes: React.FC = () => {
             </p>
           </div>
 
-          <Card className="max-w-5xl mx-auto bg-card/95 backdrop-blur-lg border-0 shadow-2xl p-8 rounded-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="max-w-5xl mx-auto bg-card/95 backdrop-blur-lg border-0 shadow-2xl p-4 sm:p-6 md:p-8 rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">
                   {t("search.pickupLocation")}
@@ -235,7 +235,7 @@ const Routes: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-end">
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">
                   {t("search.departureDate")}

@@ -77,7 +77,7 @@ const BookingFlow: React.FC = () => {
         number: num,
         isAvailable: !bookedSeats.includes(num),
         isSelected: false,
-        price: num === 1 ? (route.price + 100) : route.price,
+        price: num === 1 ? (route.price + 50) : route.price,
       }));
       setSeats(initialSeats);
     }
