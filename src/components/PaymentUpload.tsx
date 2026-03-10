@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Copy, Upload, Check, Wallet, CreditCard, Loader2, Building2, MessageCircle } from 'lucide-react';
@@ -19,6 +20,7 @@ const WHATSAPP_NUMBER = '+201002178764';
 const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) => {
   const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -30,12 +32,12 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+      toast.error(t('payment.imageOnly'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be under 5MB');
+      toast.error(t('payment.fileTooLarge'));
       return;
     }
 
@@ -53,10 +55,10 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
         .getPublicUrl(fileName);
 
       onUpload(publicUrl);
-      toast.success('Screenshot uploaded successfully');
+      toast.success(t('payment.uploadSuccess'));
     } catch (err) {
       logger.error('Upload error:', err);
-      toast.error('Failed to upload screenshot');
+      toast.error(t('payment.uploadError'));
     } finally {
       setIsUploading(false);
     }
@@ -64,7 +66,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-foreground">Payment</h3>
+      <h3 className="font-semibold text-foreground">{t('payment.title')}</h3>
 
       {/* Payment Methods */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -73,7 +75,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">InstaPay / حساب بنكي</span>
+              <span className="font-medium text-foreground">{t('payment.instapay')}</span>
             </div>
             <p className="text-sm text-muted-foreground mb-2 font-mono">{INSTAPAY_NUMBER}</p>
             <Button
@@ -83,7 +85,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
               onClick={() => copyToClipboard(INSTAPAY_NUMBER, 'InstaPay number')}
               className="gap-1 w-full"
             >
-              <Copy className="w-3 h-3" /> Copy Number
+              <Copy className="w-3 h-3" /> {t('payment.copyNumber')}
             </Button>
           </CardContent>
         </Card>
@@ -93,7 +95,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Wallet className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">Vodafone Cash</span>
+              <span className="font-medium text-foreground">{t('payment.vodafoneCash')}</span>
             </div>
             {VODAFONE_CASH_NUMBERS.map((num, i) => (
               <div key={i} className="flex items-center gap-2 mb-2">
@@ -117,7 +119,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Building2 className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">CIB حساب بنكي</span>
+              <span className="font-medium text-foreground">{t('payment.cibAccount')}</span>
             </div>
             <p className="text-sm text-muted-foreground mb-2 font-mono">{CIB_ACCOUNT}</p>
             <Button
@@ -127,7 +129,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
               onClick={() => copyToClipboard(CIB_ACCOUNT, 'CIB account')}
               className="gap-1 w-full"
             >
-              <Copy className="w-3 h-3" /> Copy Number
+              <Copy className="w-3 h-3" /> {t('payment.copyNumber')}
             </Button>
           </CardContent>
         </Card>
@@ -137,7 +139,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <MessageCircle className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">WhatsApp</span>
+              <span className="font-medium text-foreground">{t('payment.whatsapp')}</span>
             </div>
             <p className="text-sm text-muted-foreground mb-2 font-mono">{WHATSAPP_NUMBER}</p>
             <Button
@@ -147,7 +149,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
               onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, '_blank')}
               className="gap-1 w-full"
             >
-              <MessageCircle className="w-3 h-3" /> Chat on WhatsApp
+              <MessageCircle className="w-3 h-3" /> {t('payment.chatWhatsApp')}
             </Button>
           </CardContent>
         </Card>
@@ -155,7 +157,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
 
       {/* Upload Screenshot */}
       <div>
-        <p className="text-sm text-muted-foreground mb-2">Upload payment screenshot (optional)</p>
+        <p className="text-sm text-muted-foreground mb-2">{t('payment.uploadScreenshot')}</p>
         <input
           ref={fileRef}
           type="file"
@@ -166,7 +168,7 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
         {uploadedUrl ? (
           <div className="flex items-center gap-3 p-3 bg-success/10 rounded-lg border border-success/20">
             <Check className="w-5 h-5 text-success flex-shrink-0" />
-            <span className="text-sm text-success font-medium">Screenshot uploaded</span>
+            <span className="text-sm text-success font-medium">{t('payment.screenshotUploaded')}</span>
             <img src={uploadedUrl} alt="Payment" className="w-12 h-12 rounded object-cover ml-auto" />
           </div>
         ) : (
@@ -178,9 +180,9 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
             className="w-full h-20 border-dashed border-2 gap-2"
           >
             {isUploading ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Uploading...</>
+              <><Loader2 className="w-5 h-5 animate-spin" /> {t('payment.uploading')}</>
             ) : (
-              <><Upload className="w-5 h-5" /> Upload Payment Screenshot</>
+              <><Upload className="w-5 h-5" /> {t('payment.uploadBtn')}</>
             )}
           </Button>
         )}
