@@ -539,20 +539,20 @@ const TripBookingFlow: React.FC = () => {
               <CardContent className="p-6 space-y-4">
                 {selectedTemplate && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Direction</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.route')}</div>
                     <div className="font-semibold text-foreground">{selectedTemplate.name}</div>
                   </div>
                 )}
                 {pickupStop && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Pickup</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.pickupPoint')}</div>
                     <div className="font-semibold text-foreground">{pickupStop.name_en}</div>
                     {pickupTime && <div className="text-sm text-primary flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime12h(pickupTime)}</div>}
                   </div>
                 )}
                 {dropoffStop && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Dropoff</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.dropoffPoint')}</div>
                     <div className="font-semibold text-foreground">{dropoffStop.name_en}</div>
                   </div>
                 )}
