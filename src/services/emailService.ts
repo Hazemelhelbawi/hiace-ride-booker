@@ -1,53 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/lib/logger';
 
-interface EmailBookingData {
-  id: string;
-  seats: number[];
-  passenger: {
-    name: string;
-    phone: string;
-    email: string;
-    notes?: string;
-  };
-  totalPrice: number;
-  status: string;
-  isPaid: boolean;
-  createdAt: string;
-}
-
-interface EmailRouteData {
-  origin: string;
-  destination: string;
-  date: string;
-  departureTime: string;
-}
-
-interface SendEmailParams {
-  booking: EmailBookingData;
-  route: EmailRouteData;
-  status: "pending" | "confirmed" | "cancelled";
-  isPaid: boolean;
-}
-
-export const sendBookingEmail = async ({ booking, route, status, isPaid }: SendEmailParams): Promise<boolean> => {
+/**
+ * Send a booking email by providing only the bookingId.
+ * The edge function fetches all data from the database server-side.
+ */
+export const sendBookingEmail = async (bookingId: string): Promise<boolean> => {
   try {
     const response = await supabase.functions.invoke("send-booking-email", {
-      body: {
-        to: booking.passenger.email,
-        passengerName: booking.passenger.name,
-        bookingId: booking.id,
-        status,
-        isPaid,
-        route: {
-          origin: route.origin,
-          destination: route.destination,
-          date: route.date,
-          departureTime: route.departureTime,
-        },
-        seats: booking.seats,
-        totalPrice: booking.totalPrice,
-      },
+      body: { bookingId },
     });
 
     if (response.error) {

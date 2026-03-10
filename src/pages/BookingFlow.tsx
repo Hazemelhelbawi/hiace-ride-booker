@@ -163,30 +163,7 @@ const BookingFlow: React.FC = () => {
       }
 
       // Send confirmation email
-      sendBookingEmail({
-        booking: {
-          id: newBooking.id,
-          seats: newBooking.seats,
-          passenger: {
-            name: newBooking.passenger_name,
-            phone: newBooking.passenger_phone,
-            email: newBooking.passenger_email,
-            notes: newBooking.passenger_notes || '',
-          },
-          totalPrice: newBooking.total_price,
-          status: newBooking.status,
-          isPaid: newBooking.is_paid,
-          createdAt: newBooking.created_at,
-        },
-        route: {
-          origin: route.origin,
-          destination: route.destination,
-          date: route.date,
-          departureTime: route.departure_time,
-        },
-        status: 'pending',
-        isPaid: false,
-      });
+      sendBookingEmail(newBooking.id);
 
       toast.success(t('booking.confirmed') || 'Booking confirmed!');
 

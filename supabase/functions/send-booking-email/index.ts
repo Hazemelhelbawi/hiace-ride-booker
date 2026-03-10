@@ -9,22 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-interface BookingEmailRequest {
-  to: string;
-  passengerName: string;
-  bookingId: string;
-  status: "pending" | "confirmed" | "cancelled";
-  isPaid: boolean;
-  route: {
-    origin: string;
-    destination: string;
-    date: string;
-    departureTime: string;
-  };
-  seats: number[];
-  totalPrice: number;
-}
-
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -79,24 +63,37 @@ const handler = async (req: Request): Promise<Response> => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    // Use getUser() for proper server-side JWT verification
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
-    const data: BookingEmailRequest = await req.json();
-    const { to, passengerName, bookingId, status, isPaid, route, seats, totalPrice } = data;
+    // Only accept bookingId from request — all other data fetched from DB
+    const { bookingId } = await req.json();
 
-    // Validate that the booking belongs to the authenticated user or they are admin
-    const { data: booking, error: bookingError } = await supabaseClient
+    if (!bookingId || typeof bookingId !== "string" || bookingId.length > 36) {
+      return new Response(JSON.stringify({ error: "Invalid booking ID" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Use a service role client to fetch booking data (bypasses RLS for admin access)
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Fetch booking with route data from DB — never trust client-supplied data
+    const { data: booking, error: bookingError } = await serviceClient
       .from("bookings")
-      .select("user_id")
+      .select("*, routes(*)")
       .eq("id", bookingId)
       .single();
 
@@ -107,10 +104,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Check ownership - RLS will already filter, but double-check
+    // Check ownership or admin role
     if (booking.user_id !== userId) {
-      // Check if admin
-      const { data: roleData } = await supabaseClient
+      const { data: roleData } = await serviceClient
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
@@ -125,21 +121,22 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Input validation
-    if (!to || !passengerName || !bookingId || !status || !route) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
+    // Extract all email data from DB record
+    const to = booking.passenger_email;
+    const passengerName = booking.passenger_name;
+    const status = booking.status;
+    const isPaid = booking.is_paid;
+    const seats = booking.seats;
+    const totalPrice = booking.total_price;
+    const route = booking.routes;
 
-    // Sanitize all user inputs for HTML
-    const safeName = escapeHtml(passengerName.slice(0, 100));
-    const safeOrigin = escapeHtml(route.origin.slice(0, 100));
-    const safeDestination = escapeHtml(route.destination.slice(0, 100));
-    const safeDate = escapeHtml(route.date.slice(0, 20));
-    const safeDepartureTime = escapeHtml(route.departureTime.slice(0, 20));
-    const safeBookingId = escapeHtml(bookingId.slice(0, 36));
+    // Sanitize all values for HTML
+    const safeName = escapeHtml(String(passengerName).slice(0, 100));
+    const safeBookingId = escapeHtml(String(bookingId).slice(0, 36));
+    const safeOrigin = route ? escapeHtml(String(route.origin).slice(0, 100)) : "N/A";
+    const safeDestination = route ? escapeHtml(String(route.destination).slice(0, 100)) : "N/A";
+    const safeDate = route ? escapeHtml(String(route.date).slice(0, 20)) : "N/A";
+    const safeDepartureTime = route ? escapeHtml(String(route.departure_time).slice(0, 20)) : "N/A";
 
     const statusColor = getStatusColor(status);
     const subject = getStatusSubject(status, isPaid);
@@ -162,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 30px;">
               <span style="display: inline-block; background-color: ${statusColor}20; color: ${statusColor}; padding: 8px 24px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 14px;">
-                ${escapeHtml(status)}
+                ${escapeHtml(String(status))}
               </span>
             </div>
 
@@ -196,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
                 <span style="color: #6b7280; font-size: 13px;">Seats</span>
-                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${seats.map(s => String(Number(s))).join(", ")}</p>
+                <p style="color: #1f2937; margin: 4px 0 0 0; font-weight: 600;">${Array.isArray(seats) ? seats.map((s: number) => String(Number(s))).join(", ") : "N/A"}</p>
               </div>
 
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px;">
@@ -241,14 +238,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
     console.error("Error in send-booking-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal server error. Please try again later." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
