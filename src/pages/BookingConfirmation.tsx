@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { formatTime12h } from '@/lib/timeFormat';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
