@@ -3,24 +3,41 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Camera } from "lucide-react";
 
-import van1 from "@/assets/gallery/van-1.jpg";
-import van2 from "@/assets/gallery/van-2.jpg";
-import van3 from "@/assets/gallery/van-3.jpg";
-import van4 from "@/assets/gallery/van-4.jpg";
-import van5 from "@/assets/gallery/van-5.jpg";
-import van6 from "@/assets/gallery/van-6.jpg";
-import van7 from "@/assets/gallery/van-7.jpg";
-import van8 from "@/assets/gallery/van-8.jpg";
+import van1 from "@/assets/gallery/1.jpeg";
+import van2 from "@/assets/gallery/2.jpeg";
+import van3 from "@/assets/gallery/3.jpeg";
+import van4 from "@/assets/gallery/4.jpeg";
+import van5 from "@/assets/gallery/5.jpeg";
+import van6 from "@/assets/gallery/6.jpeg";
+import van7 from "@/assets/gallery/7.jpeg";
+import van8 from "@/assets/gallery/8.jpeg";
+import van9 from "@/assets/gallery/9.jpeg";
+import van10 from "@/assets/gallery/10.jpeg";
+import van11 from "@/assets/gallery/11.jpeg";
+import van12 from "@/assets/gallery/12.jpeg";
+// import van1 from "@/assets/gallery/1.jpeg";
+// import van1 from "@/assets/gallery/van-1.jpg";
+// import van2 from "@/assets/gallery/van-2.jpg";
+// import van3 from "@/assets/gallery/van-3.jpg";
+// import van4 from "@/assets/gallery/van-4.jpg";
+// import van5 from "@/assets/gallery/van-5.jpg";
+// import van6 from "@/assets/gallery/van-6.jpg";
+// import van7 from "@/assets/gallery/van-7.jpg";
+// import van8 from "@/assets/gallery/van-8.jpg";
 
 const images = [
-  { src: van1, alt: "Desert road trip" },
-  { src: van2, alt: "Highway journey" },
-  { src: van3, alt: "Comfortable interior" },
-  { src: van4, alt: "Coastal route" },
-  { src: van5, alt: "Our fleet" },
-  { src: van6, alt: "City transfer" },
-  { src: van7, alt: "Driver cockpit" },
-  { src: van8, alt: "Sunset adventure" },
+  { src: van1, alt: "سيارتنا" },
+  { src: van2, alt: "سيارتنا" },
+  { src: van3, alt: "سيارتنا" },
+  { src: van4, alt: "سيارتنا" },
+  { src: van5, alt: "سيارتنا" },
+  { src: van6, alt: "سيارتنا" },
+  { src: van7, alt: "سيارتنا" },
+  { src: van8, alt: "سيارتنا" },
+  { src: van9, alt: "سيارتنا" },
+  { src: van10, alt: "سيارتنا" },
+  { src: van11, alt: "سيارتنا" },
+  { src: van12, alt: "سيارتنا" },
 ];
 
 const Gallery: React.FC = () => {
@@ -39,7 +56,8 @@ const Gallery: React.FC = () => {
             {t("gallery.title") || "Travel in Comfort & Style"}
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            {t("gallery.subtitle") || "Take a look at our modern fleet ready to take you anywhere"}
+            {t("gallery.subtitle") ||
+              "Take a look at our modern fleet ready to take you anywhere"}
           </p>
         </div>
 
@@ -68,7 +86,10 @@ const Gallery: React.FC = () => {
         </div>
       </div>
 
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+      <Dialog
+        open={!!selectedImage}
+        onOpenChange={() => setSelectedImage(null)}
+      >
         <DialogContent className="max-w-3xl p-1 bg-card border-0">
           {selectedImage && (
             <img

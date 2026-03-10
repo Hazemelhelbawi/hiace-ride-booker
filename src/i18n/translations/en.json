@@ -263,6 +263,13 @@
     "happyCustomers": "Happy Customers",
     "routes": "Routes Available"
   },
+
+  "gallery": {
+    "badge": "Our Vehicles",
+    "title": "Latest Vehicles",
+    "subtitle": "A collection of modern, well-equipped vehicles designed to provide a safe and comfortable journey for our customers."
+  },
+
   "admin": {
     "dashboard": "Dashboard",
     "manageBookingsRoutes": "Manage bookings and routes",
