@@ -564,7 +564,7 @@ const TripBookingFlow: React.FC = () => {
                 )}
                 {selectedSeats.length > 0 && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Seats</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.seats')}</div>
                     <div className="font-semibold text-foreground">{selectedSeats.map(s => s.number).join(', ')}</div>
                   </div>
                 )}
