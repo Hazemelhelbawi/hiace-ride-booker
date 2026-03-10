@@ -6,6 +6,7 @@ import { useRoutes } from "@/hooks/useData";
 import RouteCard from "@/components/RouteCard";
 import Navbar from "@/components/Navbar";
 import PromoBanner from "@/components/PromoBanner";
+import Gallery from "@/components/Gallery";
 import Testimonials from "@/components/Testimonials";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
