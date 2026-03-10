@@ -579,18 +579,18 @@ const TripBookingFlow: React.FC = () => {
                 {selectedSeats.length > 0 && (
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium text-foreground">{subtotalPrice} LE</span>
+                      <span className="text-muted-foreground">{t('promo.originalPrice')}</span>
+                      <span className="font-medium text-foreground">{subtotalPrice} {t('common.currency')}</span>
                     </div>
                     {appliedPromoCode && (
                       <div className="flex justify-between text-sm text-success">
                         <span className="flex items-center gap-1"><Tag className="w-3 h-3" />-{appliedPromoCode.discount_percent}%</span>
-                        <span>-{discountAmount} LE</span>
+                        <span>-{discountAmount} {t('common.currency')}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                      <span className="text-foreground">Total</span>
-                      <span className="text-primary">{totalPrice} LE</span>
+                      <span className="text-foreground">{t('booking.total')}</span>
+                      <span className="text-primary">{totalPrice} {t('common.currency')}</span>
                     </div>
                   </div>
                 )}
