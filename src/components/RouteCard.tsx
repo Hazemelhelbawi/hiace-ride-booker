@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { MapPin, Clock, Users, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatTime12h } from '@/lib/timeFormat';
 import type { Route } from '@/services/api';
 
 interface RouteCardProps {
