@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { formatTime12h } from '@/lib/timeFormat';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
@@ -48,7 +49,7 @@ const BookingConfirmation: React.FC = () => {
 
 🗺️ ${t('booking.route')}: ${route.origin} → ${route.destination}
 📅 ${t('booking.date')}: ${route.date}
-🕐 ${t('admin.departureTime')}: ${route.departure_time}
+🕐 ${t('admin.departureTime')}: ${formatTime12h(route.departure_time)}
 
 💺 ${t('booking.seats')}: ${booking.seats.join(', ')}
 💰 ${t('booking.total')}: ${booking.total_price} ${t('common.currency')}
@@ -147,7 +148,7 @@ ${t('booking.thankYou')}`;
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {route.departure_time}
+                    {formatTime12h(route.departure_time)}
                   </span>
                 </div>
               </div>

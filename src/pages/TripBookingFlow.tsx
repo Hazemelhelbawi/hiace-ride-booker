@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { logger } from '@/lib/logger';
+import { formatTime12h } from '@/lib/timeFormat';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -538,32 +539,32 @@ const TripBookingFlow: React.FC = () => {
               <CardContent className="p-6 space-y-4">
                 {selectedTemplate && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Direction</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.route')}</div>
                     <div className="font-semibold text-foreground">{selectedTemplate.name}</div>
                   </div>
                 )}
                 {pickupStop && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Pickup</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.pickupPoint')}</div>
                     <div className="font-semibold text-foreground">{pickupStop.name_en}</div>
-                    {pickupTime && <div className="text-sm text-primary flex items-center gap-1"><Clock className="w-3 h-3" />{pickupTime}</div>}
+                    {pickupTime && <div className="text-sm text-primary flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime12h(pickupTime)}</div>}
                   </div>
                 )}
                 {dropoffStop && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Dropoff</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.dropoffPoint')}</div>
                     <div className="font-semibold text-foreground">{dropoffStop.name_en}</div>
                   </div>
                 )}
                 {selectedDate && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Date</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.date')}</div>
                     <div className="font-semibold text-foreground">{selectedDate}</div>
                   </div>
                 )}
                 {selectedSeats.length > 0 && (
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">Seats</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.seats')}</div>
                     <div className="font-semibold text-foreground">{selectedSeats.map(s => s.number).join(', ')}</div>
                   </div>
                 )}
@@ -578,18 +579,18 @@ const TripBookingFlow: React.FC = () => {
                 {selectedSeats.length > 0 && (
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium text-foreground">{subtotalPrice} LE</span>
+                      <span className="text-muted-foreground">{t('promo.originalPrice')}</span>
+                      <span className="font-medium text-foreground">{subtotalPrice} {t('common.currency')}</span>
                     </div>
                     {appliedPromoCode && (
                       <div className="flex justify-between text-sm text-success">
                         <span className="flex items-center gap-1"><Tag className="w-3 h-3" />-{appliedPromoCode.discount_percent}%</span>
-                        <span>-{discountAmount} LE</span>
+                        <span>-{discountAmount} {t('common.currency')}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                      <span className="text-foreground">Total</span>
-                      <span className="text-primary">{totalPrice} LE</span>
+                      <span className="text-foreground">{t('booking.total')}</span>
+                      <span className="text-primary">{totalPrice} {t('common.currency')}</span>
                     </div>
                   </div>
                 )}

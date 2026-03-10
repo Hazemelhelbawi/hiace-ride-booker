@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { formatTime12h } from '@/lib/timeFormat';
 import type { Route, Booking } from '@/services/api';
 
 interface BookingCalendarProps {
@@ -227,7 +228,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                           </div>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            {route.departure_time} - {route.arrival_time}
+                            {formatTime12h(route.departure_time)} - {formatTime12h(route.arrival_time)}
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs">
