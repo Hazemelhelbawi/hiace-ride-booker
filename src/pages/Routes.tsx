@@ -235,7 +235,7 @@ const Routes: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-end">
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">
                   {t("search.departureDate")}
