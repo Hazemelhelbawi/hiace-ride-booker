@@ -148,7 +148,7 @@ ${t('booking.thankYou')}`;
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {route.departure_time}
+                    {formatTime12h(route.departure_time)}
                   </span>
                 </div>
               </div>

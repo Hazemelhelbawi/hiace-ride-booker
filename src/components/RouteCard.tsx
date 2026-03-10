@@ -50,7 +50,7 @@ const RouteCard = React.forwardRef<HTMLDivElement, RouteCardProps>(({ route, onB
           <div className="flex items-center gap-2 text-sm">
             <Clock className="w-4 h-4 text-muted-foreground" />
             <div>
-              <div className="font-semibold text-foreground">{route.departure_time}</div>
+              <div className="font-semibold text-foreground">{formatTime12h(route.departure_time)}</div>
               <div className="text-xs text-muted-foreground">{t('admin.departureTime')}</div>
             </div>
           </div>

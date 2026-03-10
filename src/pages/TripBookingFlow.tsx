@@ -546,7 +546,7 @@ const TripBookingFlow: React.FC = () => {
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Pickup</div>
                     <div className="font-semibold text-foreground">{pickupStop.name_en}</div>
-                    {pickupTime && <div className="text-sm text-primary flex items-center gap-1"><Clock className="w-3 h-3" />{pickupTime}</div>}
+                    {pickupTime && <div className="text-sm text-primary flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime12h(pickupTime)}</div>}
                   </div>
                 )}
                 {dropoffStop && (

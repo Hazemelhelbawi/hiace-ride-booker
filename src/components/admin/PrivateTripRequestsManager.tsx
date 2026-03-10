@@ -122,7 +122,7 @@ const PrivateTripRequestsManager: React.FC = () => {
                 {requests.map(req => (
                   <TableRow key={req.id}>
                     <TableCell className="text-xs">
-                      {format(new Date(req.created_at), 'MMM dd, HH:mm')}
+                      {format(new Date(req.created_at), 'MMM dd, hh:mm a')}
                     </TableCell>
                     <TableCell className="text-xs font-medium">{req.name}</TableCell>
                     <TableCell className="text-xs">{req.phone}</TableCell>

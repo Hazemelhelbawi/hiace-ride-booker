@@ -600,6 +600,18 @@ const AdminDashboard: React.FC = () => {
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 w-8 p-0 text-success hover:text-success"
+                                    onClick={() => {
+                                      const phone = booking.passenger_phone.replace(/[^0-9]/g, '');
+                                      window.open(`https://wa.me/${phone}`, '_blank');
+                                    }}
+                                    title="WhatsApp"
+                                  >
+                                    <MessageCircle className="w-4 h-4" />
+                                  </Button>
                                   {booking.status === "pending" && (
                                     <Button
                                       size="sm"
