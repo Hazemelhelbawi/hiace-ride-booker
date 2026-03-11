@@ -156,13 +156,13 @@ ${t('booking.thankYou')}`;
                     {booking.pickup_stop && (
                       <span className="flex items-center gap-1 text-green-600">
                         <MapPin className="w-3 h-3" />
-                        {t('booking.pickup')}: {booking.pickup_stop.name_en}
+                        {t('booking.pickupPoint')}: {booking.pickup_stop.name_en}
                       </span>
                     )}
                     {booking.dropoff_stop && (
                       <span className="flex items-center gap-1 text-destructive">
                         <MapPin className="w-3 h-3" />
-                        {t('booking.dropoff')}: {booking.dropoff_stop.name_en}
+                        {t('booking.dropoffPoint')}: {booking.dropoff_stop.name_en}
                       </span>
                     )}
                   </div>
