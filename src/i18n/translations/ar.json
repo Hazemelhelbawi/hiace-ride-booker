@@ -467,7 +467,12 @@
     "scheduleDeleted": "تم حذف الجدول",
     "failedToDelete": "فشل الحذف",
     "generatedTrips": "تم إنشاء {{count}} تشغيلة",
-    "failedToGenerate": "فشل توليد الرحلات"
+    "failedToGenerate": "فشل توليد الرحلات",
+    "editSchedule": "تعديل الجدول",
+    "updateSchedule": "تحديث الجدول",
+    "updating": "جارٍ التحديث...",
+    "scheduleUpdated": "تم تحديث الجدول",
+    "failedToUpdateSchedule": "فشل تحديث الجدول"
   },
   "promo": {
     "limitedOffer": "عرض لفترة محدودة",
