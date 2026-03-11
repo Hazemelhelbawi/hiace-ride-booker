@@ -101,7 +101,16 @@ const BookingTicket: React.FC<BookingTicketProps> = ({
                   <span>To</span>
                   <strong>${route.destination}</strong>
                 </div>
+               </div>
+              ${pickupStopName ? `
+              <div class="info-grid">
+                <div class="info-item">
+                  <span>Pickup Point</span>
+                  <strong>${pickupStopName}</strong>
+                </div>
+                ${dropoffStopName ? `<div class="info-item"><span>Dropoff Point</span><strong>${dropoffStopName}</strong></div>` : ''}
               </div>
+              ` : ''}
               <div class="info-grid">
                 <div class="info-item">
                   <span>Date</span>
