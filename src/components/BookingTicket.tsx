@@ -21,6 +21,8 @@ interface BookingTicketProps {
   booking: Booking;
   route: Route;
   onClose: () => void;
+  pickupStopName?: string;
+  dropoffStopName?: string;
 }
 
 const BookingTicket: React.FC<BookingTicketProps> = ({
