@@ -421,6 +421,7 @@ const SchedulesManager: React.FC = () => {
                     <ScheduleCard
                       key={schedule.id}
                       schedule={schedule}
+                      templates={templates}
                       isExpanded={expandedSchedule === schedule.id}
                       onToggle={() =>
                         setExpandedSchedule(
