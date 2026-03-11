@@ -239,6 +239,30 @@ const BookingTicket: React.FC<BookingTicketProps> = ({
               </div>
             </div>
 
+            {/* Pickup / Dropoff Stops */}
+            {(pickupStopName || dropoffStopName) && (
+              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border border-dashed">
+                {pickupStopName && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Pickup Point</p>
+                      <p className="font-medium text-sm">{pickupStopName}</p>
+                    </div>
+                  </div>
+                )}
+                {dropoffStopName && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-red-500 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Dropoff Point</p>
+                      <p className="font-medium text-sm">{dropoffStopName}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
