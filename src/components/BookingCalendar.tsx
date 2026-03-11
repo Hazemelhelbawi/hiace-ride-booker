@@ -1,13 +1,23 @@
-import React, { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, MapPin, Users, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { formatTime12h } from '@/lib/timeFormat';
-import type { Route, Booking } from '@/services/api';
+import React, { useState, useMemo } from "react";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
+  isToday,
+} from "date-fns";
+import { ChevronLeft, ChevronRight, MapPin, Users, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { formatTime12h } from "@/lib/timeFormat";
+import type { Route, Booking } from "@/services/api";
 
 interface BookingCalendarProps {
   routes: Route[];
@@ -20,7 +30,10 @@ interface DayData {
   bookings: Booking[];
 }
 
-const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) => {
+const BookingCalendar: React.FC<BookingCalendarProps> = ({
+  routes,
+  bookings,
+}) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -30,45 +43,49 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
 
   // Get the day of week for the first day (0 = Sunday, 6 = Saturday)
   const startDayOfWeek = monthStart.getDay();
-  
+
   // Create padding days for the calendar grid
   const paddingDays = Array(startDayOfWeek).fill(null);
 
   const dayData = useMemo((): Map<string, DayData> => {
     const data = new Map<string, DayData>();
-    
-    daysInMonth.forEach(date => {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const dayRoutes = routes.filter(route => route.date === dateStr);
-      const routeIds = dayRoutes.map(r => r.id);
-      const dayBookings = bookings.filter(booking => routeIds.includes(booking.route_id));
-      
+
+    daysInMonth.forEach((date) => {
+      const dateStr = format(date, "yyyy-MM-dd");
+      const dayRoutes = routes.filter((route) => route.date === dateStr);
+      const routeIds = dayRoutes.map((r) => r.id);
+      const dayBookings = bookings.filter((booking) =>
+        routeIds.includes(booking.route_id),
+      );
+
       data.set(dateStr, {
         date,
         routes: dayRoutes,
         bookings: dayBookings,
       });
     });
-    
+
     return data;
   }, [daysInMonth, routes, bookings]);
 
   const selectedDayData = useMemo(() => {
     if (!selectedDate) return null;
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    return dayData.get(dateStr) || { date: selectedDate, routes: [], bookings: [] };
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    return (
+      dayData.get(dateStr) || { date: selectedDate, routes: [], bookings: [] }
+    );
   }, [selectedDate, dayData]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed':
-        return 'bg-success text-success-foreground';
-      case 'pending':
-        return 'bg-warning text-warning-foreground';
-      case 'cancelled':
-        return 'bg-destructive text-destructive-foreground';
+      case "confirmed":
+        return "bg-success text-success-foreground";
+      case "pending":
+        return "bg-warning text-warning-foreground";
+      case "cancelled":
+        return "bg-destructive text-destructive-foreground";
       default:
-        return 'bg-muted text-muted-foreground';
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -76,7 +93,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
     return routes.find((r) => r.id === booking.route_id);
   };
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -84,7 +101,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
       <Card className="lg:col-span-2 border-2 shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-xl font-semibold">
-            {format(currentMonth, 'MMMM yyyy')}
+            {format(currentMonth, "MMMM yyyy")}
           </CardTitle>
           <div className="flex gap-2">
             <Button
@@ -116,7 +133,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
         <CardContent>
           {/* Week day headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekDays.map(day => (
+            {weekDays.map((day) => (
               <div
                 key={day}
                 className="text-center text-sm font-medium text-muted-foreground py-2"
@@ -130,12 +147,15 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
           <div className="grid grid-cols-7 gap-1">
             {/* Empty cells for padding */}
             {paddingDays.map((_, index) => (
-              <div key={`padding-${index}`} className="h-24 bg-muted/20 rounded-lg" />
+              <div
+                key={`padding-${index}`}
+                className="h-24 bg-muted/20 rounded-lg"
+              />
             ))}
 
             {/* Day cells */}
-            {daysInMonth.map(date => {
-              const dateStr = format(date, 'yyyy-MM-dd');
+            {daysInMonth.map((date) => {
+              const dateStr = format(date, "yyyy-MM-dd");
               const data = dayData.get(dateStr);
               const routeCount = data?.routes.length || 0;
               const bookingCount = data?.bookings.length || 0;
@@ -149,36 +169,39 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                   className={cn(
                     "h-24 p-2 rounded-lg border-2 transition-all duration-200 flex flex-col",
                     "hover:border-primary/50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50",
-                    isSelected 
-                      ? "border-primary bg-primary/5 shadow-md" 
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-md"
                       : "border-transparent bg-card",
                     isCurrentDay && !isSelected && "bg-accent/50",
-                    routeCount > 0 && "bg-primary/5"
+                    routeCount > 0 && "bg-primary/5",
                   )}
                 >
                   <span
                     className={cn(
                       "text-sm font-medium self-start",
-                      isCurrentDay && "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center",
-                      !isSameMonth(date, currentMonth) && "text-muted-foreground"
+                      isCurrentDay &&
+                        "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center",
+                      !isSameMonth(date, currentMonth) &&
+                        "text-muted-foreground",
                     )}
                   >
-                    {format(date, 'd')}
+                    {format(date, "d")}
                   </span>
-                  
+
                   {routeCount > 0 && (
                     <div className="mt-auto space-y-1">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-primary" />
                         <span className="text-xs font-medium text-primary">
-                          {routeCount} {routeCount === 1 ? 'route' : 'routes'}
+                          {routeCount} {routeCount === 1 ? "route" : "routes"}
                         </span>
                       </div>
                       {bookingCount > 0 && (
                         <div className="flex items-center gap-1">
                           <Users className="w-3 h-3 text-success" />
                           <span className="text-xs text-success">
-                            {bookingCount} {bookingCount === 1 ? 'booking' : 'bookings'}
+                            {bookingCount}{" "}
+                            {bookingCount === 1 ? "booking" : "bookings"}
                           </span>
                         </div>
                       )}
@@ -195,9 +218,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
       <Card className="border-2 shadow-lg">
         <CardHeader>
           <CardTitle className="text-lg">
-            {selectedDate 
-              ? format(selectedDate, 'EEEE, MMMM d, yyyy')
-              : 'Select a date'}
+            {selectedDate
+              ? format(selectedDate, "EEEE, MMMM d, yyyy")
+              : "Select a date"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -215,10 +238,12 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                     Routes ({selectedDayData.routes.length})
                   </h4>
                   {selectedDayData.routes.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic">No routes scheduled</p>
+                    <p className="text-sm text-muted-foreground italic">
+                      No routes scheduled
+                    </p>
                   ) : (
                     <div className="space-y-2">
-                      {selectedDayData.routes.map(route => (
+                      {selectedDayData.routes.map((route) => (
                         <div
                           key={route.id}
                           className="p-3 bg-muted/50 rounded-lg border"
@@ -228,11 +253,13 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                           </div>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            {formatTime12h(route.departure_time)} - {formatTime12h(route.arrival_time)}
+                            {formatTime12h(route.departure_time)} -{" "}
+                            {formatTime12h(route.arrival_time)}
                           </div>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs">
-                              {route.available_seats}/{route.total_seats} seats available
+                              {route.available_seats}/{route.total_seats} seats
+                              available
                             </span>
                             <span className="text-xs font-medium text-primary">
                               {route.price} EGP
@@ -251,10 +278,12 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                     Bookings ({selectedDayData.bookings.length})
                   </h4>
                   {selectedDayData.bookings.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic">No bookings for this date</p>
+                    <p className="text-sm text-muted-foreground italic">
+                      No bookings for this date
+                    </p>
                   ) : (
                     <div className="space-y-2">
-                      {selectedDayData.bookings.map(booking => {
+                      {selectedDayData.bookings.map((booking) => {
                         const route = getRouteForBooking(booking);
                         return (
                           <div
@@ -265,7 +294,12 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                               <span className="font-medium text-sm">
                                 {booking.passenger_name}
                               </span>
-                              <Badge className={cn("text-xs", getStatusColor(booking.status))}>
+                              <Badge
+                                className={cn(
+                                  "text-xs",
+                                  getStatusColor(booking.status),
+                                )}
+                              >
                                 {booking.status}
                               </Badge>
                             </div>
@@ -276,12 +310,14 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ routes, bookings }) =
                             )}
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-muted-foreground">
-                                Seats: {booking.seats.join(', ')}
+                                Seats: {booking.seats.join(", ")}
                               </span>
                               <span className="text-xs font-medium">
                                 {booking.total_price} EGP
                                 {booking.is_paid && (
-                                  <span className="ml-1 text-success">(Paid)</span>
+                                  <span className="ml-1 text-success">
+                                    (Paid)
+                                  </span>
                                 )}
                               </span>
                             </div>

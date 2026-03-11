@@ -1,5 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logger';
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 export interface Route {
   id: string;
@@ -17,7 +17,7 @@ export interface Route {
   updated_at: string;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
+export type BookingStatus = "pending" | "confirmed" | "cancelled";
 
 export interface Booking {
   id: string;
@@ -37,6 +37,8 @@ export interface Booking {
   trip_instance_id?: string | null;
   pickup_stop_id?: string | null;
   dropoff_stop_id?: string | null;
+  pickup_stop?: { name_en: string; name_ar: string } | null;
+  dropoff_stop?: { name_en: string; name_ar: string } | null;
   payment_screenshot_url?: string | null;
   promo_code?: string | null;
   discount_amount?: number | null;
@@ -60,7 +62,18 @@ const mapBooking = (booking: Record<string, unknown>): Booking => ({
   trip_instance_id: booking.trip_instance_id as string | null | undefined,
   pickup_stop_id: booking.pickup_stop_id as string | null | undefined,
   dropoff_stop_id: booking.dropoff_stop_id as string | null | undefined,
-  payment_screenshot_url: booking.payment_screenshot_url as string | null | undefined,
+  pickup_stop: booking.pickup_stop as
+    | { name_en: string; name_ar: string }
+    | null
+    | undefined,
+  dropoff_stop: booking.dropoff_stop as
+    | { name_en: string; name_ar: string }
+    | null
+    | undefined,
+  payment_screenshot_url: booking.payment_screenshot_url as
+    | string
+    | null
+    | undefined,
   promo_code: booking.promo_code as string | null | undefined,
   discount_amount: booking.discount_amount as number | null | undefined,
 });
@@ -68,16 +81,16 @@ const mapBooking = (booking: Record<string, unknown>): Booking => ({
 // Routes
 export const getRoutes = async (): Promise<Route[]> => {
   const { data, error } = await supabase
-    .from('routes')
-    .select('*')
-    .order('date', { ascending: true });
+    .from("routes")
+    .select("*")
+    .order("date", { ascending: true });
 
   if (error) {
-    logger.error('Error fetching routes:', error);
+    logger.error("Error fetching routes:", error);
     return [];
   }
 
-  return (data || []).map(r => ({
+  return (data || []).map((r) => ({
     ...r,
     price: Number(r.price),
   }));
@@ -85,44 +98,49 @@ export const getRoutes = async (): Promise<Route[]> => {
 
 export const getRouteById = async (id: string): Promise<Route | null> => {
   const { data, error } = await supabase
-    .from('routes')
-    .select('*')
-    .eq('id', id)
+    .from("routes")
+    .select("*")
+    .eq("id", id)
     .maybeSingle();
 
   if (error) {
-    logger.error('Error fetching route:', error);
+    logger.error("Error fetching route:", error);
     return null;
   }
 
   return data ? { ...data, price: Number(data.price) } : null;
 };
 
-export const createRoute = async (route: Omit<Route, 'id' | 'created_at' | 'updated_at'>): Promise<Route | null> => {
+export const createRoute = async (
+  route: Omit<Route, "id" | "created_at" | "updated_at">,
+): Promise<Route | null> => {
   const { data, error } = await supabase
-    .from('routes')
+    .from("routes")
     .insert([route])
     .select()
     .single();
 
   if (error) {
-    logger.error('Error creating route:', error);
+    logger.error("Error creating route:", error);
     return null;
   }
 
   return data ? { ...data, price: Number(data.price) } : null;
 };
 
-export const updateRoute = async (id: string, updates: Partial<Route>): Promise<Route | null> => {
+export const updateRoute = async (
+  id: string,
+  updates: Partial<Route>,
+): Promise<Route | null> => {
   const { data, error } = await supabase
-    .from('routes')
+    .from("routes")
     .update(updates)
-    .eq('id', id)
+    .eq("id", id)
     .select()
     .single();
 
   if (error) {
-    logger.error('Error updating route:', error);
+    logger.error("Error updating route:", error);
     return null;
   }
 
@@ -130,13 +148,10 @@ export const updateRoute = async (id: string, updates: Partial<Route>): Promise<
 };
 
 export const deleteRoute = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('routes')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from("routes").delete().eq("id", id);
 
   if (error) {
-    logger.error('Error deleting route:', error);
+    logger.error("Error deleting route:", error);
     return false;
   }
 
@@ -146,37 +161,49 @@ export const deleteRoute = async (id: string): Promise<boolean> => {
 // Bookings
 export const getBookings = async (): Promise<Booking[]> => {
   const { data, error } = await supabase
-    .from('bookings')
-    .select(`
+    .from("bookings")
+    .select(
+      `
       *,
-      route:routes(*)
-    `)
-    .order('created_at', { ascending: false });
+      route:routes(*),
+      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
+      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
+    `,
+    )
+    .order("created_at", { ascending: false });
 
   if (error) {
-    logger.error('Error fetching bookings:', error);
+    logger.error("Error fetching bookings:", error);
     return [];
   }
 
-  return (data || []).map(b => mapBooking(b as unknown as Record<string, unknown>));
+  return (data || []).map((b) =>
+    mapBooking(b as unknown as Record<string, unknown>),
+  );
 };
 
 export const getUserBookings = async (userId: string): Promise<Booking[]> => {
   const { data, error } = await supabase
-    .from('bookings')
-    .select(`
+    .from("bookings")
+    .select(
+      `
       *,
-      route:routes(*)
-    `)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+      route:routes(*),
+      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
+      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
+    `,
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    logger.error('Error fetching user bookings:', error);
+    logger.error("Error fetching user bookings:", error);
     return [];
   }
 
-  return (data || []).map(b => mapBooking(b as unknown as Record<string, unknown>));
+  return (data || []).map((b) =>
+    mapBooking(b as unknown as Record<string, unknown>),
+  );
 };
 
 export const createBooking = async (booking: {
@@ -188,22 +215,30 @@ export const createBooking = async (booking: {
   passenger_email: string;
   passenger_notes?: string;
   total_price: number;
+  pickup_stop_id?: string;
+  dropoff_stop_id?: string;
 }): Promise<Booking | null> => {
   const { data, error } = await supabase
-    .from('bookings')
-    .insert([{
-      ...booking,
-      status: 'pending',
-      is_paid: false,
-    }])
-    .select(`
+    .from("bookings")
+    .insert([
+      {
+        ...booking,
+        status: "pending",
+        is_paid: false,
+      },
+    ])
+    .select(
+      `
       *,
-      route:routes(*)
-    `)
+      route:routes(*),
+      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
+      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
+    `,
+    )
     .single();
 
   if (error) {
-    logger.error('Error creating booking:', error);
+    logger.error("Error creating booking:", error);
     return null;
   }
 
@@ -220,19 +255,26 @@ export const createBooking = async (booking: {
   return data ? mapBooking(data as unknown as Record<string, unknown>) : null;
 };
 
-export const updateBooking = async (id: string, updates: Partial<Booking>): Promise<Booking | null> => {
+export const updateBooking = async (
+  id: string,
+  updates: Partial<Booking>,
+): Promise<Booking | null> => {
   const { data, error } = await supabase
-    .from('bookings')
+    .from("bookings")
     .update(updates)
-    .eq('id', id)
-    .select(`
+    .eq("id", id)
+    .select(
+      `
       *,
-      route:routes(*)
-    `)
+      route:routes(*),
+      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
+      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
+    `,
+    )
     .single();
 
   if (error) {
-    logger.error('Error updating booking:', error);
+    logger.error("Error updating booking:", error);
     return null;
   }
 
@@ -242,33 +284,37 @@ export const updateBooking = async (id: string, updates: Partial<Booking>): Prom
 export const cancelBooking = async (id: string): Promise<Booking | null> => {
   // First get the booking to restore seats
   const { data: booking, error: fetchError } = await supabase
-    .from('bookings')
-    .select('*, route:routes(*)')
-    .eq('id', id)
+    .from("bookings")
+    .select("*, route:routes(*)")
+    .eq("id", id)
     .single();
 
   if (fetchError || !booking) {
-    logger.error('Error fetching booking:', fetchError);
+    logger.error("Error fetching booking:", fetchError);
     return null;
   }
 
-  if (booking.status === 'cancelled') {
+  if (booking.status === "cancelled") {
     return null;
   }
 
   // Update booking status
   const { data: updatedBooking, error: updateError } = await supabase
-    .from('bookings')
-    .update({ status: 'cancelled' })
-    .eq('id', id)
-    .select(`
+    .from("bookings")
+    .update({ status: "cancelled" })
+    .eq("id", id)
+    .select(
+      `
       *,
-      route:routes(*)
-    `)
+      route:routes(*),
+      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
+      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
+    `,
+    )
     .single();
 
   if (updateError) {
-    logger.error('Error cancelling booking:', updateError);
+    logger.error("Error cancelling booking:", updateError);
     return null;
   }
 
@@ -282,20 +328,22 @@ export const cancelBooking = async (id: string): Promise<Booking | null> => {
     }
   }
 
-  return updatedBooking ? mapBooking(updatedBooking as unknown as Record<string, unknown>) : null;
+  return updatedBooking
+    ? mapBooking(updatedBooking as unknown as Record<string, unknown>)
+    : null;
 };
 
 export const getBookedSeats = async (routeId: string): Promise<number[]> => {
   const { data, error } = await supabase
-    .from('bookings')
-    .select('seats')
-    .eq('route_id', routeId)
-    .neq('status', 'cancelled');
+    .from("bookings")
+    .select("seats")
+    .eq("route_id", routeId)
+    .neq("status", "cancelled");
 
   if (error) {
-    logger.error('Error fetching booked seats:', error);
+    logger.error("Error fetching booked seats:", error);
     return [];
   }
 
-  return (data || []).flatMap(b => b.seats || []);
+  return (data || []).flatMap((b) => b.seats || []);
 };

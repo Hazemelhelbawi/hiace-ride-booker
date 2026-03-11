@@ -43,7 +43,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
   BarChart,
@@ -70,6 +74,7 @@ import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
 import SchedulesManager from "@/components/admin/SchedulesManager";
 import PrivateTripRequestsManager from "@/components/admin/PrivateTripRequestsManager";
 import { format } from "date-fns";
+import { formatTime12h } from "@/lib/timeFormat";
 
 interface RouteFormData {
   origin: string;
@@ -80,14 +85,14 @@ interface RouteFormData {
   date: string;
   driver_name: string;
   van_number: string;
-  van_type: '13_seats' | '12_seats';
+  van_type: "13_seats" | "12_seats";
 }
 
 const AdminDashboard: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
-
+  const { t, language } = useLanguage();
+  const isRTL = language === "ar";
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: routes = [], isLoading: routesLoading } = useRoutes();
 
@@ -143,9 +148,10 @@ const AdminDashboard: React.FC = () => {
   const handleCancelBooking = async (bookingId: string) => {
     const confirmed = await confirm({
       title: t("admin.confirmCancel"),
-      description: 'This booking will be cancelled and the passenger will be notified.',
-      confirmLabel: 'Cancel Booking',
-      variant: 'destructive',
+      description:
+        "This booking will be cancelled and the passenger will be notified.",
+      confirmLabel: "Cancel Booking",
+      variant: "destructive",
     });
     if (!confirmed) return;
 
@@ -198,7 +204,7 @@ const AdminDashboard: React.FC = () => {
     e.preventDefault();
 
     try {
-      const vanSeats = newRoute.van_type === '12_seats' ? 12 : 13;
+      const vanSeats = newRoute.van_type === "12_seats" ? 12 : 13;
       await createRoute.mutateAsync({
         origin: newRoute.origin,
         destination: newRoute.destination,
@@ -260,7 +266,7 @@ const AdminDashboard: React.FC = () => {
       date: route.date,
       driver_name: route.driver_name,
       van_number: route.van_number,
-      van_type: route.total_seats <= 12 ? '12_seats' : '13_seats',
+      van_type: route.total_seats <= 12 ? "12_seats" : "13_seats",
     });
     setIsRouteDialogOpen(true);
   };
@@ -281,16 +287,17 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleDeleteRoute = async (routeId: string) => {
-    const relatedBookings = bookings.filter(b => b.route_id === routeId);
-    const description = relatedBookings.length > 0
-      ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. This action cannot be undone.`
-      : 'This route will be permanently deleted. This action cannot be undone.';
-    
+    const relatedBookings = bookings.filter((b) => b.route_id === routeId);
+    const description =
+      relatedBookings.length > 0
+        ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. This action cannot be undone.`
+        : "This route will be permanently deleted. This action cannot be undone.";
+
     const confirmed = await confirm({
-      title: 'Delete Route',
+      title: "Delete Route",
       description,
-      confirmLabel: 'Delete',
-      variant: 'destructive',
+      confirmLabel: "Delete",
+      variant: "destructive",
     });
     if (!confirmed) return;
 
@@ -426,39 +433,71 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="flex flex-wrap h-auto gap-1">
-            <TabsTrigger value="bookings" className="text-xs sm:text-sm">{t("admin.bookings")}</TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-              Calendar
+          <TabsList
+            className="flex flex-wrap h-auto gap-1"
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            <TabsTrigger value="bookings" className="text-xs sm:text-sm">
+              {t("admin.bookings")}
             </TabsTrigger>
-            <TabsTrigger value="routes" className="text-xs sm:text-sm">{t("admin.routes")}</TabsTrigger>
-            <TabsTrigger value="promos" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="calendar"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+
+              {t("admin.Calendar")}
+            </TabsTrigger>
+            <TabsTrigger value="routes" className="text-xs sm:text-sm">
+              {t("admin.routes")}
+            </TabsTrigger>
+            <TabsTrigger
+              value="promos"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
               <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
               {t("admin.promoCodes")}
             </TabsTrigger>
-            <TabsTrigger value="stops" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="stops"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
               <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-              Stops
+
+              {t("admin.Stops")}
             </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="templates"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
               <RouteIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              Templates
+
+              {t("admin.Templates")}
             </TabsTrigger>
-            <TabsTrigger value="schedules" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="schedules"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-              Schedules
+
+              {t("admin.Schedules")}
             </TabsTrigger>
-            <TabsTrigger value="private-requests" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TabsTrigger
+              value="private-requests"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
               <Car className="w-3 h-3 sm:w-4 sm:h-4" />
-              Private Trips
+
+              {t("admin.PrivateTrips")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
             <Card className="border-2 shadow-lg">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <CardTitle className="text-lg sm:text-xl">{t("admin.allBookings")}</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">
+                  {t("admin.allBookings")}
+                </CardTitle>
                 <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
@@ -487,20 +526,42 @@ const AdminDashboard: React.FC = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t("admin.bookingId")}</TableHead>
-                        <TableHead>{t("admin.passenger")}</TableHead>
-                        <TableHead>{t("admin.phone")}</TableHead>
-                        <TableHead>{t("admin.route")}</TableHead>
-                        <TableHead>{t("admin.date")}</TableHead>
-                        <TableHead>{t("admin.seats")}</TableHead>
-                         <TableHead>{t("admin.total")}</TableHead>
-                        <TableHead>Screenshot</TableHead>
-                        <TableHead>{t("admin.paid")}</TableHead>
-                        <TableHead>{t("admin.status")}</TableHead>
-                        <TableHead>{t("admin.actions")}</TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.bookingId")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.passenger")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.phone")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.route")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.date")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.seats")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.total")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.Screenshot")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.paid")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.status")}
+                        </TableHead>
+                        <TableHead className="text-center">
+                          {t("admin.actions")}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="text-center">
                       {bookings.length === 0 ? (
                         <TableRow>
                           <TableCell
@@ -558,16 +619,30 @@ const AdminDashboard: React.FC = () => {
                                   ))}
                                 </div>
                               </TableCell>
-                               <TableCell className="font-semibold">
+                              <TableCell className="font-semibold">
                                 {booking.total_price} {t("common.currency")}
                               </TableCell>
                               <TableCell>
                                 {(booking as any).payment_screenshot_url ? (
-                                  <a href={(booking as any).payment_screenshot_url} target="_blank" rel="noopener noreferrer">
-                                    <img src={(booking as any).payment_screenshot_url} alt="Payment" className="w-10 h-10 rounded object-cover border hover:scale-150 transition-transform" />
+                                  <a
+                                    href={
+                                      (booking as any).payment_screenshot_url
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img
+                                      src={
+                                        (booking as any).payment_screenshot_url
+                                      }
+                                      alt="Payment"
+                                      className="w-10 h-10 rounded object-cover border hover:scale-150 transition-transform"
+                                    />
                                   </a>
                                 ) : (
-                                  <span className="text-xs text-muted-foreground">—</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    —
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -605,9 +680,30 @@ const AdminDashboard: React.FC = () => {
                                     variant="outline"
                                     className="h-8 w-8 p-0 text-success hover:text-success"
                                     onClick={() => {
-                                      const phone = booking.passenger_phone.replace(/[^0-9]/g, '');
-                                      window.open(`https://wa.me/${phone}`, '_blank');
+                                      let phone =
+                                        booking.passenger_phone.replace(
+                                          /[^0-9]/g,
+                                          "",
+                                        );
+                                      // Remove leading 0 and add Egypt country code
+                                      if (phone.startsWith("0"))
+                                        phone = "20" + phone.slice(1);
+                                      window.open(
+                                        `https://wa.me/${phone}`,
+                                        "_blank",
+                                      );
                                     }}
+                                    // onClick={() => {
+                                    //   const phone =
+                                    //     booking.passenger_phone.replace(
+                                    //       /[^0-9]/g,
+                                    //       "",
+                                    //     );
+                                    //   window.open(
+                                    //     `https://wa.me/${phone}`,
+                                    //     "_blank",
+                                    //   );
+                                    // }}
                                     title="WhatsApp"
                                   >
                                     <MessageCircle className="w-4 h-4" />
@@ -830,10 +926,10 @@ const AdminDashboard: React.FC = () => {
 
                       {/* Van Type Selection */}
                       <div className="space-y-2">
-                        <Label>Van Type</Label>
+                        <Label>{t("admin.VanType")}</Label>
                         <Select
                           value={newRoute.van_type}
-                          onValueChange={(v: '13_seats' | '12_seats') =>
+                          onValueChange={(v: "13_seats" | "12_seats") =>
                             setNewRoute((prev) => ({ ...prev, van_type: v }))
                           }
                         >
@@ -841,8 +937,12 @@ const AdminDashboard: React.FC = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="13_seats">13 Seats (with seat 4)</SelectItem>
-                            <SelectItem value="12_seats">12 Seats (without seat 4)</SelectItem>
+                            <SelectItem value="13_seats">
+                              13 Seats (with seat 4)
+                            </SelectItem>
+                            <SelectItem value="12_seats">
+                              12 Seats (without seat 4)
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -886,7 +986,9 @@ const AdminDashboard: React.FC = () => {
                             {format(new Date(route.date), "MMM dd, yyyy")}
                           </TableCell>
                           <TableCell className="text-sm">
-                            {route.departure_time} - {route.arrival_time}
+                            {formatTime12h(route.departure_time)} -{" "}
+                            {formatTime12h(route.arrival_time)}
+                            {/* {route.departure_time} - {route.arrival_time} */}
                           </TableCell>
                           <TableCell className="font-semibold">
                             {route.price} {t("common.currency")}

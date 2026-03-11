@@ -1,9 +1,21 @@
-import React, { useRef } from 'react';
-import { Booking, Route } from '@/types';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MapPin, Clock, Calendar, User, Phone, Mail, Armchair, Ticket, Printer, Download, X } from 'lucide-react';
-import { format } from 'date-fns';
+import React, { useRef } from "react";
+import { Booking, Route } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  MapPin,
+  Clock,
+  Calendar,
+  User,
+  Phone,
+  Mail,
+  Armchair,
+  Ticket,
+  Printer,
+  Download,
+  X,
+} from "lucide-react";
+import { format } from "date-fns";
 
 interface BookingTicketProps {
   booking: Booking;
@@ -11,14 +23,18 @@ interface BookingTicketProps {
   onClose: () => void;
 }
 
-const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }) => {
+const BookingTicket: React.FC<BookingTicketProps> = ({
+  booking,
+  route,
+  onClose,
+}) => {
   const ticketRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
     const printContent = ticketRef.current;
     if (!printContent) return;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
     printWindow.document.write(`
@@ -85,7 +101,7 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
               <div class="info-grid">
                 <div class="info-item">
                   <span>Date</span>
-                  <strong>${format(new Date(route.date), 'MMM dd, yyyy')}</strong>
+                  <strong>${format(new Date(route.date), "MMM dd, yyyy")}</strong>
                 </div>
                 <div class="info-item">
                   <span>Departure</span>
@@ -101,15 +117,15 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
               <div class="seats-row">
                 <span>Seats</span>
                 <div class="seat-numbers">
-                  ${booking.seats.map(seat => `<div class="seat-number">${seat}</div>`).join('')}
+                  ${booking.seats.map((seat) => `<div class="seat-number">${seat}</div>`).join("")}
                 </div>
               </div>
               <div class="total-row">
                 <span>Total Amount</span>
                 <strong>${booking.totalPrice} LE</strong>
               </div>
-              <div class="payment-status ${booking.isPaid ? 'paid' : ''}">
-                ${booking.isPaid ? '✅ Payment Confirmed' : '⏳ Payment pending - Pay at pickup point'}
+              <div class="payment-status ${booking.isPaid ? "paid" : ""}">
+                ${booking.isPaid ? "✅ Payment Confirmed" : "⏳ Payment pending - Pay at pickup point"}
               </div>
             </div>
           </div>
@@ -130,7 +146,7 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
 ║  ROUTE DETAILS                                   ║
 ║  From: ${route.origin.padEnd(42)}║
 ║  To: ${route.destination.padEnd(44)}║
-║  Date: ${format(new Date(route.date), 'MMM dd, yyyy').padEnd(42)}║
+║  Date: ${format(new Date(route.date), "MMM dd, yyyy").padEnd(42)}║
 ║  Departure: ${route.departureTime.padEnd(37)}║
 ╠══════════════════════════════════════════════════╣
 ║  PASSENGER DETAILS                               ║
@@ -138,16 +154,16 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
 ║  Phone: ${booking.passenger.phone.padEnd(41)}║
 ║  Email: ${booking.passenger.email.padEnd(41)}║
 ╠══════════════════════════════════════════════════╣
-║  SEATS: ${booking.seats.join(', ').padEnd(41)}║
-║  TOTAL: ${(booking.totalPrice + ' LE').padEnd(41)}║
+║  SEATS: ${booking.seats.join(", ").padEnd(41)}║
+║  TOTAL: ${(booking.totalPrice + " LE").padEnd(41)}║
 ╠══════════════════════════════════════════════════╣
-║  STATUS: ${(booking.isPaid ? 'PAID ✓' : 'PENDING PAYMENT').padEnd(40)}║
+║  STATUS: ${(booking.isPaid ? "PAID ✓" : "PENDING PAYMENT").padEnd(40)}║
 ╚══════════════════════════════════════════════════╝
     `.trim();
 
-    const blob = new Blob([ticketData], { type: 'text/plain' });
+    const blob = new Blob([ticketData], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `ticket-${booking.id}.txt`;
     document.body.appendChild(a);
@@ -158,7 +174,10 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-lg border-2 shadow-2xl overflow-hidden" ref={ticketRef}>
+      <Card
+        className="w-full max-w-lg border-2 shadow-2xl overflow-hidden"
+        ref={ticketRef}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -173,14 +192,18 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
             <Ticket className="w-8 h-8" />
             <h2 className="text-2xl font-bold">Booking Confirmed!</h2>
           </div>
-          <p className="text-primary-foreground/80">Your ticket has been booked successfully</p>
+          <p className="text-primary-foreground/80">
+            Your ticket has been booked successfully
+          </p>
         </div>
 
         <CardContent className="p-6 space-y-6">
           {/* Booking ID */}
           <div className="text-center pb-4 border-b border-dashed">
             <p className="text-sm text-muted-foreground">Booking ID</p>
-            <p className="text-lg font-mono font-bold text-primary">#{booking.id}</p>
+            <p className="text-lg font-mono font-bold text-primary">
+              #{booking.id}
+            </p>
           </div>
 
           {/* Route Info */}
@@ -208,7 +231,9 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Date</p>
-                  <p className="font-medium">{format(new Date(route.date), 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">
+                    {format(new Date(route.date), "MMM dd, yyyy")}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -223,7 +248,9 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
 
           {/* Passenger Info */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Passenger Details</h3>
+            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              Passenger Details
+            </h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-muted-foreground" />
@@ -248,8 +275,8 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
             </div>
             <div className="flex gap-2">
               {booking.seats.map((seat) => (
-                <span 
-                  key={seat} 
+                <span
+                  key={seat}
                   className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm"
                 >
                   {seat}
@@ -261,27 +288,31 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
           {/* Total */}
           <div className="flex items-center justify-between text-lg">
             <span className="font-medium">Total Amount</span>
-            <span className="text-2xl font-bold text-primary">{booking.totalPrice} LE</span>
+            <span className="text-2xl font-bold text-primary">
+              {booking.totalPrice} LE
+            </span>
           </div>
 
           {/* Payment Status */}
-          <div className={`text-center py-2 px-4 rounded-lg ${booking.isPaid ? 'bg-green-500/10 border border-green-500/20' : 'bg-yellow-500/10 border border-yellow-500/20'}`}>
-            <p className={`text-sm font-medium ${booking.isPaid ? 'text-green-600' : 'text-yellow-600'}`}>
-              {booking.isPaid ? '✅ Payment Confirmed' : 'Payment pending - Pay at pickup point'}
+          <div
+            className={`text-center py-2 px-4 rounded-lg ${booking.isPaid ? "bg-green-500/10 border border-green-500/20" : "bg-yellow-500/10 border border-yellow-500/20"}`}
+          >
+            <p
+              className={`text-sm font-medium ${booking.isPaid ? "text-green-600" : "text-yellow-600"}`}
+            >
+              {booking.isPaid
+                ? "✅ Payment Confirmed"
+                : "Payment pending - Pay at pickup point"}
             </p>
           </div>
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <Button 
-              onClick={handlePrint}
-              variant="outline"
-              className="gap-2"
-            >
+            <Button onClick={handlePrint} variant="outline" className="gap-2">
               <Printer className="w-4 h-4" />
               Print
             </Button>
-            <Button 
+            <Button
               onClick={handleDownload}
               variant="outline"
               className="gap-2"
@@ -292,7 +323,7 @@ const BookingTicket: React.FC<BookingTicketProps> = ({ booking, route, onClose }
           </div>
 
           {/* Close Button */}
-          <Button 
+          <Button
             onClick={onClose}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >

@@ -1,19 +1,29 @@
-import React from 'react';
-import { useConfirmDialog } from '@/components/ConfirmDialog';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
-import { Car, Trash2, MessageCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Car, Trash2, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface PrivateTripRequest {
   id: string;
@@ -31,14 +41,15 @@ interface PrivateTripRequest {
 const PrivateTripRequestsManager: React.FC = () => {
   const queryClient = useQueryClient();
   const { confirm } = useConfirmDialog();
+  const { t } = useLanguage();
 
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['private-trip-requests'],
+    queryKey: ["private-trip-requests"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('private_trip_requests' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("private_trip_requests" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []) as unknown as PrivateTripRequest[];
     },
@@ -47,40 +58,45 @@ const PrivateTripRequestsManager: React.FC = () => {
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
-        .from('private_trip_requests' as any)
+        .from("private_trip_requests" as any)
         .update({ status } as any)
-        .eq('id', id);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-trip-requests'] });
-      toast.success('Status updated');
+      queryClient.invalidateQueries({ queryKey: ["private-trip-requests"] });
+      toast.success(t("privateTrips.statusUpdated"));
     },
-    onError: () => toast.error('Failed to update status'),
+    onError: () => toast.error(t("privateTrips.failedToUpdateStatus")),
   });
 
   const deleteRequest = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('private_trip_requests' as any)
+        .from("private_trip_requests" as any)
         .delete()
-        .eq('id', id);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-trip-requests'] });
-      toast.success('Request deleted');
+      queryClient.invalidateQueries({ queryKey: ["private-trip-requests"] });
+      toast.success(t("privateTrips.requestDeleted"));
     },
-    onError: () => toast.error('Failed to delete'),
+    onError: () => toast.error(t("privateTrips.failedToDelete")),
   });
 
   const statusColor = (s: string) => {
     switch (s) {
-      case 'pending': return 'bg-warning/10 text-warning';
-      case 'contacted': return 'bg-primary/10 text-primary';
-      case 'confirmed': return 'bg-success/10 text-success';
-      case 'rejected': return 'bg-destructive/10 text-destructive';
-      default: return '';
+      case "pending":
+        return "bg-warning/10 text-warning";
+      case "contacted":
+        return "bg-primary/10 text-primary";
+      case "confirmed":
+        return "bg-success/10 text-success";
+      case "rejected":
+        return "bg-destructive/10 text-destructive";
+      default:
+        return "";
     }
   };
 
@@ -88,68 +104,118 @@ const PrivateTripRequestsManager: React.FC = () => {
     <Card className="border-2 shadow-lg">
       <CardHeader>
         <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-          <Car className="w-5 h-5" /> Private Trip Requests
-          {requests.filter(r => r.status === 'pending').length > 0 && (
+          <Car className="w-5 h-5" />
+          {t("privateTrips.title")}
+          {requests.filter((r) => r.status === "pending").length > 0 && (
             <Badge className="bg-warning/10 text-warning ml-2">
-              {requests.filter(r => r.status === 'pending').length} new
+              {requests.filter((r) => r.status === "pending").length}{" "}
+              {t("privateTrips.new")}
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-8">Loading...</p>
+          <p className="text-center text-muted-foreground py-8">
+            {t("common.loading")}
+          </p>
         ) : requests.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No private trip requests yet.</p>
+          <p className="text-center text-muted-foreground py-8">
+            {t("privateTrips.noRequests")}
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="text-center">
                 <TableRow>
-                  <TableHead className="text-xs">Date</TableHead>
-                  <TableHead className="text-xs">Name</TableHead>
-                  <TableHead className="text-xs">Phone</TableHead>
-                  <TableHead className="text-xs">Passengers</TableHead>
-                  <TableHead className="text-xs">Pickup</TableHead>
-                  <TableHead className="text-xs">Dropoff</TableHead>
-                  <TableHead className="text-xs">Preferred Date</TableHead>
-                  <TableHead className="text-xs">Notes</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs">Actions</TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.date")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.name")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.phone")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.passengers")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.pickup")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.dropoff")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.preferredDate")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.notes")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.status")}
+                  </TableHead>
+                  <TableHead className="text-xs">
+                    {t("privateTrips.actions")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {requests.map(req => (
+              <TableBody className="text-center">
+                {requests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell className="text-xs">
-                      {format(new Date(req.created_at), 'MMM dd, hh:mm a')}
+                      {format(new Date(req.created_at), "MMM dd, hh:mm a")}
                     </TableCell>
-                    <TableCell className="text-xs font-medium">{req.name}</TableCell>
+                    <TableCell className="text-xs font-medium">
+                      {req.name}
+                    </TableCell>
                     <TableCell className="text-xs">{req.phone}</TableCell>
-                    <TableCell className="text-xs text-center">{req.number_of_passengers}</TableCell>
-                    <TableCell className="text-xs">{req.pickup_location}</TableCell>
-                    <TableCell className="text-xs">{req.dropoff_location}</TableCell>
+                    <TableCell className="text-xs text-center">
+                      {req.number_of_passengers}
+                    </TableCell>
                     <TableCell className="text-xs">
-                      {req.preferred_date ? format(new Date(req.preferred_date), 'MMM dd, yyyy') : '—'}
+                      {req.pickup_location}
                     </TableCell>
-                    <TableCell className="text-xs max-w-[150px] truncate">{req.notes || '—'}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColor(req.status)}>{req.status}</Badge>
+                    <TableCell className="text-xs">
+                      {req.dropoff_location}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {req.preferred_date
+                        ? format(new Date(req.preferred_date), "MMM dd, yyyy")
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-xs max-w-[150px] truncate">
+                      {req.notes || "—"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
+                      <Badge className={statusColor(req.status)}>
+                        {t(`privateTrips.${req.status}`)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
                         <Select
                           value={req.status}
-                          onValueChange={v => updateStatus.mutate({ id: req.id, status: v })}
+                          onValueChange={(v) =>
+                            updateStatus.mutate({ id: req.id, status: v })
+                          }
                         >
                           <SelectTrigger className="h-7 text-xs w-28">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="contacted">Contacted</SelectItem>
-                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="pending">
+                              {t("privateTrips.pending")}
+                            </SelectItem>
+                            <SelectItem value="contacted">
+                              {t("privateTrips.contacted")}
+                            </SelectItem>
+                            <SelectItem value="confirmed">
+                              {t("privateTrips.confirmed")}
+                            </SelectItem>
+                            <SelectItem value="rejected">
+                              {t("privateTrips.rejected")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <Button
@@ -157,9 +223,16 @@ const PrivateTripRequestsManager: React.FC = () => {
                           variant="outline"
                           className="h-7 w-7 p-0 text-success hover:text-success"
                           onClick={() => {
-                            const phone = req.phone.replace(/[^0-9]/g, '');
-                            const msg = encodeURIComponent(`Hi ${req.name}, regarding your private trip request from ${req.pickup_location} to ${req.dropoff_location}...`);
-                            window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+                            let phone = req.phone.replace(/[^0-9]/g, "");
+                            if (phone.startsWith("0"))
+                              phone = "20" + phone.slice(1);
+                            const msg = encodeURIComponent(
+                              `Hi ${req.name}, regarding your private trip request from ${req.pickup_location} to ${req.dropoff_location}...`,
+                            );
+                            window.open(
+                              `https://wa.me/${phone}?text=${msg}`,
+                              "_blank",
+                            );
                           }}
                           title="WhatsApp"
                         >
@@ -171,10 +244,10 @@ const PrivateTripRequestsManager: React.FC = () => {
                           className="h-7 w-7 p-0"
                           onClick={async () => {
                             const confirmed = await confirm({
-                              title: 'Delete Request',
-                              description: 'This private trip request will be permanently deleted.',
-                              confirmLabel: 'Delete',
-                              variant: 'destructive',
+                              title: t("privateTrips.deleteRequest"),
+                              description: t("privateTrips.deleteRequestDesc"),
+                              confirmLabel: t("privateTrips.delete"),
+                              variant: "destructive",
                             });
                             if (confirmed) deleteRequest.mutate(req.id);
                           }}

@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import { useConfirmDialog } from '@/components/ConfirmDialog';
-import { useLanguage } from '@/contexts/LanguageContext';
+import React, { useState } from "react";
+import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   useStops,
   useCreateStop,
   useUpdateStop,
   useDeleteStop,
-} from '@/hooks/useStopsData';
-import type { Stop } from '@/services/stopsApi';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/hooks/useStopsData";
+import type { Stop } from "@/services/stopsApi";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,26 +28,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Plus, Edit, Trash2, MapPin, Search } from 'lucide-react';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { Plus, Edit, Trash2, MapPin, Search } from "lucide-react";
+import { toast } from "sonner";
 
 const REGIONS = [
-  'Cairo',
-  'South Sinai',
-  'North Sinai',
-  'Red Sea',
-  'Alexandria',
-  'Giza',
-  'Suez',
-  'Ismailia',
+  "Cairo",
+  "South Sinai",
+  "North Sinai",
+  "Red Sea",
+  "Alexandria",
+  "Giza",
+  "Suez",
+  "Ismailia",
 ];
 
 interface StopFormData {
@@ -61,13 +61,13 @@ interface StopFormData {
 }
 
 const emptyForm: StopFormData = {
-  name_ar: '',
-  name_en: '',
-  region: '',
-  city: '',
-  address: '',
-  latitude: '',
-  longitude: '',
+  name_ar: "",
+  name_en: "",
+  region: "",
+  city: "",
+  address: "",
+  latitude: "",
+  longitude: "",
 };
 
 const StopsManager: React.FC = () => {
@@ -81,8 +81,8 @@ const StopsManager: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStop, setEditingStop] = useState<Stop | null>(null);
   const [form, setForm] = useState<StopFormData>(emptyForm);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -96,9 +96,9 @@ const StopsManager: React.FC = () => {
       name_en: stop.name_en,
       region: stop.region,
       city: stop.city,
-      address: stop.address || '',
-      latitude: stop.latitude?.toString() || '',
-      longitude: stop.longitude?.toString() || '',
+      address: stop.address || "",
+      latitude: stop.latitude?.toString() || "",
+      longitude: stop.longitude?.toString() || "",
     });
     setDialogOpen(true);
   };
@@ -106,7 +106,7 @@ const StopsManager: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name_en || !form.name_ar || !form.region || !form.city) {
-      toast.error('Please fill all required fields');
+      toast.error(t("stops.fillRequiredFields"));
       return;
     }
 
@@ -124,57 +124,65 @@ const StopsManager: React.FC = () => {
     try {
       if (editingStop) {
         await updateStop.mutateAsync({ id: editingStop.id, updates: payload });
-        toast.success('Stop updated');
+        toast.success(t("stops.stopUpdated"));
       } else {
         await createStop.mutateAsync(payload);
-        toast.success('Stop created');
+        toast.success(t("stops.stopCreated"));
       }
       setDialogOpen(false);
       resetForm();
     } catch {
-      toast.error('Failed to save stop');
+      toast.error(t("stops.failedToSave"));
     }
   };
 
   const handleToggleActive = async (stop: Stop) => {
     try {
-      await updateStop.mutateAsync({ id: stop.id, updates: { is_active: !stop.is_active } });
-      toast.success(stop.is_active ? 'Stop deactivated' : 'Stop activated');
+      await updateStop.mutateAsync({
+        id: stop.id,
+        updates: { is_active: !stop.is_active },
+      });
+      toast.success(
+        stop.is_active ? t("stops.stopDeactivated") : t("stops.stopActivated"),
+      );
     } catch {
-      toast.error('Failed to update stop');
+      toast.error(t("stops.failedToUpdate"));
     }
   };
 
   const handleDelete = async (id: string) => {
     const confirmed = await confirm({
-      title: 'Delete Stop',
-      description: 'This stop and all its associations will be permanently deleted.',
-      confirmLabel: 'Delete',
-      variant: 'destructive',
+      title: t("stops.deleteStop"),
+      description: t("stops.deleteStopDesc"),
+      confirmLabel: t("stops.delete"),
+      variant: "destructive",
     });
     if (!confirmed) return;
     try {
       await deleteStop.mutateAsync(id);
-      toast.success('Stop deleted');
+      toast.success(t("stops.stopDeleted"));
     } catch {
-      toast.error('Failed to delete stop');
+      toast.error(t("stops.failedToDelete"));
     }
   };
 
-  const filteredStops = stops.filter(s => {
+  const filteredStops = stops.filter((s) => {
     const matchesSearch =
       s.name_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.name_ar.includes(searchQuery) ||
       s.city.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRegion = regionFilter === 'all' || s.region === regionFilter;
+    const matchesRegion = regionFilter === "all" || s.region === regionFilter;
     return matchesSearch && matchesRegion;
   });
 
-  // Group by region
-  const regions = [...new Set(filteredStops.map(s => s.region))].sort();
+  const regions = [...new Set(filteredStops.map((s) => s.region))].sort();
 
   if (isLoading) {
-    return <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>;
+    return (
+      <p className="text-center text-muted-foreground py-8">
+        {t("common.loading")}
+      </p>
+    );
   }
 
   return (
@@ -182,36 +190,48 @@ const StopsManager: React.FC = () => {
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <MapPin className="w-5 h-5 text-primary" />
-          Stops Management
+          {t("stops.stopsManagement")}
         </CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary-dark text-white gap-2">
               <Plus className="w-4 h-4" />
-              Add Stop
+              {t("stops.addStop")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editingStop ? 'Edit Stop' : 'Add New Stop'}</DialogTitle>
+              <DialogTitle>
+                {editingStop ? t("stops.editStop") : t("stops.addNewStop")}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Name (English) *</Label>
+                  <Label>{t("stops.nameEn")} *</Label>
                   <Input
                     value={form.name_en}
-                    onChange={e => setForm(p => ({ ...p, name_en: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, name_en: e.target.value }))
+                    }
                     placeholder="e.g., Dokki"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Name (Arabic) *</Label>
+                  <Label>{t("stops.nameAr")} *</Label>
                   <Input
                     dir="rtl"
                     value={form.name_ar}
-                    onChange={e => setForm(p => ({ ...p, name_ar: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, name_ar: e.target.value }))
+                    }
                     placeholder="مثلاً: الدقي"
                     required
                   />
@@ -220,21 +240,30 @@ const StopsManager: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Region *</Label>
-                  <Select value={form.region} onValueChange={v => setForm(p => ({ ...p, region: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
+                  <Label>{t("stops.region")} *</Label>
+                  <Select
+                    value={form.region}
+                    onValueChange={(v) => setForm((p) => ({ ...p, region: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("stops.selectRegion")} />
+                    </SelectTrigger>
                     <SelectContent>
-                      {REGIONS.map(r => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      {REGIONS.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>City *</Label>
+                  <Label>{t("stops.city")} *</Label>
                   <Input
                     value={form.city}
-                    onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, city: e.target.value }))
+                    }
                     placeholder="e.g., Cairo"
                     required
                   />
@@ -242,39 +271,48 @@ const StopsManager: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Address</Label>
+                <Label>{t("stops.address")}</Label>
                 <Input
                   value={form.address}
-                  onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
-                  placeholder="Full address (optional)"
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, address: e.target.value }))
+                  }
+                  placeholder={t("stops.addressPlaceholder")}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Latitude</Label>
+                  <Label>{t("stops.latitude")}</Label>
                   <Input
                     type="number"
                     step="any"
                     value={form.latitude}
-                    onChange={e => setForm(p => ({ ...p, latitude: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, latitude: e.target.value }))
+                    }
                     placeholder="30.0444"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Longitude</Label>
+                  <Label>{t("stops.longitude")}</Label>
                   <Input
                     type="number"
                     step="any"
                     value={form.longitude}
-                    onChange={e => setForm(p => ({ ...p, longitude: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, longitude: e.target.value }))
+                    }
                     placeholder="31.2357"
                   />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white">
-                {editingStop ? 'Update Stop' : 'Create Stop'}
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary-dark text-white"
+              >
+                {editingStop ? t("stops.updateStop") : t("stops.createStop")}
               </Button>
             </form>
           </DialogContent>
@@ -287,72 +325,114 @@ const StopsManager: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search stops..."
+              placeholder={t("stops.searchStops")}
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Select value={regionFilter} onValueChange={setRegionFilter}>
             <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by region" />
+              <SelectValue placeholder={t("stops.filterByRegion")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              {REGIONS.map(r => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
+              <SelectItem value="all">{t("stops.allRegions")}</SelectItem>
+              {REGIONS.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Stops grouped by region */}
         {regions.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No stops found. Create your first stop above.</p>
+          <p className="text-center text-muted-foreground py-8">
+            {t("stops.noStopsFound")}
+          </p>
         ) : (
           <div className="space-y-6">
-            {regions.map(region => {
-              const regionStops = filteredStops.filter(s => s.region === region);
+            {regions.map((region) => {
+              const regionStops = filteredStops.filter(
+                (s) => s.region === region,
+              );
               return (
                 <div key={region}>
                   <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="outline" className="text-sm font-semibold px-3 py-1">
+                    <Badge
+                      variant="outline"
+                      className="text-sm font-semibold px-3 py-1"
+                    >
                       {region}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      ({regionStops.length} stop{regionStops.length !== 1 ? 's' : ''})
+                      ({regionStops.length}{" "}
+                      {regionStops.length !== 1
+                        ? t("stops.stopsPlural")
+                        : t("stops.stopSingular")}
+                      )
                     </span>
                   </div>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Name (EN)</TableHead>
-                          <TableHead>Name (AR)</TableHead>
-                          <TableHead>City</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="text-center">
+                            {t("stops.nameEnCol")}
+                          </TableHead>
+                          <TableHead className="text-center">
+                            {t("stops.nameArCol")}
+                          </TableHead>
+                          <TableHead className="text-center">
+                            {t("stops.city")}
+                          </TableHead>
+                          <TableHead className="text-center">
+                            {t("stops.statusCol")}
+                          </TableHead>
+                          <TableHead className="text-center">
+                            {t("stops.actionsCol")}
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {regionStops.map(stop => (
-                          <TableRow key={stop.id} className={!stop.is_active ? 'opacity-50' : ''}>
-                            <TableCell className="font-medium">{stop.name_en}</TableCell>
-                            <TableCell dir="rtl">{stop.name_ar}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{stop.city}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
+                        {regionStops.map((stop) => (
+                          <TableRow
+                            key={stop.id}
+                            className={!stop.is_active ? "opacity-50" : ""}
+                          >
+                            <TableCell className="font-medium text-center">
+                              {stop.name_en}
+                            </TableCell>
+                            <TableCell className="text-center" dir="rtl">
+                              {stop.name_ar}
+                            </TableCell>
+                            <TableCell className="text-center text-sm text-muted-foreground">
+                              {stop.city}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-2">
                                 <Switch
                                   checked={stop.is_active}
-                                  onCheckedChange={() => handleToggleActive(stop)}
+                                  onCheckedChange={() =>
+                                    handleToggleActive(stop)
+                                  }
                                 />
-                                <span className={`text-xs ${stop.is_active ? 'text-success' : 'text-muted-foreground'}`}>
-                                  {stop.is_active ? 'Active' : 'Inactive'}
+                                <span
+                                  className={`text-xs ${stop.is_active ? "text-success" : "text-muted-foreground"}`}
+                                >
+                                  {stop.is_active
+                                    ? t("stops.active")
+                                    : t("stops.inactive")}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline" onClick={() => openEdit(stop)} className="gap-1">
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-2 ">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openEdit(stop)}
+                                  className="gap-1"
+                                >
                                   <Edit className="w-3 h-3" />
                                 </Button>
                                 <Button
