@@ -387,7 +387,7 @@
     "cancelled": "Cancelled"
   },
 
-  "Schedules": {
+  "schedules": {
     "Schedules": "Schedules",
     "tripSchedules": "Trip Schedules",
     "newSchedule": "New Schedule",
