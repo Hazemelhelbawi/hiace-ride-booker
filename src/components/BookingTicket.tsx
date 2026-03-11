@@ -29,6 +29,8 @@ const BookingTicket: React.FC<BookingTicketProps> = ({
   booking,
   route,
   onClose,
+  pickupStopName,
+  dropoffStopName,
 }) => {
   const ticketRef = useRef<HTMLDivElement>(null);
 
