@@ -387,7 +387,7 @@
     "cancelled": "Cancelled"
   },
 
-  "Schedules": {
+  "schedules": {
     "Schedules": "Schedules",
     "tripSchedules": "Trip Schedules",
     "newSchedule": "New Schedule",
@@ -466,7 +466,12 @@
     "scheduleDeleted": "Schedule deleted",
     "failedToDelete": "Failed to delete",
     "generatedTrips": "Generated {{count}} trip instances",
-    "failedToGenerate": "Failed to generate trips"
+    "failedToGenerate": "Failed to generate trips",
+    "editSchedule": "Edit Schedule",
+    "updateSchedule": "Update Schedule",
+    "updating": "Updating...",
+    "scheduleUpdated": "Schedule updated",
+    "failedToUpdateSchedule": "Failed to update schedule"
   },
 
   "promo": {

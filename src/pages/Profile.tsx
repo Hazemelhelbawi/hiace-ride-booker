@@ -142,6 +142,8 @@ const Profile: React.FC = () => {
           booking={mapToLegacyBooking(selectedBooking.booking)}
           route={mapToLegacyRoute(selectedBooking.route)}
           onClose={() => setSelectedBooking(null)}
+          pickupStopName={selectedBooking.booking.pickup_stop?.name_en}
+          dropoffStopName={selectedBooking.booking.dropoff_stop?.name_en}
         />
       )}
 

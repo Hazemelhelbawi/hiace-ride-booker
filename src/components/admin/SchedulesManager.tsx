@@ -38,6 +38,7 @@ import {
   Zap,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouteTemplates } from "@/hooks/useStopsData";
@@ -420,6 +421,7 @@ const SchedulesManager: React.FC = () => {
                     <ScheduleCard
                       key={schedule.id}
                       schedule={schedule}
+                      templates={templates}
                       isExpanded={expandedSchedule === schedule.id}
                       onToggle={() =>
                         setExpandedSchedule(
@@ -454,6 +456,7 @@ const SchedulesManager: React.FC = () => {
 
 interface ScheduleCardProps {
   schedule: any;
+  templates: any[];
   isExpanded: boolean;
   onToggle: () => void;
   onDelete: () => void;
@@ -463,6 +466,7 @@ interface ScheduleCardProps {
 
 const ScheduleCard: React.FC<ScheduleCardProps> = ({
   schedule,
+  templates,
   isExpanded,
   onToggle,
   onDelete,
@@ -470,7 +474,45 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   onToggleActive,
 }) => {
   const { t } = useLanguage();
+  const updateSchedule = useUpdateSchedule();
   const totalSeats = schedule.vehicle_count * schedule.seats_per_vehicle;
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    route_template_id: schedule.route_template_id,
+    title: schedule.title,
+    start_date: schedule.start_date,
+    end_date: schedule.end_date,
+    recurrence_type: schedule.recurrence_type as "daily" | "weekly" | "custom",
+    weekdays: schedule.weekdays || [],
+    vehicle_count: schedule.vehicle_count,
+    seats_per_vehicle: schedule.seats_per_vehicle,
+    price: schedule.price,
+    van_type: schedule.van_type as "13_seats" | "12_seats",
+    daily_repeats: schedule.daily_repeats || 1,
+  });
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateSchedule.mutateAsync({
+        id: schedule.id,
+        updates: editForm,
+      });
+      setIsEditOpen(false);
+      toast.success(t("schedules.scheduleUpdated"));
+    } catch {
+      toast.error(t("schedules.failedToUpdateSchedule"));
+    }
+  };
+
+  const toggleEditWeekday = (day: number) => {
+    setEditForm((prev) => ({
+      ...prev,
+      weekdays: prev.weekdays.includes(day)
+        ? prev.weekdays.filter((d: number) => d !== day)
+        : [...prev.weekdays, day],
+    }));
+  };
 
   return (
     <Card className="border">
@@ -509,6 +551,9 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               checked={schedule.is_active}
               onCheckedChange={onToggleActive}
             />
+            <Button size="sm" variant="outline" onClick={() => setIsEditOpen(true)}>
+              <Pencil className="w-3 h-3 mr-1" /> {t("common.edit")}
+            </Button>
             <Button size="sm" variant="outline" onClick={onGenerate}>
               <Zap className="w-3 h-3 mr-1" /> {t("schedules.generate")}
             </Button>
@@ -534,6 +579,99 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           </div>
         )}
       </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("schedules.editSchedule")}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4">
+            <div>
+              <Label>{t("schedules.routeTemplate")} *</Label>
+              <Select
+                value={editForm.route_template_id}
+                onValueChange={(v) => setEditForm((p) => ({ ...p, route_template_id: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {templates.map((tmpl) => (
+                    <SelectItem key={tmpl.id} value={tmpl.id}>{tmpl.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("schedules.title")} *</Label>
+              <Input value={editForm.title} onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t("schedules.startDate")} *</Label>
+                <Input type="date" value={editForm.start_date} onChange={(e) => setEditForm((p) => ({ ...p, start_date: e.target.value }))} />
+              </div>
+              <div>
+                <Label>{t("schedules.endDate")} *</Label>
+                <Input type="date" value={editForm.end_date} onChange={(e) => setEditForm((p) => ({ ...p, end_date: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>{t("schedules.Recurrence")}</Label>
+              <Select value={editForm.recurrence_type} onValueChange={(v: any) => setEditForm((p) => ({ ...p, recurrence_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">{t("schedules.Daily")}</SelectItem>
+                  <SelectItem value="weekly">{t("schedules.Weekly")}</SelectItem>
+                  <SelectItem value="custom">{t("schedules.customDays")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(editForm.recurrence_type === "weekly" || editForm.recurrence_type === "custom") && (
+              <div>
+                <Label>{t("schedules.selectDays")}</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {WEEKDAY_NAMES.map((name, i) => (
+                    <Button key={i} type="button" size="sm" variant={editForm.weekdays.includes(i) ? "default" : "outline"} onClick={() => toggleEditWeekday(i)}>
+                      {name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <Label>{t("schedules.VanType")}</Label>
+              <Select value={editForm.van_type} onValueChange={(v: any) => setEditForm((p) => ({ ...p, van_type: v, seats_per_vehicle: v === "12_seats" ? 12 : 13 }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="13_seats">{t("schedules.13Seats")}</SelectItem>
+                  <SelectItem value="12_seats">{t("schedules.12Seats")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("schedules.DailyRepeats")}</Label>
+              <Input type="number" min={1} max={10} value={editForm.daily_repeats} onChange={(e) => setEditForm((p) => ({ ...p, daily_repeats: parseInt(e.target.value) || 1 }))} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>{t("schedules.Vehicles")}</Label>
+                <Input type="number" min={1} value={editForm.vehicle_count} onChange={(e) => setEditForm((p) => ({ ...p, vehicle_count: parseInt(e.target.value) || 1 }))} />
+              </div>
+              <div>
+                <Label>{t("schedules.Seats/Vehicle")}</Label>
+                <Input type="number" min={1} value={editForm.seats_per_vehicle} onChange={(e) => setEditForm((p) => ({ ...p, seats_per_vehicle: parseInt(e.target.value) || 12 }))} />
+              </div>
+              <div>
+                <Label>{t("schedules.Price(LE)")}</Label>
+                <Input type="number" min={0} value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: parseFloat(e.target.value) || 0 }))} />
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={updateSchedule.isPending}>
+              {updateSchedule.isPending ? t("schedules.updating") : t("schedules.updateSchedule")}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

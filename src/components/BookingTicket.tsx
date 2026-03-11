@@ -21,12 +21,16 @@ interface BookingTicketProps {
   booking: Booking;
   route: Route;
   onClose: () => void;
+  pickupStopName?: string;
+  dropoffStopName?: string;
 }
 
 const BookingTicket: React.FC<BookingTicketProps> = ({
   booking,
   route,
   onClose,
+  pickupStopName,
+  dropoffStopName,
 }) => {
   const ticketRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +101,16 @@ const BookingTicket: React.FC<BookingTicketProps> = ({
                   <span>To</span>
                   <strong>${route.destination}</strong>
                 </div>
+               </div>
+              ${pickupStopName ? `
+              <div class="info-grid">
+                <div class="info-item">
+                  <span>Pickup Point</span>
+                  <strong>${pickupStopName}</strong>
+                </div>
+                ${dropoffStopName ? `<div class="info-item"><span>Dropoff Point</span><strong>${dropoffStopName}</strong></div>` : ''}
               </div>
+              ` : ''}
               <div class="info-grid">
                 <div class="info-item">
                   <span>Date</span>
@@ -225,6 +238,30 @@ const BookingTicket: React.FC<BookingTicketProps> = ({
                 <p className="font-semibold text-lg">{route.destination}</p>
               </div>
             </div>
+
+            {/* Pickup / Dropoff Stops */}
+            {(pickupStopName || dropoffStopName) && (
+              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border border-dashed">
+                {pickupStopName && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Pickup Point</p>
+                      <p className="font-medium text-sm">{pickupStopName}</p>
+                    </div>
+                  </div>
+                )}
+                {dropoffStopName && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-red-500 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Dropoff Point</p>
+                      <p className="font-medium text-sm">{dropoffStopName}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">

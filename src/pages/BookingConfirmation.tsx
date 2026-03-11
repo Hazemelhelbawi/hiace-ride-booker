@@ -151,6 +151,22 @@ ${t('booking.thankYou')}`;
                     {formatTime12h(route.departure_time)}
                   </span>
                 </div>
+                {(booking.pickup_stop || booking.dropoff_stop) && (
+                  <div className="flex items-center gap-4 text-sm mt-2">
+                    {booking.pickup_stop && (
+                      <span className="flex items-center gap-1 text-green-600">
+                        <MapPin className="w-3 h-3" />
+                        {t('booking.pickupPoint')}: {booking.pickup_stop.name_en}
+                      </span>
+                    )}
+                    {booking.dropoff_stop && (
+                      <span className="flex items-center gap-1 text-destructive">
+                        <MapPin className="w-3 h-3" />
+                        {t('booking.dropoffPoint')}: {booking.dropoff_stop.name_en}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
