@@ -579,6 +579,99 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           </div>
         )}
       </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("schedules.editSchedule")}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4">
+            <div>
+              <Label>{t("schedules.routeTemplate")} *</Label>
+              <Select
+                value={editForm.route_template_id}
+                onValueChange={(v) => setEditForm((p) => ({ ...p, route_template_id: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {templates.map((tmpl) => (
+                    <SelectItem key={tmpl.id} value={tmpl.id}>{tmpl.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("schedules.title")} *</Label>
+              <Input value={editForm.title} onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t("schedules.startDate")} *</Label>
+                <Input type="date" value={editForm.start_date} onChange={(e) => setEditForm((p) => ({ ...p, start_date: e.target.value }))} />
+              </div>
+              <div>
+                <Label>{t("schedules.endDate")} *</Label>
+                <Input type="date" value={editForm.end_date} onChange={(e) => setEditForm((p) => ({ ...p, end_date: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>{t("schedules.Recurrence")}</Label>
+              <Select value={editForm.recurrence_type} onValueChange={(v: any) => setEditForm((p) => ({ ...p, recurrence_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">{t("schedules.Daily")}</SelectItem>
+                  <SelectItem value="weekly">{t("schedules.Weekly")}</SelectItem>
+                  <SelectItem value="custom">{t("schedules.customDays")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(editForm.recurrence_type === "weekly" || editForm.recurrence_type === "custom") && (
+              <div>
+                <Label>{t("schedules.selectDays")}</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {WEEKDAY_NAMES.map((name, i) => (
+                    <Button key={i} type="button" size="sm" variant={editForm.weekdays.includes(i) ? "default" : "outline"} onClick={() => toggleEditWeekday(i)}>
+                      {name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <Label>{t("schedules.VanType")}</Label>
+              <Select value={editForm.van_type} onValueChange={(v: any) => setEditForm((p) => ({ ...p, van_type: v, seats_per_vehicle: v === "12_seats" ? 12 : 13 }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="13_seats">{t("schedules.13Seats")}</SelectItem>
+                  <SelectItem value="12_seats">{t("schedules.12Seats")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("schedules.DailyRepeats")}</Label>
+              <Input type="number" min={1} max={10} value={editForm.daily_repeats} onChange={(e) => setEditForm((p) => ({ ...p, daily_repeats: parseInt(e.target.value) || 1 }))} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>{t("schedules.Vehicles")}</Label>
+                <Input type="number" min={1} value={editForm.vehicle_count} onChange={(e) => setEditForm((p) => ({ ...p, vehicle_count: parseInt(e.target.value) || 1 }))} />
+              </div>
+              <div>
+                <Label>{t("schedules.Seats/Vehicle")}</Label>
+                <Input type="number" min={1} value={editForm.seats_per_vehicle} onChange={(e) => setEditForm((p) => ({ ...p, seats_per_vehicle: parseInt(e.target.value) || 12 }))} />
+              </div>
+              <div>
+                <Label>{t("schedules.Price(LE)")}</Label>
+                <Input type="number" min={0} value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: parseFloat(e.target.value) || 0 }))} />
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={updateSchedule.isPending}>
+              {updateSchedule.isPending ? t("schedules.updating") : t("schedules.updateSchedule")}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
