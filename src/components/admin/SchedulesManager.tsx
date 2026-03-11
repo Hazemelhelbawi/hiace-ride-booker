@@ -455,6 +455,7 @@ const SchedulesManager: React.FC = () => {
 
 interface ScheduleCardProps {
   schedule: any;
+  templates: any[];
   isExpanded: boolean;
   onToggle: () => void;
   onDelete: () => void;
@@ -464,6 +465,7 @@ interface ScheduleCardProps {
 
 const ScheduleCard: React.FC<ScheduleCardProps> = ({
   schedule,
+  templates,
   isExpanded,
   onToggle,
   onDelete,
@@ -471,7 +473,45 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   onToggleActive,
 }) => {
   const { t } = useLanguage();
+  const updateSchedule = useUpdateSchedule();
   const totalSeats = schedule.vehicle_count * schedule.seats_per_vehicle;
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    route_template_id: schedule.route_template_id,
+    title: schedule.title,
+    start_date: schedule.start_date,
+    end_date: schedule.end_date,
+    recurrence_type: schedule.recurrence_type as "daily" | "weekly" | "custom",
+    weekdays: schedule.weekdays || [],
+    vehicle_count: schedule.vehicle_count,
+    seats_per_vehicle: schedule.seats_per_vehicle,
+    price: schedule.price,
+    van_type: schedule.van_type as "13_seats" | "12_seats",
+    daily_repeats: schedule.daily_repeats || 1,
+  });
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateSchedule.mutateAsync({
+        id: schedule.id,
+        updates: editForm,
+      });
+      setIsEditOpen(false);
+      toast.success(t("schedules.scheduleUpdated"));
+    } catch {
+      toast.error(t("schedules.failedToUpdateSchedule"));
+    }
+  };
+
+  const toggleEditWeekday = (day: number) => {
+    setEditForm((prev) => ({
+      ...prev,
+      weekdays: prev.weekdays.includes(day)
+        ? prev.weekdays.filter((d: number) => d !== day)
+        : [...prev.weekdays, day],
+    }));
+  };
 
   return (
     <Card className="border">
