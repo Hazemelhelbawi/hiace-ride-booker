@@ -550,6 +550,9 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               checked={schedule.is_active}
               onCheckedChange={onToggleActive}
             />
+            <Button size="sm" variant="outline" onClick={() => setIsEditOpen(true)}>
+              <Pencil className="w-3 h-3 mr-1" /> {t("common.edit")}
+            </Button>
             <Button size="sm" variant="outline" onClick={onGenerate}>
               <Zap className="w-3 h-3 mr-1" /> {t("schedules.generate")}
             </Button>
