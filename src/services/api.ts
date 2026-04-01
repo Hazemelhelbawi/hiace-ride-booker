@@ -210,12 +210,7 @@ export const getUserBookings = async (userId: string): Promise<Booking[]> => {
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
+      BOOKING_SELECT,
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
