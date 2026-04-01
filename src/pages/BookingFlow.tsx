@@ -133,6 +133,26 @@ const BookingFlow: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Re-check booked seats to prevent stale data conflicts
+      const { data: latestBookings } = await supabase
+        .from('bookings')
+        .select('seats')
+        .eq('route_id', route.id)
+        .neq('status', 'cancelled');
+      const latestBooked = (latestBookings || []).flatMap((b: any) => b.seats || []);
+      const conflicting = selectedSeats.filter(s => latestBooked.includes(s.number));
+      if (conflicting.length > 0) {
+        toast.error(`Seats ${conflicting.map(s => s.number).join(', ')} are already booked. Please select different seats.`);
+        setSeats(prev => prev.map(seat => ({
+          ...seat,
+          isAvailable: !latestBooked.includes(seat.number),
+          isSelected: seat.isSelected && !latestBooked.includes(seat.number),
+        })));
+        setStep(1);
+        setIsSubmitting(false);
+        return;
+      }
+
       const notesWithStops = [
         passengerInfo.pickupPoint ? `Pickup: ${passengerInfo.pickupPoint}` : '',
         passengerInfo.dropoffPoint ? `Dropoff: ${passengerInfo.dropoffPoint}` : '',
@@ -155,7 +175,18 @@ const BookingFlow: React.FC = () => {
         is_paid: false,
       };
 
-      const newBooking = await createBooking.mutateAsync(bookingData);
+      let newBooking;
+      try {
+        newBooking = await createBooking.mutateAsync(bookingData);
+      } catch (bookingError: any) {
+        if (bookingError?.message?.includes('already booked')) {
+          toast.error(bookingError.message);
+          setStep(1);
+          setIsSubmitting(false);
+          return;
+        }
+        throw bookingError;
+      }
 
       // Increment promo code usage if one was applied
       if (appliedPromoCode) {
