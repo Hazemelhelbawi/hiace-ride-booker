@@ -597,7 +597,7 @@ const AdminDashboard: React.FC = () => {
                         </TableRow>
                       ) : (
                         bookings.map((booking) => {
-                          const route = getRouteForBooking(booking);
+                          const info = getRouteInfo(booking);
                           return (
                             <TableRow key={booking.id}>
                               <TableCell className="font-mono text-sm">
@@ -617,12 +617,11 @@ const AdminDashboard: React.FC = () => {
                                 {booking.passenger_phone}
                               </TableCell>
                               <TableCell>
-                                {route ? (
-                                  <div className="text-sm">
-                                    {route.origin} → {route.destination}
+                                <div className="text-sm">{info.label}</div>
+                                {info.date && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {info.date}
                                   </div>
-                                ) : (
-                                  "N/A"
                                 )}
                               </TableCell>
                               <TableCell className="text-sm">
@@ -632,7 +631,7 @@ const AdminDashboard: React.FC = () => {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-1 flex-wrap">
+                                <div className="flex gap-1 flex-wrap items-center">
                                   {booking.seats.map((seat) => (
                                     <span
                                       key={seat}
@@ -641,6 +640,11 @@ const AdminDashboard: React.FC = () => {
                                       {seat}
                                     </span>
                                   ))}
+                                  {info.totalSeats > 0 && (
+                                    <span className="text-xs text-muted-foreground ml-1">
+                                      ({booking.seats.length}/{info.totalSeats})
+                                    </span>
+                                  )}
                                 </div>
                               </TableCell>
                               <TableCell className="font-semibold">
