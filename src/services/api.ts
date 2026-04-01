@@ -347,3 +347,18 @@ export const getBookedSeats = async (routeId: string): Promise<number[]> => {
 
   return (data || []).flatMap((b) => b.seats || []);
 };
+
+export const getBookedSeatsByTripInstance = async (tripInstanceId: string): Promise<number[]> => {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("seats")
+    .eq("trip_instance_id", tripInstanceId)
+    .neq("status", "cancelled");
+
+  if (error) {
+    logger.error("Error fetching booked seats by trip instance:", error);
+    return [];
+  }
+
+  return (data || []).flatMap((b) => b.seats || []);
+};
