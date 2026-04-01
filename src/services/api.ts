@@ -246,14 +246,7 @@ export const createBooking = async (booking: {
         is_paid: false,
       },
     ])
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
+    .select(BOOKING_SELECT)
     .single();
 
   if (error) {
