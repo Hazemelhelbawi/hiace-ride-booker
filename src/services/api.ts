@@ -35,6 +35,22 @@ export interface Booking {
   updated_at: string;
   route?: Route;
   trip_instance_id?: string | null;
+  trip_instance?: {
+    id: string;
+    trip_date: string;
+    schedule_id: string;
+    available_seats: number;
+    total_seats: number;
+    schedule?: {
+      title: string;
+      price: number;
+      route_template?: {
+        name: string;
+        origin_region: string;
+        destination_region: string;
+      } | null;
+    } | null;
+  } | null;
   pickup_stop_id?: string | null;
   dropoff_stop_id?: string | null;
   pickup_stop?: { name_en: string; name_ar: string } | null;
