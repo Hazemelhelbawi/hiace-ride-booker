@@ -35,6 +35,22 @@ export interface Booking {
   updated_at: string;
   route?: Route;
   trip_instance_id?: string | null;
+  trip_instance?: {
+    id: string;
+    trip_date: string;
+    schedule_id: string;
+    available_seats: number;
+    total_seats: number;
+    schedule?: {
+      title: string;
+      price: number;
+      route_template?: {
+        name: string;
+        origin_region: string;
+        destination_region: string;
+      } | null;
+    } | null;
+  } | null;
   pickup_stop_id?: string | null;
   dropoff_stop_id?: string | null;
   pickup_stop?: { name_en: string; name_ar: string } | null;
@@ -60,6 +76,7 @@ const mapBooking = (booking: Record<string, unknown>): Booking => ({
   updated_at: booking.updated_at as string,
   route: booking.route as Route | undefined,
   trip_instance_id: booking.trip_instance_id as string | null | undefined,
+  trip_instance: booking.trip_instance as Booking['trip_instance'],
   pickup_stop_id: booking.pickup_stop_id as string | null | undefined,
   dropoff_stop_id: booking.dropoff_stop_id as string | null | undefined,
   pickup_stop: booking.pickup_stop as
@@ -158,18 +175,25 @@ export const deleteRoute = async (id: string): Promise<boolean> => {
   return true;
 };
 
+const BOOKING_SELECT = `
+  *,
+  route:routes(*),
+  trip_instance:trip_instances!bookings_trip_instance_id_fkey(
+    id, trip_date, schedule_id, available_seats, total_seats,
+    schedule:trip_schedules(
+      title, price,
+      route_template:route_templates(name, origin_region, destination_region)
+    )
+  ),
+  pickup_stop:stops!pickup_stop_id(name_en, name_ar),
+  dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
+`;
+
 // Bookings
 export const getBookings = async (): Promise<Booking[]> => {
   const { data, error } = await supabase
     .from("bookings")
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
+    .select(BOOKING_SELECT)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -186,12 +210,7 @@ export const getUserBookings = async (userId: string): Promise<Booking[]> => {
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
+      BOOKING_SELECT,
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
@@ -227,14 +246,7 @@ export const createBooking = async (booking: {
         is_paid: false,
       },
     ])
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
+    .select(BOOKING_SELECT)
     .single();
 
   if (error) {
@@ -267,14 +279,7 @@ export const updateBooking = async (
     .from("bookings")
     .update(updates)
     .eq("id", id)
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
+    .select(BOOKING_SELECT)
     .single();
 
   if (error) {
@@ -307,14 +312,7 @@ export const cancelBooking = async (id: string): Promise<Booking | null> => {
     .from("bookings")
     .update({ status: "cancelled" })
     .eq("id", id)
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
+    .select(BOOKING_SELECT)
     .single();
 
   if (updateError) {
