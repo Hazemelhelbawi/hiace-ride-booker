@@ -279,14 +279,7 @@ export const updateBooking = async (
     .from("bookings")
     .update(updates)
     .eq("id", id)
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
+    .select(BOOKING_SELECT)
     .single();
 
   if (error) {
