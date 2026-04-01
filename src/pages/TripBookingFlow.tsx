@@ -217,9 +217,27 @@ const TripBookingFlow: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // We still need a route_id for backward compat. Use a placeholder approach:
-      // Create a temporary entry or use the first available route.
-      // For now, we'll insert directly with the new fields.
+      // Re-check booked seats right before booking to prevent stale data
+      const { data: latestBookings } = await supabase
+        .from('bookings')
+        .select('seats')
+        .eq('trip_instance_id', selectedTrip.id)
+        .neq('status', 'cancelled');
+      const latestBooked = (latestBookings || []).flatMap(b => b.seats || []);
+      const conflicting = selectedSeats.filter(s => latestBooked.includes(s.number));
+      if (conflicting.length > 0) {
+        toast.error(`Seats ${conflicting.map(s => s.number).join(', ')} are already booked. Please select different seats.`);
+        // Refresh seat map
+        setBookedSeats(latestBooked);
+        setSeats(prev => prev.map(seat => ({
+          ...seat,
+          isAvailable: !latestBooked.includes(seat.number),
+          isSelected: seat.isSelected && !latestBooked.includes(seat.number),
+        })));
+        setIsSubmitting(false);
+        return;
+      }
+
       const { data: newBooking, error } = await supabase
         .from('bookings')
         .insert([{
@@ -243,7 +261,28 @@ const TripBookingFlow: React.FC = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('already booked')) {
+          toast.error(error.message);
+          setStep('seats');
+          // Refresh booked seats
+          const { data: refreshed } = await supabase
+            .from('bookings')
+            .select('seats')
+            .eq('trip_instance_id', selectedTrip.id)
+            .neq('status', 'cancelled');
+          const refreshedBooked = (refreshed || []).flatMap(b => b.seats || []);
+          setBookedSeats(refreshedBooked);
+          setSeats(prev => prev.map(seat => ({
+            ...seat,
+            isAvailable: !refreshedBooked.includes(seat.number),
+            isSelected: false,
+          })));
+          setIsSubmitting(false);
+          return;
+        }
+        throw error;
+      }
 
       // Update available seats on trip instance
       await supabase

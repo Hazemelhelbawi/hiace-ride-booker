@@ -123,3 +123,11 @@ export const useBookedSeats = (routeId: string | undefined) => {
     enabled: !!routeId,
   });
 };
+
+export const useBookedSeatsByTripInstance = (tripInstanceId: string | undefined) => {
+  return useQuery({
+    queryKey: ['booked-seats-trip', tripInstanceId],
+    queryFn: () => tripInstanceId ? api.getBookedSeatsByTripInstance(tripInstanceId) : [],
+    enabled: !!tripInstanceId,
+  });
+};

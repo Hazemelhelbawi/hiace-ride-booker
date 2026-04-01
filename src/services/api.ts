@@ -239,7 +239,11 @@ export const createBooking = async (booking: {
 
   if (error) {
     logger.error("Error creating booking:", error);
-    return null;
+    // Re-throw seat conflict errors so the UI can handle them
+    if (error.message?.includes('already booked')) {
+      throw new Error(error.message);
+    }
+    throw new Error('Failed to create booking');
   }
 
   // Update available seats on the route
@@ -342,6 +346,21 @@ export const getBookedSeats = async (routeId: string): Promise<number[]> => {
 
   if (error) {
     logger.error("Error fetching booked seats:", error);
+    return [];
+  }
+
+  return (data || []).flatMap((b) => b.seats || []);
+};
+
+export const getBookedSeatsByTripInstance = async (tripInstanceId: string): Promise<number[]> => {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("seats")
+    .eq("trip_instance_id", tripInstanceId)
+    .neq("status", "cancelled");
+
+  if (error) {
+    logger.error("Error fetching booked seats by trip instance:", error);
     return [];
   }
 
