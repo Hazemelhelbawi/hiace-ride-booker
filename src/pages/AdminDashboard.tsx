@@ -309,8 +309,32 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const getRouteForBooking = (booking: Booking): Route | undefined => {
-    return routes.find((r) => r.id === booking.route_id);
+  const getRouteInfo = (booking: Booking): { label: string; date: string; totalSeats: number } => {
+    const route = routes.find((r) => r.id === booking.route_id);
+    if (route) {
+      return {
+        label: `${route.origin} → ${route.destination}`,
+        date: route.date,
+        totalSeats: route.total_seats,
+      };
+    }
+    const ti = (booking as any).trip_instance;
+    if (ti?.schedule?.route_template) {
+      const rt = ti.schedule.route_template;
+      return {
+        label: `${rt.origin_region} → ${rt.destination_region}`,
+        date: ti.trip_date,
+        totalSeats: ti.total_seats,
+      };
+    }
+    if (ti?.schedule) {
+      return {
+        label: ti.schedule.title,
+        date: ti.trip_date,
+        totalSeats: ti.total_seats,
+      };
+    }
+    return { label: "N/A", date: "", totalSeats: 0 };
   };
 
   const stats = {
