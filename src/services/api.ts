@@ -239,7 +239,11 @@ export const createBooking = async (booking: {
 
   if (error) {
     logger.error("Error creating booking:", error);
-    return null;
+    // Re-throw seat conflict errors so the UI can handle them
+    if (error.message?.includes('already booked')) {
+      throw new Error(error.message);
+    }
+    throw new Error('Failed to create booking');
   }
 
   // Update available seats on the route
