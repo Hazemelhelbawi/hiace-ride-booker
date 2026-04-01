@@ -76,6 +76,7 @@ const mapBooking = (booking: Record<string, unknown>): Booking => ({
   updated_at: booking.updated_at as string,
   route: booking.route as Route | undefined,
   trip_instance_id: booking.trip_instance_id as string | null | undefined,
+  trip_instance: booking.trip_instance as Booking['trip_instance'],
   pickup_stop_id: booking.pickup_stop_id as string | null | undefined,
   dropoff_stop_id: booking.dropoff_stop_id as string | null | undefined,
   pickup_stop: booking.pickup_stop as
