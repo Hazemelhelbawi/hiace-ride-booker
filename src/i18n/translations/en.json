@@ -524,11 +524,17 @@
     "tab": "Trip Seats",
     "title": "Trip Seat Management",
     "subtitle": "Live overview of seat occupancy across all trips.",
-    "noTrips": "No trips yet.",
+    "noTrips": "No trips found for the selected date.",
     "viewSeatMap": "View seat map",
     "booked": "booked",
     "available": "Available",
     "bookedLegend": "Booked",
-    "empty": "Empty"
+    "empty": "Empty",
+    "filterByDate": "Filter by date",
+    "today": "Today",
+    "allDates": "All dates",
+    "pickDate": "Pick a date",
+    "vehicle": "Vehicle",
+    "vehicleOf": "of"
   }
 }
