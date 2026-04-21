@@ -73,6 +73,7 @@ import StopsManager from "@/components/admin/StopsManager";
 import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
 import SchedulesManager from "@/components/admin/SchedulesManager";
 import PrivateTripRequestsManager from "@/components/admin/PrivateTripRequestsManager";
+import TripSeatsManager from "@/components/admin/TripSeatsManager";
 import { format } from "date-fns";
 import { formatTime12h } from "@/lib/timeFormat";
 
@@ -505,6 +506,13 @@ const AdminDashboard: React.FC = () => {
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
 
               {t("admin.Schedules")}
+            </TabsTrigger>
+            <TabsTrigger
+              value="trip-seats"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              {t("tripSeats.tab") || "Trip Seats"}
             </TabsTrigger>
             <TabsTrigger
               value="private-requests"
@@ -1075,6 +1083,10 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="schedules">
             <SchedulesManager />
+          </TabsContent>
+
+          <TabsContent value="trip-seats">
+            <TripSeatsManager />
           </TabsContent>
 
           <TabsContent value="private-requests">

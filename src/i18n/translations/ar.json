@@ -126,7 +126,8 @@
     "pickupPoint": "نقطة الالتقاط",
     "dropoffPoint": "نقطة النزول",
     "selectPickup": "اختر نقطة الالتقاط",
-    "selectDropoff": "اختر نقطة النزول"
+    "selectDropoff": "اختر نقطة النزول",
+    "seatsJustBooked": "عذراً، تم حجز المقعد {seats} للتو. الرجاء اختيار مقعد آخر."
   },
   "privateTrip": {
     "title": "طلب رحلة خاصة",
@@ -518,5 +519,16 @@
     "uploadError": "فشل في رفع لقطة الشاشة",
     "imageOnly": "يرجى رفع ملف صورة",
     "fileTooLarge": "حجم الملف يجب أن يكون أقل من 5 ميجابايت"
+  },
+  "tripSeats": {
+    "tab": "مقاعد الرحلات",
+    "title": "إدارة مقاعد الرحلات",
+    "subtitle": "نظرة حية على إشغال المقاعد لكل الرحلات.",
+    "noTrips": "لا توجد رحلات بعد.",
+    "viewSeatMap": "عرض خريطة المقاعد",
+    "booked": "محجوز",
+    "available": "متاح",
+    "bookedLegend": "محجوز",
+    "empty": "فارغ"
   }
 }

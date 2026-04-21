@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { logger } from '@/lib/logger';
 import { formatTime12h } from '@/lib/timeFormat';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -62,6 +62,12 @@ type Step = 'direction' | 'pickup' | 'dropoff' | 'date' | 'seats' | 'info';
 
 const TripBookingFlow: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefill = (location.state || {}) as {
+    origin?: string;
+    destination?: string;
+    date?: string;
+  };
   const { user } = useAuth();
   const { t } = useLanguage();
   const { data: templates = [] } = useRouteTemplates(true);
@@ -91,6 +97,26 @@ const TripBookingFlow: React.FC = () => {
   const { data: templateStops = [] } = useRouteTemplateStops(selectedTemplateId);
 
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+
+  // Prefill from legacy RouteCard navigation (origin/destination/date)
+  useEffect(() => {
+    if (!prefill.origin || !prefill.destination || templates.length === 0) return;
+    if (selectedTemplateId) return; // already chosen
+    const o = prefill.origin.toLowerCase();
+    const d = prefill.destination.toLowerCase();
+    const match = templates.find(
+      tmpl =>
+        tmpl.origin_region.toLowerCase().includes(o) &&
+        tmpl.destination_region.toLowerCase().includes(d)
+    ) || templates.find(
+      tmpl => tmpl.name.toLowerCase().includes(o) && tmpl.name.toLowerCase().includes(d)
+    );
+    if (match) {
+      setSelectedTemplateId(match.id);
+      if (prefill.date) setSelectedDate(prefill.date);
+      setStep('pickup');
+    }
+  }, [prefill.origin, prefill.destination, prefill.date, templates, selectedTemplateId]);
 
   // Filter stops for pickup/dropoff based on template stops
   const pickupStops = useMemo(() => {
@@ -131,35 +157,95 @@ const TripBookingFlow: React.FC = () => {
     fetchTrips();
   }, [selectedDate, selectedTemplateId]);
 
-  // Initialize seats when trip is selected
-  useEffect(() => {
-    if (!selectedTrip) return;
-    const vanType = selectedTrip.schedule?.van_type || '13_seats';
-    const seatNumbers = vanType === '12_seats'
+  const seatNumbersForTrip = useCallback((trip: TripOption | null) => {
+    const vanType = trip?.schedule?.van_type || '13_seats';
+    return vanType === '12_seats'
       ? [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14]
       : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
-    const price = selectedTrip.schedule?.price || 0;
+  }, []);
 
-    // Fetch booked seats for this trip instance
+  // Apply booked seats to the seat map (preserves user's selections that are still free)
+  const applyBookedSeats = useCallback((booked: number[]) => {
+    if (!selectedTrip) return;
+    const seatNumbers = seatNumbersForTrip(selectedTrip);
+    const price = selectedTrip.schedule?.price || 0;
+    setBookedSeats(booked);
+    setSeats(prev => {
+      const prevSelected = new Set(
+        prev.filter(s => s.isSelected && !booked.includes(s.number)).map(s => s.number)
+      );
+      const lostSelections = prev.filter(s => s.isSelected && booked.includes(s.number));
+      if (lostSelections.length > 0) {
+        toast.error(
+          t('booking.seatsJustBooked')
+            ?.replace('{seats}', lostSelections.map(s => s.number).join(', ')) ||
+            `Sorry, seat${lostSelections.length > 1 ? 's' : ''} ${lostSelections.map(s => s.number).join(', ')} ${lostSelections.length > 1 ? 'were' : 'was'} just booked. Please choose another.`
+        );
+      }
+      return seatNumbers.map(num => ({
+        number: num,
+        isAvailable: !booked.includes(num),
+        isSelected: prevSelected.has(num),
+        price: num === 1 ? price + 50 : price,
+      }));
+    });
+  }, [selectedTrip, seatNumbersForTrip, t]);
+
+  // Initial fetch when trip is selected
+  useEffect(() => {
+    if (!selectedTrip) return;
+    let cancelled = false;
     const fetchBooked = async () => {
       const { data } = await supabase
         .from('bookings')
         .select('seats')
         .eq('trip_instance_id', selectedTrip.id)
         .neq('status', 'cancelled');
+      if (cancelled) return;
       const booked = (data || []).flatMap(b => b.seats || []);
+      const seatNumbers = seatNumbersForTrip(selectedTrip);
+      const price = selectedTrip.schedule?.price || 0;
       setBookedSeats(booked);
-
-      const initialSeats: Seat[] = seatNumbers.map(num => ({
+      setSeats(seatNumbers.map(num => ({
         number: num,
         isAvailable: !booked.includes(num),
         isSelected: false,
         price: num === 1 ? price + 50 : price,
-      }));
-      setSeats(initialSeats);
+      })));
     };
     fetchBooked();
-  }, [selectedTrip]);
+    return () => { cancelled = true; };
+  }, [selectedTrip, seatNumbersForTrip]);
+
+  // Realtime subscription: any booking change for this trip refreshes seat availability
+  useEffect(() => {
+    if (!selectedTrip) return;
+    const tripId = selectedTrip.id;
+    const channel = supabase
+      .channel(`trip-seats-${tripId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: `trip_instance_id=eq.${tripId}`,
+        },
+        async () => {
+          const { data } = await supabase
+            .from('bookings')
+            .select('seats')
+            .eq('trip_instance_id', tripId)
+            .neq('status', 'cancelled');
+          const booked = (data || []).flatMap(b => b.seats || []);
+          applyBookedSeats(booked);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedTrip, applyBookedSeats]);
 
   useEffect(() => {
     if (user) {

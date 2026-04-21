@@ -168,7 +168,8 @@
     "pickupPoint": "Pickup Point",
     "dropoffPoint": "Dropoff Point",
     "selectPickup": "Select pickup stop",
-    "selectDropoff": "Select dropoff stop"
+    "selectDropoff": "Select dropoff stop",
+    "seatsJustBooked": "Sorry, seat {seats} was just booked. Please choose another."
   },
   "privateTrip": {
     "title": "Request a Private Trip",
@@ -518,5 +519,16 @@
     "uploadError": "Failed to upload screenshot",
     "imageOnly": "Please upload an image file",
     "fileTooLarge": "File must be under 5MB"
+  },
+  "tripSeats": {
+    "tab": "Trip Seats",
+    "title": "Trip Seat Management",
+    "subtitle": "Live overview of seat occupancy across all trips.",
+    "noTrips": "No trips yet.",
+    "viewSeatMap": "View seat map",
+    "booked": "booked",
+    "available": "Available",
+    "bookedLegend": "Booked",
+    "empty": "Empty"
   }
 }

@@ -98,10 +98,16 @@ const Routes: React.FC = () => {
 
   const handleBook = (route: (typeof routes)[0]) => {
     if (!isAuthenticated) {
-      navigate("/auth", { state: { from: "/", routeId: route.id } });
+      navigate("/auth", { state: { from: "/book", routeId: route.id } });
       return;
     }
-    navigate(`/booking/${route.id}`);
+    navigate("/book", {
+      state: {
+        origin: route.origin,
+        destination: route.destination,
+        date: route.date,
+      },
+    });
   };
 
   const handleOriginChange = (value: string) => {
