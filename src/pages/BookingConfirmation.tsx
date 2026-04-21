@@ -128,8 +128,8 @@ ${t('booking.thankYou')}`;
                 <Ticket className="w-5 h-5" />
                 {t('booking.details')}
               </CardTitle>
-              <Badge variant="secondary" className="bg-white/20 text-white">
-                #{booking.id.slice(0, 8)}
+              <Badge variant="secondary" className="bg-white/20 text-white font-mono">
+                #{booking.id.slice(0, 8).toUpperCase()}
               </Badge>
             </div>
           </CardHeader>
