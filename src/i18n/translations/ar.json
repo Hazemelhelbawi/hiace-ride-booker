@@ -126,7 +126,8 @@
     "pickupPoint": "نقطة الالتقاط",
     "dropoffPoint": "نقطة النزول",
     "selectPickup": "اختر نقطة الالتقاط",
-    "selectDropoff": "اختر نقطة النزول"
+    "selectDropoff": "اختر نقطة النزول",
+    "seatsJustBooked": "عذراً، تم حجز المقعد {seats} للتو. الرجاء اختيار مقعد آخر."
   },
   "privateTrip": {
     "title": "طلب رحلة خاصة",
