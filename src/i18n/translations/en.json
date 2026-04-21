@@ -168,7 +168,8 @@
     "pickupPoint": "Pickup Point",
     "dropoffPoint": "Dropoff Point",
     "selectPickup": "Select pickup stop",
-    "selectDropoff": "Select dropoff stop"
+    "selectDropoff": "Select dropoff stop",
+    "seatsJustBooked": "Sorry, seat {seats} was just booked. Please choose another."
   },
   "privateTrip": {
     "title": "Request a Private Trip",
