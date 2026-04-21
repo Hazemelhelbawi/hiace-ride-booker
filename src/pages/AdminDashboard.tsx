@@ -73,6 +73,7 @@ import StopsManager from "@/components/admin/StopsManager";
 import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
 import SchedulesManager from "@/components/admin/SchedulesManager";
 import PrivateTripRequestsManager from "@/components/admin/PrivateTripRequestsManager";
+import TripSeatsManager from "@/components/admin/TripSeatsManager";
 import { format } from "date-fns";
 import { formatTime12h } from "@/lib/timeFormat";
 
