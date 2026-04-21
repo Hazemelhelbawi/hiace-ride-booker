@@ -508,6 +508,13 @@ const AdminDashboard: React.FC = () => {
               {t("admin.Schedules")}
             </TabsTrigger>
             <TabsTrigger
+              value="trip-seats"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              {t("tripSeats.tab") || "Trip Seats"}
+            </TabsTrigger>
+            <TabsTrigger
               value="private-requests"
               className="gap-1 sm:gap-2 text-xs sm:text-sm"
             >
