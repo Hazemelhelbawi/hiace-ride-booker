@@ -1085,6 +1085,10 @@ const AdminDashboard: React.FC = () => {
             <SchedulesManager />
           </TabsContent>
 
+          <TabsContent value="trip-seats">
+            <TripSeatsManager />
+          </TabsContent>
+
           <TabsContent value="private-requests">
             <PrivateTripRequestsManager />
           </TabsContent>
