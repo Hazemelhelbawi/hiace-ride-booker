@@ -98,6 +98,26 @@ const TripBookingFlow: React.FC = () => {
 
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
 
+  // Prefill from legacy RouteCard navigation (origin/destination/date)
+  useEffect(() => {
+    if (!prefill.origin || !prefill.destination || templates.length === 0) return;
+    if (selectedTemplateId) return; // already chosen
+    const o = prefill.origin.toLowerCase();
+    const d = prefill.destination.toLowerCase();
+    const match = templates.find(
+      tmpl =>
+        tmpl.origin_region.toLowerCase().includes(o) &&
+        tmpl.destination_region.toLowerCase().includes(d)
+    ) || templates.find(
+      tmpl => tmpl.name.toLowerCase().includes(o) && tmpl.name.toLowerCase().includes(d)
+    );
+    if (match) {
+      setSelectedTemplateId(match.id);
+      if (prefill.date) setSelectedDate(prefill.date);
+      setStep('pickup');
+    }
+  }, [prefill.origin, prefill.destination, prefill.date, templates, selectedTemplateId]);
+
   // Filter stops for pickup/dropoff based on template stops
   const pickupStops = useMemo(() => {
     return templateStops
