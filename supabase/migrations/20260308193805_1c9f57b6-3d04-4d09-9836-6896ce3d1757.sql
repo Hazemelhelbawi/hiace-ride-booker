@@ -1,1 +1,0 @@
-ALTER TABLE public.trip_instances DROP CONSTRAINT IF EXISTS trip_instances_schedule_id_trip_date_key;

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { logger } from '@/lib/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { createPrivateTrip } from '@/services/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -18,43 +17,34 @@ const PrivateTripRequest: React.FC = () => {
   const [form, setForm] = useState({
     name: '',
     phone: '',
-    number_of_passengers: 1,
-    pickup_location: '',
-    dropoff_location: '',
-    preferred_date: '',
+    from_location: '',
+    to_location: '',
+    requested_date: '',
     notes: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim() || !form.pickup_location.trim() || !form.dropoff_location.trim()) {
+    if (!form.name.trim() || !form.phone.trim() || !form.from_location.trim() || !form.to_location.trim()) {
       toast.error(t('booking.fillRequired') || 'Please fill in all required fields');
-      return;
-    }
-    if (form.number_of_passengers < 1 || form.number_of_passengers > 50) {
-      toast.error('Number of passengers must be between 1 and 50');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('private_trip_requests' as any)
-        .insert([{
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          number_of_passengers: form.number_of_passengers,
-          pickup_location: form.pickup_location.trim(),
-          dropoff_location: form.dropoff_location.trim(),
-          preferred_date: form.preferred_date || null,
-          notes: form.notes.trim() || null,
-        }]);
+      await createPrivateTrip({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        from_location: form.from_location.trim(),
+        to_location: form.to_location.trim(),
+        requested_date: form.requested_date || new Date().toISOString().split('T')[0],
+        notes: form.notes.trim() || undefined,
+      });
 
-      if (error) throw error;
       setSubmitted(true);
       toast.success(t('common.success') || 'Request submitted successfully!');
     } catch (error) {
-      logger.error('Error submitting request:', error);
+      console.error('Error submitting request:', error);
       toast.error(t('common.error') || 'Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -78,7 +68,7 @@ const PrivateTripRequest: React.FC = () => {
                 {t('privateTrip.successMessage') || "We've received your private trip request. Our team will contact you soon to confirm the details."}
                 {' '}<strong>{form.phone}</strong>
               </p>
-              <Button onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', number_of_passengers: 1, pickup_location: '', dropoff_location: '', preferred_date: '', notes: '' }); }} variant="outline">
+              <Button onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', from_location: '', to_location: '', requested_date: '', notes: '' }); }} variant="outline">
                 {t('privateTrip.submitAnother') || 'Submit Another Request'}
               </Button>
             </CardContent>
@@ -129,24 +119,11 @@ const PrivateTripRequest: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="passengers">{t('privateTrip.passengers') || 'Number of Passengers'} *</Label>
+                <Label htmlFor="from_location">{t('privateTrip.pickup') || 'From Location'} *</Label>
                 <Input
-                  id="passengers"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={form.number_of_passengers}
-                  onChange={e => setForm(p => ({ ...p, number_of_passengers: parseInt(e.target.value) || 1 }))}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pickup">{t('privateTrip.pickup') || 'Pickup Location'} *</Label>
-                <Input
-                  id="pickup"
-                  value={form.pickup_location}
-                  onChange={e => setForm(p => ({ ...p, pickup_location: e.target.value }))}
+                  id="from_location"
+                  value={form.from_location}
+                  onChange={e => setForm(p => ({ ...p, from_location: e.target.value }))}
                   placeholder={t('search.pickupLocation') || 'e.g., Cairo, Dokki'}
                   maxLength={200}
                   required
@@ -154,11 +131,11 @@ const PrivateTripRequest: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dropoff">{t('privateTrip.dropoff') || 'Dropoff Location'} *</Label>
+                <Label htmlFor="to_location">{t('privateTrip.dropoff') || 'To Location'} *</Label>
                 <Input
-                  id="dropoff"
-                  value={form.dropoff_location}
-                  onChange={e => setForm(p => ({ ...p, dropoff_location: e.target.value }))}
+                  id="to_location"
+                  value={form.to_location}
+                  onChange={e => setForm(p => ({ ...p, to_location: e.target.value }))}
                   placeholder={t('search.dropoffLocation') || 'e.g., Dahab, South Sinai'}
                   maxLength={200}
                   required
@@ -166,13 +143,14 @@ const PrivateTripRequest: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="date">{t('privateTrip.preferredDate') || 'Preferred Date'}</Label>
+                <Label htmlFor="date">{t('privateTrip.preferredDate') || 'Preferred Date'} *</Label>
                 <Input
                   id="date"
                   type="date"
-                  value={form.preferred_date}
-                  onChange={e => setForm(p => ({ ...p, preferred_date: e.target.value }))}
+                  value={form.requested_date}
+                  onChange={e => setForm(p => ({ ...p, requested_date: e.target.value }))}
                   min={new Date().toISOString().split('T')[0]}
+                  required
                 />
               </div>
 

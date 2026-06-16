@@ -1,48 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Camera } from "lucide-react";
-
-import van1 from "@/assets/gallery/1.jpeg";
-import van2 from "@/assets/gallery/2.jpeg";
-import van3 from "@/assets/gallery/3.jpeg";
-import van4 from "@/assets/gallery/4.jpeg";
-import van5 from "@/assets/gallery/5.jpeg";
-import van6 from "@/assets/gallery/6.jpeg";
-import van7 from "@/assets/gallery/7.jpeg";
-import van8 from "@/assets/gallery/8.jpeg";
-import van9 from "@/assets/gallery/9.jpeg";
-import van10 from "@/assets/gallery/10.jpeg";
-import van11 from "@/assets/gallery/11.jpeg";
-import van12 from "@/assets/gallery/12.jpeg";
-// import van1 from "@/assets/gallery/1.jpeg";
-// import van1 from "@/assets/gallery/van-1.jpg";
-// import van2 from "@/assets/gallery/van-2.jpg";
-// import van3 from "@/assets/gallery/van-3.jpg";
-// import van4 from "@/assets/gallery/van-4.jpg";
-// import van5 from "@/assets/gallery/van-5.jpg";
-// import van6 from "@/assets/gallery/van-6.jpg";
-// import van7 from "@/assets/gallery/van-7.jpg";
-// import van8 from "@/assets/gallery/van-8.jpg";
-
-const images = [
-  { src: van1, alt: "سيارتنا" },
-  { src: van2, alt: "سيارتنا" },
-  { src: van3, alt: "سيارتنا" },
-  { src: van4, alt: "سيارتنا" },
-  { src: van5, alt: "سيارتنا" },
-  { src: van6, alt: "سيارتنا" },
-  { src: van7, alt: "سيارتنا" },
-  { src: van8, alt: "سيارتنا" },
-  { src: van9, alt: "سيارتنا" },
-  { src: van10, alt: "سيارتنا" },
-  { src: van11, alt: "سيارتنا" },
-  { src: van12, alt: "سيارتنا" },
-];
+import { getGallery, STRAPI_URL, type StrapiItem, type GalleryItem } from "@/services/api";
 
 const Gallery: React.FC = () => {
   const { t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [galleryItems, setGalleryItems] = useState<StrapiItem<GalleryItem>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const items = await getGallery();
+        setGalleryItems(items);
+      } catch (error) {
+        console.error('Error fetching gallery:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading gallery...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (galleryItems.length === 0) {
+    return null; // Don't show gallery section if no items
+  }
 
   return (
     <section className="py-20 bg-background">
@@ -62,27 +59,32 @@ const Gallery: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setSelectedImage(img.src)}
-              className={`group relative overflow-hidden rounded-2xl cursor-pointer ${
-                i === 0 || i === 5 ? "row-span-2" : ""
-              }`}
-            >
-              <img
-                src={img.src}
-                alt={img.alt}
-                loading="lazy"
-                className="w-full h-full object-cover aspect-square transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-all duration-300 flex items-end">
-                <span className="text-white font-medium text-sm p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {img.alt}
-                </span>
-              </div>
-            </button>
-          ))}
+          {galleryItems.map((item, i) => {
+            const imageUrl = STRAPI_URL + item.attributes.image.data.attributes.url;
+            const caption = item.attributes.caption || item.attributes.image.data.attributes.alternativeText || 'Gallery image';
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => setSelectedImage(imageUrl)}
+                className={`group relative overflow-hidden rounded-2xl cursor-pointer ${
+                  i === 0 || i === 5 ? "row-span-2" : ""
+                }`}
+              >
+                <img
+                  src={imageUrl}
+                  alt={caption}
+                  loading="lazy"
+                  className="w-full h-full object-cover aspect-square transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-all duration-300 flex items-end">
+                  <span className="text-white font-medium text-sm p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {caption}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 

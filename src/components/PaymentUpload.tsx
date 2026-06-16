@@ -1,6 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { logger } from '@/lib/logger';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +6,7 @@ import { Copy, Upload, Check, Wallet, CreditCard, Loader2, Building2, MessageCir
 import { toast } from 'sonner';
 
 interface PaymentUploadProps {
-  onUpload: (url: string) => void;
+  onUpload: (file: File) => void;
   uploadedUrl: string;
 }
 
@@ -41,27 +39,9 @@ const PaymentUpload: React.FC<PaymentUploadProps> = ({ onUpload, uploadedUrl }) 
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split('.').pop()}`;
-      const { error } = await supabase.storage
-        .from('payment-screenshots')
-        .upload(fileName, file);
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('payment-screenshots')
-        .getPublicUrl(fileName);
-
-      onUpload(publicUrl);
-      toast.success(t('payment.uploadSuccess'));
-    } catch (err) {
-      logger.error('Upload error:', err);
-      toast.error(t('payment.uploadError'));
-    } finally {
-      setIsUploading(false);
-    }
+    // Pass file to parent component for upload
+    onUpload(file);
+    toast.success(t('payment.uploadSuccess'));
   };
 
   return (

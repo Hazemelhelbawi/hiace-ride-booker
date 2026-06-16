@@ -1,25 +1,16 @@
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/lib/logger';
+// Email service stub for Strapi migration
+// In a production environment, you would implement email sending through:
+// 1. Strapi email plugin (strapi-plugin-email)
+// 2. External service like SendGrid, Mailgun, etc.
+// 3. Custom Strapi webhook
 
-/**
- * Send a booking email by providing only the bookingId.
- * The edge function fetches all data from the database server-side.
- */
-export const sendBookingEmail = async (bookingId: string): Promise<boolean> => {
+export const sendBookingEmail = async (bookingId: string | number): Promise<boolean> => {
   try {
-    const response = await supabase.functions.invoke("send-booking-email", {
-      body: { bookingId },
-    });
-
-    if (response.error) {
-      logger.error("Failed to send email:", response.error);
-      return false;
-    }
-
-    logger.log("Email sent successfully");
+    console.log(`Email service: Would send email for booking ${bookingId}`);
+    // TODO: Implement actual email sending via Strapi or external service
     return true;
   } catch (error) {
-    logger.error("Error sending email:", error);
+    console.error("Error sending email:", error);
     return false;
   }
 };

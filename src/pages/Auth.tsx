@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { logger } from '@/lib/logger';
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -21,11 +20,9 @@ import { toast } from "sonner";
 
 const Auth: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const {
     login,
-    signup,
-    signInWithGoogle,
+    register,
     isAuthenticated,
     isLoading: authLoading,
     user,
@@ -65,26 +62,15 @@ const Auth: React.FC = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await signup(
+    const success = await register(
+      signupData.name,
       signupData.email,
       signupData.password,
-      signupData.name,
       signupData.phone,
     );
     setIsLoading(false);
     if (success) {
       navigate("/");
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      logger.error("Google sign-in error:", error);
-    } finally {
-      setIsGoogleLoading(false);
     }
   };
 

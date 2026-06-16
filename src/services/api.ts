@@ -1,349 +1,662 @@
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/lib/logger";
+// Strapi v5 REST API Service
+const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
 
-export interface Route {
-  id: string;
-  origin: string;
-  destination: string;
-  departure_time: string;
-  arrival_time: string;
-  price: number;
-  available_seats: number;
-  total_seats: number;
-  date: string;
-  driver_name: string;
-  van_number: string;
-  created_at: string;
-  updated_at: string;
+// Strapi v5 Response Types
+interface StrapiItem<T> {
+  id: number;
+  attributes: T;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled";
+interface StrapiResponse<T> {
+  data: StrapiItem<T> | StrapiItem<T>[];
+  meta?: Record<string, unknown>;
+}
+
+// API Interfaces
+export interface StrapiUser {
+  username: string;
+  email: string;
+  provider?: string;
+  confirmed?: boolean;
+  blocked?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  role?: {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+  };
+}
+
+export interface Trip {
+  date: string;
+  time: string;
+  direction: 'cairo_sinai' | 'sinai_cairo';
+  vehicle_type: '12' | '13';
+  is_extra: boolean;
+  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Stop {
+  name: string;
+  region: 'cairo' | 'south_sinai';
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface Booking {
-  id: string;
-  user_id: string;
-  route_id: string;
-  seats: number[];
+  booking_number: string;
   passenger_name: string;
-  passenger_phone: string;
-  passenger_email: string;
-  passenger_notes: string | null;
-  status: BookingStatus;
+  phone: string;
+  seats: number[];
   total_price: number;
+  screenshot?: {
+    data: {
+      id: number;
+      attributes: {
+        url: string;
+        name: string;
+        alternativeText?: string;
+        caption?: string;
+        width?: number;
+        height?: number;
+        formats?: Record<string, unknown>;
+        hash: string;
+        ext: string;
+        mime: string;
+        size: number;
+        previewUrl?: string;
+        provider: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    };
+  };
   is_paid: boolean;
-  created_at: string;
-  updated_at: string;
-  route?: Route;
-  trip_instance_id?: string | null;
-  pickup_stop_id?: string | null;
-  dropoff_stop_id?: string | null;
-  pickup_stop?: { name_en: string; name_ar: string } | null;
-  dropoff_stop?: { name_en: string; name_ar: string } | null;
-  payment_screenshot_url?: string | null;
-  promo_code?: string | null;
-  discount_amount?: number | null;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  notes?: string;
+  trip?: {
+    data: StrapiItem<Trip>;
+  };
+  pickup_stop?: {
+    data: StrapiItem<Stop>;
+  };
+  dropoff_stop?: {
+    data: StrapiItem<Stop>;
+  };
+  user?: {
+    data: {
+      id: number;
+      attributes: StrapiUser;
+    };
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-const mapBooking = (booking: Record<string, unknown>): Booking => ({
-  id: booking.id as string,
-  user_id: booking.user_id as string,
-  route_id: booking.route_id as string,
-  seats: booking.seats as number[],
-  passenger_name: booking.passenger_name as string,
-  passenger_phone: booking.passenger_phone as string,
-  passenger_email: booking.passenger_email as string,
-  passenger_notes: booking.passenger_notes as string | null,
-  status: booking.status as BookingStatus,
-  total_price: Number(booking.total_price),
-  is_paid: booking.is_paid as boolean,
-  created_at: booking.created_at as string,
-  updated_at: booking.updated_at as string,
-  route: booking.route as Route | undefined,
-  trip_instance_id: booking.trip_instance_id as string | null | undefined,
-  pickup_stop_id: booking.pickup_stop_id as string | null | undefined,
-  dropoff_stop_id: booking.dropoff_stop_id as string | null | undefined,
-  pickup_stop: booking.pickup_stop as
-    | { name_en: string; name_ar: string }
-    | null
-    | undefined,
-  dropoff_stop: booking.dropoff_stop as
-    | { name_en: string; name_ar: string }
-    | null
-    | undefined,
-  payment_screenshot_url: booking.payment_screenshot_url as
-    | string
-    | null
-    | undefined,
-  promo_code: booking.promo_code as string | null | undefined,
-  discount_amount: booking.discount_amount as number | null | undefined,
-});
+export interface PrivateTrip {
+  name: string;
+  phone: string;
+  from_location: string;
+  to_location: string;
+  requested_date: string;
+  notes?: string;
+  status: 'new' | 'in_progress' | 'completed';
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-// Routes
-export const getRoutes = async (): Promise<Route[]> => {
-  const { data, error } = await supabase
-    .from("routes")
-    .select("*")
-    .order("date", { ascending: true });
+export interface GalleryItem {
+  image: {
+    data: {
+      id: number;
+      attributes: {
+        url: string;
+        name: string;
+        alternativeText?: string;
+        caption?: string;
+        width?: number;
+        height?: number;
+        formats?: Record<string, unknown>;
+        hash: string;
+        ext: string;
+        mime: string;
+        size: number;
+        createdAt: string;
+        updatedAt: string;
+      };
+    };
+  };
+  caption?: string;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-  if (error) {
-    logger.error("Error fetching routes:", error);
-    return [];
-  }
-
-  return (data || []).map((r) => ({
-    ...r,
-    price: Number(r.price),
-  }));
+// Helper to handle Strapi errors
+const handleError = (error: unknown): never => {
+  console.error('Strapi API Error:', error);
+  throw error;
 };
 
-export const getRouteById = async (id: string): Promise<Route | null> => {
-  const { data, error } = await supabase
-    .from("routes")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+// Authentication
+export const registerUser = async (data: {
+  username: string;
+  email: string;
+  password: string;
+}): Promise<{ jwt: string; user: StrapiUser }> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/auth/local/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-  if (error) {
-    logger.error("Error fetching route:", error);
-    return null;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Registration failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    return handleError(error);
   }
-
-  return data ? { ...data, price: Number(data.price) } : null;
 };
 
-export const createRoute = async (
-  route: Omit<Route, "id" | "created_at" | "updated_at">,
-): Promise<Route | null> => {
-  const { data, error } = await supabase
-    .from("routes")
-    .insert([route])
-    .select()
-    .single();
+export const loginUser = async (
+  identifier: string,
+  password: string
+): Promise<{ jwt: string; user: StrapiUser }> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/auth/local`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ identifier, password }),
+    });
 
-  if (error) {
-    logger.error("Error creating route:", error);
-    return null;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Login failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    return handleError(error);
   }
-
-  return data ? { ...data, price: Number(data.price) } : null;
 };
 
-export const updateRoute = async (
-  id: string,
-  updates: Partial<Route>,
-): Promise<Route | null> => {
-  const { data, error } = await supabase
-    .from("routes")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+export const getMe = async (token: string): Promise<StrapiUser> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/users/me?populate=role`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (error) {
-    logger.error("Error updating route:", error);
-    return null;
+    if (!response.ok) {
+      throw new Error('Failed to fetch user info');
+    }
+
+    return await response.json();
+  } catch (error) {
+    return handleError(error);
   }
-
-  return data ? { ...data, price: Number(data.price) } : null;
 };
 
-export const deleteRoute = async (id: string): Promise<boolean> => {
-  const { error } = await supabase.from("routes").delete().eq("id", id);
+// Stops
+export const getStops = async (region?: 'cairo' | 'south_sinai'): Promise<StrapiItem<Stop>[]> => {
+  try {
+    let url = `${STRAPI_URL}/api/stops?sort=order:asc`;
+    if (region) {
+      url += `&filters[region][$eq]=${region}`;
+    }
 
-  if (error) {
-    logger.error("Error deleting route:", error);
-    return false;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch stops');
+    }
+
+    const result: StrapiResponse<Stop> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    return handleError(error);
   }
+};
 
-  return true;
+// Trips
+export const getTrips = async (params?: {
+  direction?: 'cairo_sinai' | 'sinai_cairo';
+  date?: string;
+}): Promise<StrapiItem<Trip>[]> => {
+  try {
+    let url = `${STRAPI_URL}/api/trips?populate=*&filters[is_active][$eq]=true`;
+    
+    if (params?.direction) {
+      url += `&filters[direction][$eq]=${params.direction}`;
+    }
+    if (params?.date) {
+      url += `&filters[date][$eq]=${params.date}`;
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch trips');
+    }
+
+    const result: StrapiResponse<Trip> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    return handleError(error);
+  }
 };
 
 // Bookings
-export const getBookings = async (): Promise<Booking[]> => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
-    .order("created_at", { ascending: false });
+export const getBookedSeats = async (tripId: number): Promise<number[]> => {
+  try {
+    const response = await fetch(
+      `${STRAPI_URL}/api/bookings?filters[trip][id][$eq]=${tripId}&filters[status][$ne]=cancelled&populate=*`
+    );
 
-  if (error) {
-    logger.error("Error fetching bookings:", error);
+    if (!response.ok) {
+      throw new Error('Failed to fetch booked seats');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    const bookings = Array.isArray(result.data) ? result.data : [result.data];
+    
+    // Flatten all seat arrays from all non-cancelled bookings
+    return bookings.flatMap(booking => booking.attributes.seats || []);
+  } catch (error) {
+    console.error('Error fetching booked seats:', error);
     return [];
   }
-
-  return (data || []).map((b) =>
-    mapBooking(b as unknown as Record<string, unknown>),
-  );
 };
 
-export const getUserBookings = async (userId: string): Promise<Booking[]> => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+// Upload file helper
+const uploadFile = async (file: File, token: string): Promise<number> => {
+  try {
+    const formData = new FormData();
+    formData.append('files', file);
 
-  if (error) {
-    logger.error("Error fetching user bookings:", error);
-    return [];
-  }
-
-  return (data || []).map((b) =>
-    mapBooking(b as unknown as Record<string, unknown>),
-  );
-};
-
-export const createBooking = async (booking: {
-  user_id: string;
-  route_id: string;
-  seats: number[];
-  passenger_name: string;
-  passenger_phone: string;
-  passenger_email: string;
-  passenger_notes?: string;
-  total_price: number;
-  pickup_stop_id?: string;
-  dropoff_stop_id?: string;
-}): Promise<Booking | null> => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .insert([
-      {
-        ...booking,
-        status: "pending",
-        is_paid: false,
+    const response = await fetch(`${STRAPI_URL}/api/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    ])
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
-    .single();
+      body: formData,
+    });
 
-  if (error) {
-    logger.error("Error creating booking:", error);
-    return null;
-  }
-
-  // Update available seats on the route
-  if (data) {
-    const route = await getRouteById(booking.route_id);
-    if (route) {
-      await updateRoute(booking.route_id, {
-        available_seats: route.available_seats - booking.seats.length,
-      });
+    if (!response.ok) {
+      throw new Error('File upload failed');
     }
-  }
 
-  return data ? mapBooking(data as unknown as Record<string, unknown>) : null;
+    const result = await response.json();
+    return result[0].id;
+  } catch (error) {
+    return handleError(error);
+  }
 };
 
-export const updateBooking = async (
-  id: string,
-  updates: Partial<Booking>,
-): Promise<Booking | null> => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .update(updates)
-    .eq("id", id)
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
-    .single();
-
-  if (error) {
-    logger.error("Error updating booking:", error);
-    return null;
-  }
-
-  return data ? mapBooking(data as unknown as Record<string, unknown>) : null;
-};
-
-export const cancelBooking = async (id: string): Promise<Booking | null> => {
-  // First get the booking to restore seats
-  const { data: booking, error: fetchError } = await supabase
-    .from("bookings")
-    .select("*, route:routes(*)")
-    .eq("id", id)
-    .single();
-
-  if (fetchError || !booking) {
-    logger.error("Error fetching booking:", fetchError);
-    return null;
-  }
-
-  if (booking.status === "cancelled") {
-    return null;
-  }
-
-  // Update booking status
-  const { data: updatedBooking, error: updateError } = await supabase
-    .from("bookings")
-    .update({ status: "cancelled" })
-    .eq("id", id)
-    .select(
-      `
-      *,
-      route:routes(*),
-      pickup_stop:stops!pickup_stop_id(name_en, name_ar),
-      dropoff_stop:stops!dropoff_stop_id(name_en, name_ar)
-    `,
-    )
-    .single();
-
-  if (updateError) {
-    logger.error("Error cancelling booking:", updateError);
-    return null;
-  }
-
-  // Restore seats to route
-  if (booking.route_id && booking.seats) {
-    const route = await getRouteById(booking.route_id);
-    if (route) {
-      await updateRoute(booking.route_id, {
-        available_seats: route.available_seats + booking.seats.length,
-      });
+export const createBooking = async (
+  data: {
+    trip: number;
+    passenger_name: string;
+    phone: string;
+    seats: number[];
+    total_price: number;
+    pickup_stop?: number;
+    dropoff_stop?: number;
+    notes?: string;
+  },
+  token: string,
+  screenshotFile?: File
+): Promise<StrapiItem<Booking>> => {
+  try {
+    let screenshotId: number | undefined;
+    
+    // Upload screenshot if provided
+    if (screenshotFile) {
+      screenshotId = await uploadFile(screenshotFile, token);
     }
-  }
 
-  return updatedBooking
-    ? mapBooking(updatedBooking as unknown as Record<string, unknown>)
-    : null;
+    // Generate booking number
+    const bookingNumber = `BK-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    const bookingData: Record<string, unknown> = {
+      booking_number: bookingNumber,
+      passenger_name: data.passenger_name,
+      phone: data.phone,
+      seats: data.seats,
+      total_price: data.total_price,
+      trip: data.trip,
+      is_paid: false,
+      status: 'pending',
+    };
+
+    if (data.pickup_stop) bookingData.pickup_stop = data.pickup_stop;
+    if (data.dropoff_stop) bookingData.dropoff_stop = data.dropoff_stop;
+    if (data.notes) bookingData.notes = data.notes;
+    if (screenshotId) bookingData.screenshot = screenshotId;
+
+    const response = await fetch(`${STRAPI_URL}/api/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ data: bookingData }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create booking');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
 };
 
-export const getBookedSeats = async (routeId: string): Promise<number[]> => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("seats")
-    .eq("route_id", routeId)
-    .neq("status", "cancelled");
+export const getMyBookings = async (token: string): Promise<StrapiItem<Booking>[]> => {
+  try {
+    const response = await fetch(
+      `${STRAPI_URL}/api/bookings?populate=*&filters[user][id][$eq]=me&sort=createdAt:desc`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  if (error) {
-    logger.error("Error fetching booked seats:", error);
+    if (!response.ok) {
+      throw new Error('Failed to fetch bookings');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const cancelBooking = async (id: number, token: string): Promise<StrapiItem<Booking>> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/bookings/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: {
+          status: 'cancelled',
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to cancel booking');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+// Admin endpoints
+export const getAllBookings = async (token: string): Promise<StrapiItem<Booking>[]> => {
+  try {
+    const response = await fetch(
+      `${STRAPI_URL}/api/bookings?populate=*&sort=createdAt:desc`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch all bookings');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const updateBookingStatus = async (
+  id: number,
+  status: 'pending' | 'confirmed' | 'cancelled',
+  token: string
+): Promise<StrapiItem<Booking>> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/bookings/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: { status },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update booking status');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const toggleBookingPaid = async (
+  id: number,
+  is_paid: boolean,
+  token: string
+): Promise<StrapiItem<Booking>> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/bookings/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: { is_paid },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle paid status');
+    }
+
+    const result: StrapiResponse<Booking> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+// Private Trips
+export const getAllPrivateTrips = async (token: string): Promise<StrapiItem<PrivateTrip>[]> => {
+  try {
+    const response = await fetch(
+      `${STRAPI_URL}/api/private-trips?sort=createdAt:desc`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch private trips');
+    }
+
+    const result: StrapiResponse<PrivateTrip> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const createPrivateTrip = async (data: {
+  name: string;
+  phone: string;
+  from_location: string;
+  to_location: string;
+  requested_date: string;
+  notes?: string;
+}): Promise<StrapiItem<PrivateTrip>> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/private-trips`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          ...data,
+          status: 'new',
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create private trip');
+    }
+
+    const result: StrapiResponse<PrivateTrip> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+// Gallery
+export const getGallery = async (): Promise<StrapiItem<GalleryItem>[]> => {
+  try {
+    const response = await fetch(
+      `${STRAPI_URL}/api/galleries?populate=image&sort=order:asc`
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch gallery');
+    }
+
+    const result: StrapiResponse<GalleryItem> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    console.error('Error fetching gallery:', error);
     return [];
   }
-
-  return (data || []).flatMap((b) => b.seats || []);
 };
+
+// Admin Trips Management
+export const getAllTripsAdmin = async (token: string): Promise<StrapiItem<Trip>[]> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/trips?populate=*&sort=date:desc`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch trips');
+    }
+
+    const result: StrapiResponse<Trip> = await response.json();
+    return Array.isArray(result.data) ? result.data : [result.data];
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const createTrip = async (
+  data: {
+    date: string;
+    time: string;
+    direction: 'cairo_sinai' | 'sinai_cairo';
+    vehicle_type: '12' | '13';
+    is_extra?: boolean;
+  },
+  token: string
+): Promise<StrapiItem<Trip>> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/trips`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: {
+          ...data,
+          is_extra: data.is_extra || false,
+          is_active: true,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create trip');
+    }
+
+    const result: StrapiResponse<Trip> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const toggleTripActive = async (
+  id: number,
+  is_active: boolean,
+  token: string
+): Promise<StrapiItem<Trip>> => {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/trips/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: { is_active },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle trip active status');
+    }
+
+    const result: StrapiResponse<Trip> = await response.json();
+    return Array.isArray(result.data) ? result.data[0] : result.data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+// Export STRAPI_URL for use in components
+export { STRAPI_URL };

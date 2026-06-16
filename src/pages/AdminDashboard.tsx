@@ -1,24 +1,21 @@
-import React, { useState } from "react";
-import { useConfirmDialog } from "@/components/ConfirmDialog";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  useBookings,
-  useRoutes,
-  useCreateRoute,
-  useUpdateRoute,
-  useDeleteRoute,
-  useUpdateBooking,
-  useCancelBooking,
-} from "@/hooks/useData";
-import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
-import type { Route, Booking } from "@/services/api";
-import { sendBookingEmail } from "@/services/emailService";
-import {
-  exportBookingsToPDF,
-  exportBookingsToExcel,
-} from "@/utils/exportBookings";
+  getAllBookings,
+  updateBookingStatus,
+  toggleBookingPaid,
+  getAllPrivateTrips,
+  getAllTripsAdmin,
+  createTrip,
+  toggleTripActive,
+  STRAPI_URL,
+  type StrapiItem,
+  type Booking,
+  type PrivateTrip,
+  type Trip,
+} from "@/services/api";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,139 +49,151 @@ import {
 import {
   BarChart,
   Users,
-  MapPin,
   Plus,
-  Trash2,
-  Edit,
   CreditCard,
   XCircle,
-  FileText,
-  FileSpreadsheet,
   Calendar,
-  Tag,
   Car,
-  Route as RouteIcon,
+  Loader2,
   MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import BookingCalendar from "@/components/BookingCalendar";
-import PromoCodeManager from "@/components/admin/PromoCodeManager";
-import StopsManager from "@/components/admin/StopsManager";
-import RouteTemplatesManager from "@/components/admin/RouteTemplatesManager";
-import SchedulesManager from "@/components/admin/SchedulesManager";
-import PrivateTripRequestsManager from "@/components/admin/PrivateTripRequestsManager";
-import { format } from "date-fns";
-import { formatTime12h } from "@/lib/timeFormat";
 
-interface RouteFormData {
-  origin: string;
-  destination: string;
-  departure_time: string;
-  arrival_time: string;
-  price: number;
+interface TripFormData {
   date: string;
-  driver_name: string;
-  van_number: string;
-  van_type: "13_seats" | "12_seats";
+  time: string;
+  direction: 'cairo_sinai' | 'sinai_cairo';
+  vehicle_type: '12' | '13';
+  is_extra: boolean;
 }
 
 const AdminDashboard: React.FC = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, token, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const { t, language } = useLanguage();
-  const isRTL = language === "ar";
-  const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
-  const { data: routes = [], isLoading: routesLoading } = useRoutes();
+  const { t } = useLanguage();
 
-  // Enable real-time updates for bookings
-  useRealtimeBookings();
-
-  const createRoute = useCreateRoute();
-  const updateRoute = useUpdateRoute();
-  const deleteRoute = useDeleteRoute();
-  const updateBooking = useUpdateBooking();
-  const cancelBooking = useCancelBooking();
-  const { confirm } = useConfirmDialog();
-
-  const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
-  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
-  const [newRoute, setNewRoute] = useState<RouteFormData>({
-    origin: "",
-    destination: "",
-    departure_time: "",
-    arrival_time: "",
-    price: 0,
-    date: "",
-    driver_name: "",
-    van_number: "",
-    van_type: "13_seats",
+  const [bookings, setBookings] = useState<StrapiItem<Booking>[]>([]);
+  const [trips, setTrips] = useState<StrapiItem<Trip>[]>([]);
+  const [privateTrips, setPrivateTrips] = useState<StrapiItem<PrivateTrip>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isTripDialogOpen, setIsTripDialogOpen] = useState(false);
+  const [newTrip, setNewTrip] = useState<TripFormData>({
+    date: '',
+    time: '',
+    direction: 'cairo_sinai',
+    vehicle_type: '13',
+    is_extra: false,
   });
 
   // Redirect if not admin
-  React.useEffect(() => {
-    if (!authLoading && (!user || !user.isAdmin)) {
+  useEffect(() => {
+    if (!authLoading && (!user || !isAdmin)) {
       navigate("/");
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isAdmin, navigate]);
 
-  const handleStatusChange = async (bookingId: string, newStatus: string) => {
-    const booking = bookings.find((b) => b.id === bookingId);
-    if (!booking) return;
+  // Fetch data on mount
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [bookingsData, tripsData, privateTripsData] = await Promise.all([
+          getAllBookings(token),
+          getAllTripsAdmin(token),
+          getAllPrivateTrips(token),
+        ]);
+        
+        setBookings(bookingsData);
+        setTrips(tripsData);
+        setPrivateTrips(privateTripsData);
+      } catch (error) {
+        console.error('Error fetching admin data:', error);
+        toast.error('Failed to load admin data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [token]);
+
+  const handleStatusChange = async (bookingId: number, newStatus: 'pending' | 'confirmed' | 'cancelled') => {
+    if (!token) return;
 
     try {
-      await updateBooking.mutateAsync({
-        id: bookingId,
-        updates: { status: newStatus as "pending" | "confirmed" | "cancelled" },
-      });
-      toast.success(t("admin.statusUpdated"));
+      await updateBookingStatus(bookingId, newStatus, token);
+      toast.success(t("admin.statusUpdated") || "Status updated");
 
-      // Send email notification
-      sendBookingEmail(booking.id);
+      // Refetch bookings
+      const updatedBookings = await getAllBookings(token);
+      setBookings(updatedBookings);
     } catch (error) {
-      toast.error(t("common.error"));
+      console.error('Error updating status:', error);
+      toast.error(t("common.error") || "Failed to update status");
     }
   };
 
-  const handleCancelBooking = async (bookingId: string) => {
-    const confirmed = await confirm({
-      title: t("admin.confirmCancel"),
-      description:
-        "This booking will be cancelled and the passenger will be notified.",
-      confirmLabel: "Cancel Booking",
-      variant: "destructive",
-    });
-    if (!confirmed) return;
-
-    const booking = bookings.find((b) => b.id === bookingId);
-    if (!booking) return;
+  const handlePaymentToggle = async (bookingId: number, isPaid: boolean) => {
+    if (!token) return;
 
     try {
-      await cancelBooking.mutateAsync(bookingId);
-      toast.success(t("admin.bookingCancelled"));
-
-      // Send cancellation email
-      sendBookingEmail(booking.id);
-    } catch (error) {
-      toast.error(t("common.error"));
-    }
-  };
-
-  const handlePaymentToggle = async (bookingId: string, isPaid: boolean) => {
-    const booking = bookings.find((b) => b.id === bookingId);
-    if (!booking) return;
-
-    try {
-      await updateBooking.mutateAsync({
-        id: bookingId,
-        updates: { is_paid: isPaid },
-      });
+      await toggleBookingPaid(bookingId, isPaid, token);
       toast.success(isPaid ? t("admin.markedPaid") : t("admin.markedUnpaid"));
 
-      // Send email notification
-      sendBookingEmail(booking.id);
+      // Refetch bookings
+      const updatedBookings = await getAllBookings(token);
+      setBookings(updatedBookings);
     } catch (error) {
+      console.error('Error toggling paid status:', error);
       toast.error(t("common.error"));
     }
+  };
+
+  const handleAddTrip = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    try {
+      await createTrip(newTrip, token);
+      setIsTripDialogOpen(false);
+      resetTripForm();
+      toast.success(t("admin.tripAdded") || "Trip added successfully");
+
+      // Refetch trips
+      const updatedTrips = await getAllTripsAdmin(token);
+      setTrips(updatedTrips);
+    } catch (error) {
+      console.error('Error creating trip:', error);
+      toast.error(t("common.error"));
+    }
+  };
+
+  const handleToggleTripActive = async (tripId: number, isActive: boolean) => {
+    if (!token) return;
+
+    try {
+      await toggleTripActive(tripId, isActive, token);
+      toast.success(isActive ? "Trip activated" : "Trip deactivated");
+
+      // Refetch trips
+      const updatedTrips = await getAllTripsAdmin(token);
+      setTrips(updatedTrips);
+    } catch (error) {
+      console.error('Error toggling trip:', error);
+      toast.error(t("common.error"));
+    }
+  };
+
+  const resetTripForm = () => {
+    setNewTrip({
+      date: '',
+      time: '',
+      direction: 'cairo_sinai',
+      vehicle_type: '13',
+      is_extra: false,
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -200,135 +209,22 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleAddRoute = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const vanSeats = newRoute.van_type === "12_seats" ? 12 : 13;
-      await createRoute.mutateAsync({
-        origin: newRoute.origin,
-        destination: newRoute.destination,
-        departure_time: newRoute.departure_time,
-        arrival_time: newRoute.arrival_time,
-        price: Number(newRoute.price),
-        date: newRoute.date,
-        driver_name: newRoute.driver_name,
-        van_number: newRoute.van_number,
-        available_seats: vanSeats,
-        total_seats: vanSeats,
-      });
-
-      setIsRouteDialogOpen(false);
-      resetRouteForm();
-      toast.success(t("admin.routeAdded"));
-    } catch (error) {
-      toast.error(t("common.error"));
-    }
-  };
-
-  const handleEditRoute = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!editingRoute) return;
-
-    try {
-      await updateRoute.mutateAsync({
-        id: editingRoute.id,
-        updates: {
-          origin: newRoute.origin,
-          destination: newRoute.destination,
-          departure_time: newRoute.departure_time,
-          arrival_time: newRoute.arrival_time,
-          price: Number(newRoute.price),
-          date: newRoute.date,
-          driver_name: newRoute.driver_name,
-          van_number: newRoute.van_number,
-        },
-      });
-
-      setEditingRoute(null);
-      setIsRouteDialogOpen(false);
-      resetRouteForm();
-      toast.success(t("admin.routeUpdated"));
-    } catch (error) {
-      toast.error(t("common.error"));
-    }
-  };
-
-  const openEditDialog = (route: Route) => {
-    setEditingRoute(route);
-    setNewRoute({
-      origin: route.origin,
-      destination: route.destination,
-      departure_time: route.departure_time,
-      arrival_time: route.arrival_time,
-      price: route.price,
-      date: route.date,
-      driver_name: route.driver_name,
-      van_number: route.van_number,
-      van_type: route.total_seats <= 12 ? "12_seats" : "13_seats",
-    });
-    setIsRouteDialogOpen(true);
-  };
-
-  const resetRouteForm = () => {
-    setNewRoute({
-      origin: "",
-      destination: "",
-      departure_time: "",
-      arrival_time: "",
-      price: 0,
-      date: "",
-      driver_name: "",
-      van_number: "",
-      van_type: "13_seats",
-    });
-    setEditingRoute(null);
-  };
-
-  const handleDeleteRoute = async (routeId: string) => {
-    const relatedBookings = bookings.filter((b) => b.route_id === routeId);
-    const description =
-      relatedBookings.length > 0
-        ? `This route has ${relatedBookings.length} booking(s) that will also be deleted. This action cannot be undone.`
-        : "This route will be permanently deleted. This action cannot be undone.";
-
-    const confirmed = await confirm({
-      title: "Delete Route",
-      description,
-      confirmLabel: "Delete",
-      variant: "destructive",
-    });
-    if (!confirmed) return;
-
-    try {
-      await deleteRoute.mutateAsync(routeId);
-      toast.success(t("admin.routeDeleted"));
-    } catch (error) {
-      toast.error(t("common.error"));
-    }
-  };
-
-  const getRouteForBooking = (booking: Booking): Route | undefined => {
-    return routes.find((r) => r.id === booking.route_id);
-  };
-
   const stats = {
     totalBookings: bookings.length,
-    pendingBookings: bookings.filter((b) => b.status === "pending").length,
-    confirmedBookings: bookings.filter((b) => b.status === "confirmed").length,
-    totalRoutes: routes.length,
-    paidBookings: bookings.filter((b) => b.is_paid).length,
+    pendingBookings: bookings.filter((b) => b.attributes.status === "pending").length,
+    confirmedBookings: bookings.filter((b) => b.attributes.status === "confirmed").length,
+    paidBookings: bookings.filter((b) => b.attributes.is_paid).length,
+    activeTrips: trips.filter((t) => t.attributes.is_active).length,
   };
 
-  if (authLoading || bookingsLoading || routesLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-hero">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <p className="text-center text-muted-foreground">
-            {t("common.loading")}
-          </p>
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          </div>
         </div>
       </div>
     );
@@ -341,10 +237,10 @@ const AdminDashboard: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">
-            {t("admin.dashboard")}
+            {t("admin.dashboard") || "Admin Dashboard"}
           </h1>
           <p className="text-muted-foreground">
-            {t("admin.manageBookingsRoutes")}
+            {t("admin.manageBookingsRoutes") || "Manage bookings and trips"}
           </p>
         </div>
 
@@ -355,7 +251,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t("admin.totalBookings")}
+                    {t("admin.totalBookings") || "Total Bookings"}
                   </p>
                   <p className="text-3xl font-bold text-foreground">
                     {stats.totalBookings}
@@ -371,7 +267,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t("admin.pending")}
+                    {t("admin.pending") || "Pending"}
                   </p>
                   <p className="text-3xl font-bold text-warning">
                     {stats.pendingBookings}
@@ -387,7 +283,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t("admin.confirmed")}
+                    {t("admin.confirmed") || "Confirmed"}
                   </p>
                   <p className="text-3xl font-bold text-success">
                     {stats.confirmedBookings}
@@ -403,7 +299,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t("admin.paid")}
+                    {t("admin.paid") || "Paid"}
                   </p>
                   <p className="text-3xl font-bold text-primary">
                     {stats.paidBookings}
@@ -419,13 +315,13 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t("admin.activeRoutes")}
+                    {t("admin.activeTrips") || "Active Trips"}
                   </p>
                   <p className="text-3xl font-bold text-foreground">
-                    {stats.totalRoutes}
+                    {stats.activeTrips}
                   </p>
                 </div>
-                <MapPin className="w-8 h-8 text-primary" />
+                <Calendar className="w-8 h-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -433,93 +329,26 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList
-            className="flex flex-wrap h-auto gap-1"
-            dir={isRTL ? "rtl" : "ltr"}
-          >
+          <TabsList className="flex flex-wrap h-auto gap-1">
             <TabsTrigger value="bookings" className="text-xs sm:text-sm">
-              {t("admin.bookings")}
+              {t("admin.bookings") || "Bookings"}
             </TabsTrigger>
-            <TabsTrigger
-              value="calendar"
-              className="gap-1 sm:gap-2 text-xs sm:text-sm"
-            >
+            <TabsTrigger value="trips" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-
-              {t("admin.Calendar")}
+              {t("admin.trips") || "Trips"}
             </TabsTrigger>
-            <TabsTrigger value="routes" className="text-xs sm:text-sm">
-              {t("admin.routes")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="promos"
-              className="gap-1 sm:gap-2 text-xs sm:text-sm"
-            >
-              <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
-              {t("admin.promoCodes")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="stops"
-              className="gap-1 sm:gap-2 text-xs sm:text-sm"
-            >
-              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-
-              {t("admin.Stops")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="templates"
-              className="gap-1 sm:gap-2 text-xs sm:text-sm"
-            >
-              <RouteIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-
-              {t("admin.Templates")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="schedules"
-              className="gap-1 sm:gap-2 text-xs sm:text-sm"
-            >
-              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-
-              {t("admin.Schedules")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="private-requests"
-              className="gap-1 sm:gap-2 text-xs sm:text-sm"
-            >
+            <TabsTrigger value="private-requests" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <Car className="w-3 h-3 sm:w-4 sm:h-4" />
-
-              {t("admin.PrivateTrips")}
+              {t("admin.PrivateTrips") || "Private Trips"}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
             <Card className="border-2 shadow-lg">
-              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">
-                  {t("admin.allBookings")}
+                  {t("admin.allBookings") || "All Bookings"}
                 </CardTitle>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => exportBookingsToPDF(bookings, routes)}
-                    className="gap-2"
-                    disabled={bookings.length === 0}
-                  >
-                    <FileText className="w-4 h-4" />
-                    Export PDF
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => exportBookingsToExcel(bookings, routes)}
-                    className="gap-2"
-                    disabled={bookings.length === 0}
-                  >
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Export Excel
-                  </Button>
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -527,37 +356,34 @@ const AdminDashboard: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-center">
-                          {t("admin.bookingId")}
+                          {t("admin.bookingNumber") || "Booking #"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.passenger")}
+                          {t("admin.passenger") || "Passenger"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.phone")}
+                          {t("admin.phone") || "Phone"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.route")}
+                          {t("admin.trip") || "Trip"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.date")}
+                          {t("admin.seats") || "Seats"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.seats")}
+                          {t("admin.total") || "Total"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.total")}
+                          {t("admin.Screenshot") || "Screenshot"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.Screenshot")}
+                          {t("admin.paid") || "Paid"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.paid")}
+                          {t("admin.status") || "Status"}
                         </TableHead>
                         <TableHead className="text-center">
-                          {t("admin.status")}
-                        </TableHead>
-                        <TableHead className="text-center">
-                          {t("admin.actions")}
+                          {t("admin.actions") || "Actions"}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -568,48 +394,40 @@ const AdminDashboard: React.FC = () => {
                             colSpan={10}
                             className="text-center text-muted-foreground py-8"
                           >
-                            {t("admin.noBookings")}
+                            {t("admin.noBookings") || "No bookings yet"}
                           </TableCell>
                         </TableRow>
                       ) : (
                         bookings.map((booking) => {
-                          const route = getRouteForBooking(booking);
+                          const trip = booking.attributes.trip?.data;
+                          const direction = trip?.attributes.direction === 'cairo_sinai' ? 'Cairo → Sinai' : 'Sinai → Cairo';
+                          
                           return (
                             <TableRow key={booking.id}>
                               <TableCell className="font-mono text-sm">
-                                #{booking.id.slice(0, 8)}
+                                {booking.attributes.booking_number}
                               </TableCell>
                               <TableCell>
                                 <div>
                                   <div className="font-medium">
-                                    {booking.passenger_name}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {booking.passenger_email}
+                                    {booking.attributes.passenger_name}
                                   </div>
                                 </div>
                               </TableCell>
                               <TableCell className="text-sm">
-                                {booking.passenger_phone}
+                                {booking.attributes.phone}
                               </TableCell>
                               <TableCell>
-                                {route ? (
-                                  <div className="text-sm">
-                                    {route.origin} → {route.destination}
-                                  </div>
-                                ) : (
-                                  "N/A"
-                                )}
-                              </TableCell>
-                              <TableCell className="text-sm">
-                                {format(
-                                  new Date(booking.created_at),
-                                  "MMM dd, yyyy",
-                                )}
+                                <div className="text-sm">
+                                  {direction}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {trip?.attributes.date} {trip?.attributes.time}
+                                </div>
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-1 flex-wrap">
-                                  {booking.seats.map((seat) => (
+                                <div className="flex gap-1 flex-wrap justify-center">
+                                  {booking.attributes.seats.map((seat) => (
                                     <span
                                       key={seat}
                                       className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-primary/10 text-primary rounded"
@@ -620,47 +438,41 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                               </TableCell>
                               <TableCell className="font-semibold">
-                                {booking.total_price} {t("common.currency")}
+                                {booking.attributes.total_price} {t("common.currency") || "EGP"}
                               </TableCell>
                               <TableCell>
-                                {(booking as any).payment_screenshot_url ? (
+                                {booking.attributes.screenshot ? (
                                   <a
-                                    href={
-                                      (booking as any).payment_screenshot_url
-                                    }
+                                    href={STRAPI_URL + booking.attributes.screenshot.data.attributes.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
                                     <img
-                                      src={
-                                        (booking as any).payment_screenshot_url
-                                      }
+                                      src={STRAPI_URL + booking.attributes.screenshot.data.attributes.url}
                                       alt="Payment"
-                                      className="w-10 h-10 rounded object-cover border hover:scale-150 transition-transform"
+                                      className="w-10 h-10 rounded object-cover border hover:scale-150 transition-transform mx-auto"
                                     />
                                   </a>
                                 ) : (
-                                  <span className="text-xs text-muted-foreground">
-                                    —
-                                  </span>
+                                  <span className="text-xs text-muted-foreground">—</span>
                                 )}
                               </TableCell>
                               <TableCell>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 justify-center">
                                   <Switch
-                                    checked={booking.is_paid}
+                                    checked={booking.attributes.is_paid}
                                     onCheckedChange={(checked) =>
                                       handlePaymentToggle(booking.id, checked)
                                     }
                                   />
                                   <span
                                     className={
-                                      booking.is_paid
+                                      booking.attributes.is_paid
                                         ? "text-success text-sm"
                                         : "text-warning text-sm"
                                     }
                                   >
-                                    {booking.is_paid
+                                    {booking.attributes.is_paid
                                       ? t("admin.paid")
                                       : t("admin.unpaid")}
                                   </span>
@@ -668,67 +480,40 @@ const AdminDashboard: React.FC = () => {
                               </TableCell>
                               <TableCell>
                                 <Badge
-                                  className={getStatusColor(booking.status)}
+                                  className={getStatusColor(booking.attributes.status)}
                                 >
-                                  {booking.status}
+                                  {booking.attributes.status}
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 justify-center">
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     className="h-8 w-8 p-0 text-success hover:text-success"
                                     onClick={() => {
-                                      let phone =
-                                        booking.passenger_phone.replace(
-                                          /[^0-9]/g,
-                                          "",
-                                        );
-                                      // Remove leading 0 and add Egypt country code
-                                      if (phone.startsWith("0"))
-                                        phone = "20" + phone.slice(1);
-                                      window.open(
-                                        `https://wa.me/${phone}`,
-                                        "_blank",
-                                      );
+                                      let phone = booking.attributes.phone.replace(/[^0-9]/g, "");
+                                      if (phone.startsWith("0")) phone = "20" + phone.slice(1);
+                                      window.open(`https://wa.me/${phone}`, "_blank");
                                     }}
-                                    // onClick={() => {
-                                    //   const phone =
-                                    //     booking.passenger_phone.replace(
-                                    //       /[^0-9]/g,
-                                    //       "",
-                                    //     );
-                                    //   window.open(
-                                    //     `https://wa.me/${phone}`,
-                                    //     "_blank",
-                                    //   );
-                                    // }}
                                     title="WhatsApp"
                                   >
                                     <MessageCircle className="w-4 h-4" />
                                   </Button>
-                                  {booking.status === "pending" && (
+                                  {booking.attributes.status === "pending" && (
                                     <Button
                                       size="sm"
-                                      onClick={() =>
-                                        handleStatusChange(
-                                          booking.id,
-                                          "confirmed",
-                                        )
-                                      }
+                                      onClick={() => handleStatusChange(booking.id, "confirmed")}
                                       className="bg-success hover:bg-success/90"
                                     >
                                       {t("admin.confirm")}
                                     </Button>
                                   )}
-                                  {booking.status !== "cancelled" && (
+                                  {booking.attributes.status !== "cancelled" && (
                                     <Button
                                       size="sm"
                                       variant="destructive"
-                                      onClick={() =>
-                                        handleCancelBooking(booking.id)
-                                      }
+                                      onClick={() => handleStatusChange(booking.id, "cancelled")}
                                       className="gap-1"
                                     >
                                       <XCircle className="w-3 h-3" />
@@ -748,212 +533,96 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="calendar">
-            <BookingCalendar routes={routes} bookings={bookings} />
-          </TabsContent>
-
-          <TabsContent value="routes">
+          <TabsContent value="trips">
             <Card className="border-2 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{t("admin.routeManagement")}</CardTitle>
-                <Dialog
-                  open={isRouteDialogOpen}
-                  onOpenChange={(open) => {
-                    setIsRouteDialogOpen(open);
-                    if (!open) resetRouteForm();
-                  }}
-                >
+                <CardTitle>{t("admin.tripManagement") || "Trip Management"}</CardTitle>
+                <Dialog open={isTripDialogOpen} onOpenChange={(open) => {
+                  setIsTripDialogOpen(open);
+                  if (!open) resetTripForm();
+                }}>
                   <DialogTrigger asChild>
                     <Button className="bg-primary hover:bg-primary-dark text-white gap-2">
                       <Plus className="w-4 h-4" />
-                      {t("admin.addTrip")}
+                      {t("admin.addTrip") || "Add Trip"}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-lg">
                     <DialogHeader>
-                      <DialogTitle>
-                        {editingRoute
-                          ? t("admin.editRoute")
-                          : t("admin.addTrip")}
-                      </DialogTitle>
+                      <DialogTitle>{t("admin.addTrip") || "Add New Trip"}</DialogTitle>
                     </DialogHeader>
-                    <form
-                      onSubmit={editingRoute ? handleEditRoute : handleAddRoute}
-                      className="space-y-4"
-                    >
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="origin">{t("admin.origin")}</Label>
-                          <Input
-                            id="origin"
-                            value={newRoute.origin}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                origin: e.target.value,
-                              }))
-                            }
-                            placeholder="e.g., Cairo"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="destination">
-                            {t("admin.destination")}
-                          </Label>
-                          <Input
-                            id="destination"
-                            value={newRoute.destination}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                destination: e.target.value,
-                              }))
-                            }
-                            placeholder="e.g., Dahab"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="departure_time">
-                            {t("admin.departureTime")}
-                          </Label>
-                          <Input
-                            id="departure_time"
-                            type="time"
-                            value={newRoute.departure_time}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                departure_time: e.target.value,
-                              }))
-                            }
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="arrival_time">
-                            {t("admin.arrivalTime")}
-                          </Label>
-                          <Input
-                            id="arrival_time"
-                            type="time"
-                            value={newRoute.arrival_time}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                arrival_time: e.target.value,
-                              }))
-                            }
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="date">{t("admin.date")}</Label>
-                          <Input
-                            id="date"
-                            type="date"
-                            value={newRoute.date}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                date: e.target.value,
-                              }))
-                            }
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="price">{t("admin.price")}</Label>
-                          <Input
-                            id="price"
-                            type="number"
-                            value={newRoute.price}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                price: Number(e.target.value),
-                              }))
-                            }
-                            placeholder="e.g., 750"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="driver_name">
-                            {t("admin.driverName")}
-                          </Label>
-                          <Input
-                            id="driver_name"
-                            value={newRoute.driver_name}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                driver_name: e.target.value,
-                              }))
-                            }
-                            placeholder="e.g., Ahmed Hassan"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="van_number">
-                            {t("admin.vanNumber")}
-                          </Label>
-                          <Input
-                            id="van_number"
-                            value={newRoute.van_number}
-                            onChange={(e) =>
-                              setNewRoute((prev) => ({
-                                ...prev,
-                                van_number: e.target.value,
-                              }))
-                            }
-                            placeholder="e.g., ABC-1234"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      {/* Van Type Selection */}
+                    <form onSubmit={handleAddTrip} className="space-y-4">
                       <div className="space-y-2">
-                        <Label>{t("admin.VanType")}</Label>
+                        <Label htmlFor="date">{t("admin.date") || "Date"}</Label>
+                        <Input
+                          id="date"
+                          type="date"
+                          value={newTrip.date}
+                          onChange={(e) => setNewTrip((prev) => ({ ...prev, date: e.target.value }))}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="time">{t("admin.time") || "Time"}</Label>
+                        <Input
+                          id="time"
+                          type="time"
+                          value={newTrip.time}
+                          onChange={(e) => setNewTrip((prev) => ({ ...prev, time: e.target.value }))}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{t("admin.direction") || "Direction"}</Label>
                         <Select
-                          value={newRoute.van_type}
-                          onValueChange={(v: "13_seats" | "12_seats") =>
-                            setNewRoute((prev) => ({ ...prev, van_type: v }))
+                          value={newTrip.direction}
+                          onValueChange={(v: 'cairo_sinai' | 'sinai_cairo') =>
+                            setNewTrip((prev) => ({ ...prev, direction: v }))
                           }
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="13_seats">
-                              13 Seats (with seat 4)
-                            </SelectItem>
-                            <SelectItem value="12_seats">
-                              12 Seats (without seat 4)
-                            </SelectItem>
+                            <SelectItem value="cairo_sinai">Cairo → Sinai</SelectItem>
+                            <SelectItem value="sinai_cairo">Sinai → Cairo</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <Button
-                        type="submit"
-                        className="w-full bg-primary hover:bg-primary-dark text-white"
-                      >
-                        {editingRoute
-                          ? t("admin.updateRoute")
-                          : t("admin.addTrip")}
+                      <div className="space-y-2">
+                        <Label>{t("admin.vehicleType") || "Vehicle Type"}</Label>
+                        <Select
+                          value={newTrip.vehicle_type}
+                          onValueChange={(v: '12' | '13') =>
+                            setNewTrip((prev) => ({ ...prev, vehicle_type: v }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="13">13 Seats</SelectItem>
+                            <SelectItem value="12">12 Seats</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="extra"
+                          checked={newTrip.is_extra}
+                          onCheckedChange={(checked) =>
+                            setNewTrip((prev) => ({ ...prev, is_extra: checked }))
+                          }
+                        />
+                        <Label htmlFor="extra">{t("admin.extraTrip") || "Extra Trip"}</Label>
+                      </div>
+
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white">
+                        {t("admin.addTrip") || "Add Trip"}
                       </Button>
                     </form>
                   </DialogContent>
@@ -964,65 +633,38 @@ const AdminDashboard: React.FC = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t("admin.route")}</TableHead>
-                        <TableHead>{t("admin.date")}</TableHead>
-                        <TableHead>{t("admin.time")}</TableHead>
-                        <TableHead>{t("admin.price")}</TableHead>
-                        <TableHead>{t("routes.seatsAvailable")}</TableHead>
-                        <TableHead>{t("routes.driver")}</TableHead>
-                        <TableHead>{t("routes.van")}</TableHead>
-                        <TableHead>{t("admin.actions")}</TableHead>
+                        <TableHead>{t("admin.date") || "Date"}</TableHead>
+                        <TableHead>{t("admin.time") || "Time"}</TableHead>
+                        <TableHead>{t("admin.direction") || "Direction"}</TableHead>
+                        <TableHead>{t("admin.vehicle") || "Vehicle"}</TableHead>
+                        <TableHead>{t("admin.status") || "Status"}</TableHead>
+                        <TableHead>{t("admin.actions") || "Actions"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {routes.map((route) => (
-                        <TableRow key={route.id}>
+                      {trips.map((trip) => (
+                        <TableRow key={trip.id}>
+                          <TableCell>{trip.attributes.date}</TableCell>
+                          <TableCell>{trip.attributes.time}</TableCell>
                           <TableCell>
-                            <div className="font-medium">
-                              {route.origin} → {route.destination}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(route.date), "MMM dd, yyyy")}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {formatTime12h(route.departure_time)} -{" "}
-                            {formatTime12h(route.arrival_time)}
-                            {/* {route.departure_time} - {route.arrival_time} */}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {route.price} {t("common.currency")}
+                            {trip.attributes.direction === 'cairo_sinai' ? 'Cairo → Sinai' : 'Sinai → Cairo'}
                           </TableCell>
                           <TableCell>
-                            {route.available_seats} / {route.total_seats}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {route.driver_name}
-                          </TableCell>
-                          <TableCell className="text-sm font-mono">
-                            {route.van_number}
+                            {trip.attributes.vehicle_type} seats
+                            {trip.attributes.is_extra && (
+                              <Badge variant="outline" className="ml-2">Extra</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openEditDialog(route)}
-                                className="gap-1"
-                              >
-                                <Edit className="w-3 h-3" />
-                                {t("admin.edit")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDeleteRoute(route.id)}
-                                className="gap-1"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                {t("admin.delete")}
-                              </Button>
-                            </div>
+                            <Badge className={trip.attributes.is_active ? "bg-success" : "bg-muted"}>
+                              {trip.attributes.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Switch
+                              checked={trip.attributes.is_active}
+                              onCheckedChange={(checked) => handleToggleTripActive(trip.id, checked)}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1033,24 +675,62 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="promos">
-            <PromoCodeManager />
-          </TabsContent>
-
-          <TabsContent value="stops">
-            <StopsManager />
-          </TabsContent>
-
-          <TabsContent value="templates">
-            <RouteTemplatesManager />
-          </TabsContent>
-
-          <TabsContent value="schedules">
-            <SchedulesManager />
-          </TabsContent>
-
           <TabsContent value="private-requests">
-            <PrivateTripRequestsManager />
+            <Card className="border-2 shadow-lg">
+              <CardHeader>
+                <CardTitle>{t("admin.privateTrips") || "Private Trip Requests"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("admin.name") || "Name"}</TableHead>
+                        <TableHead>{t("admin.phone") || "Phone"}</TableHead>
+                        <TableHead>{t("admin.from") || "From"}</TableHead>
+                        <TableHead>{t("admin.to") || "To"}</TableHead>
+                        <TableHead>{t("admin.date") || "Date"}</TableHead>
+                        <TableHead>{t("admin.notes") || "Notes"}</TableHead>
+                        <TableHead>{t("admin.status") || "Status"}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {privateTrips.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            {t("admin.noPrivateTrips") || "No private trip requests"}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        privateTrips.map((trip) => (
+                          <TableRow key={trip.id}>
+                            <TableCell className="font-medium">{trip.attributes.name}</TableCell>
+                            <TableCell>{trip.attributes.phone}</TableCell>
+                            <TableCell>{trip.attributes.from_location}</TableCell>
+                            <TableCell>{trip.attributes.to_location}</TableCell>
+                            <TableCell>{trip.attributes.requested_date}</TableCell>
+                            <TableCell className="max-w-xs truncate">{trip.attributes.notes || '—'}</TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  trip.attributes.status === 'completed'
+                                    ? 'bg-success'
+                                    : trip.attributes.status === 'in_progress'
+                                    ? 'bg-warning'
+                                    : 'bg-primary'
+                                }
+                              >
+                                {trip.attributes.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

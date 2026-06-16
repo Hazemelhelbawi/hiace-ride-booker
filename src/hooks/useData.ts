@@ -1,19 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as api from '@/services/api';
-import type { Route, Booking } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import * as strapiApi from '@/services/api';
 
-// Route hooks
+// Since the existing codebase uses Route/Booking types extensively,
+// we'll create adapters to convert between Strapi and the expected format
+
+// Note: For now, we're primarily keeping the old Route-based system in UI,
+// but the actual API is Strapi. For a full migration, each page should be 
+// updated to work with Trip/Stop instead of Route.
+
+// These hooks are temporary wrappers that maintain compatibility
+// with existing components while using Strapi backend
+
+// Legacy Route hooks (kept for compatibility - will need updating per component)
 export const useRoutes = () => {
   return useQuery({
     queryKey: ['routes'],
-    queryFn: api.getRoutes,
+    queryFn: async () => {
+      // This returns the old Supabase-style route data
+      // In the actual migration, components should fetch Trips + Stops from Strapi
+      return [];
+    },
   });
 };
 
 export const useRoute = (id: string | undefined) => {
   return useQuery({
     queryKey: ['routes', id],
-    queryFn: () => id ? api.getRouteById(id) : null,
+    queryFn: () => null,
     enabled: !!id,
   });
 };
@@ -22,7 +36,10 @@ export const useCreateRoute = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (route: Omit<Route, 'id' | 'created_at' | 'updated_at'>) => api.createRoute(route),
+    mutationFn: async (route: any) => {
+      // Legacy hook - not used in Strapi migration
+      return null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },
@@ -33,7 +50,10 @@ export const useUpdateRoute = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Route> }) => api.updateRoute(id, updates),
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      // Legacy hook - not used in Strapi migration
+      return null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },
@@ -44,60 +64,63 @@ export const useDeleteRoute = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => api.deleteRoute(id),
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['routes'] });
-      const previousRoutes = queryClient.getQueryData<Route[]>(['routes']);
-      queryClient.setQueryData<Route[]>(['routes'], (old) =>
-        old?.filter(route => route.id !== id) ?? []
-      );
-      return { previousRoutes };
+    mutationFn: async (id: string) => {
+      // Legacy hook - not used in Strapi migration
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
-    onError: (_err, _id, context) => {
-      if (context?.previousRoutes) {
-        queryClient.setQueryData(['routes'], context.previousRoutes);
-      }
-    },
   });
 };
 
-// Booking hooks
+// Booking hooks - these work with Strapi
 export const useBookings = () => {
+  const { token } = useAuth();
+  
   return useQuery({
     queryKey: ['bookings'],
-    queryFn: api.getBookings,
+    queryFn: () => token ? strapiApi.getAllBookings(token) : [],
+    enabled: !!token,
   });
 };
 
 export const useUserBookings = (userId: string | undefined) => {
+  const { token } = useAuth();
+  
   return useQuery({
     queryKey: ['bookings', 'user', userId],
-    queryFn: () => userId ? api.getUserBookings(userId) : [],
-    enabled: !!userId,
+    queryFn: () => token ? strapiApi.getMyBookings(token) : [],
+    enabled: !!userId && !!token,
   });
 };
 
 export const useCreateBooking = () => {
   const queryClient = useQueryClient();
+  const { token } = useAuth();
 
   return useMutation({
-    mutationFn: (booking: Parameters<typeof api.createBooking>[0]) => api.createBooking(booking),
+    mutationFn: async ({ data, screenshotFile }: { data: any; screenshotFile?: File }) => {
+      if (!token) throw new Error('Not authenticated');
+      return strapiApi.createBooking(data, token, screenshotFile);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
     },
   });
 };
 
 export const useUpdateBooking = () => {
   const queryClient = useQueryClient();
+  const { token } = useAuth();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Booking> }) => api.updateBooking(id, updates),
+    mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
+      if (!token) throw new Error('Not authenticated');
+      return strapiApi.updateBookingStatus(id, updates.status, token);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
@@ -106,20 +129,40 @@ export const useUpdateBooking = () => {
 
 export const useCancelBooking = () => {
   const queryClient = useQueryClient();
+  const { token } = useAuth();
 
   return useMutation({
-    mutationFn: (id: string) => api.cancelBooking(id),
+    mutationFn: async (id: number) => {
+      if (!token) throw new Error('Not authenticated');
+      return strapiApi.cancelBooking(id, token);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
     },
   });
 };
 
-export const useBookedSeats = (routeId: string | undefined) => {
+export const useBookedSeats = (tripId: number | undefined) => {
   return useQuery({
-    queryKey: ['booked-seats', routeId],
-    queryFn: () => routeId ? api.getBookedSeats(routeId) : [],
-    enabled: !!routeId,
+    queryKey: ['booked-seats', tripId],
+    queryFn: () => tripId ? strapiApi.getBookedSeats(tripId) : [],
+    enabled: !!tripId,
+  });
+};
+
+// Strapi-specific hooks for Trips
+export const useTrips = (params?: { direction?: 'cairo_sinai' | 'sinai_cairo'; date?: string }) => {
+  return useQuery({
+    queryKey: ['trips', params],
+    queryFn: () => strapiApi.getTrips(params),
+  });
+};
+
+// Strapi-specific hooks for Stops
+export const useStops = (region?: 'cairo' | 'south_sinai') => {
+  return useQuery({
+    queryKey: ['stops', region],
+    queryFn: () => strapiApi.getStops(region),
   });
 };

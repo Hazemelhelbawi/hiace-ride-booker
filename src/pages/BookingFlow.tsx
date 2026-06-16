@@ -1,17 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { logger } from '@/lib/logger';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useRoute, useBookedSeats, useCreateBooking } from '@/hooks/useData';
-import { useStops } from '@/hooks/useStopsData';
-import { useIncrementPromoCodeUsage, type PromoCode } from '@/hooks/usePromoCodes';
-import { sendBookingEmail } from '@/services/emailService';
+import { getTrips, getBookedSeats, getStops, createBooking, STRAPI_URL, type StrapiItem, type Trip, type Stop } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Navbar from '@/components/Navbar';
 import SeatMap from '@/components/SeatMap';
-import PromoCodeInput from '@/components/PromoCodeInput';
-import PaymentUpload from '@/components/PaymentUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,68 +13,96 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Check, Tag } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Seat } from '@/types';
 
 interface PassengerInfo {
   name: string;
   phone: string;
-  email: string;
   notes: string;
-  pickupPoint: string;
-  dropoffPoint: string;
+  pickupStopId: string;
+  dropoffStopId: string;
 }
 
 const BookingFlow: React.FC = () => {
-  const { routeId } = useParams<{ routeId: string }>();
+  const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { t } = useLanguage();
-  const { data: route, isLoading: routeLoading } = useRoute(routeId);
-  const { data: bookedSeats = [] } = useBookedSeats(routeId);
-  const createBooking = useCreateBooking();
-  const { data: allStops = [] } = useStops();
-  const incrementPromoUsage = useIncrementPromoCodeUsage();
 
-
-
-
+  const [trip, setTrip] = useState<StrapiItem<Trip> | null>(null);
+  const [bookedSeats, setBookedSeats] = useState<number[]>([]);
+  const [stops, setStops] = useState<StrapiItem<Stop>[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [step, setStep] = useState<1 | 2>(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [appliedPromoCode, setAppliedPromoCode] = useState<PromoCode | null>(null);
-  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState<string>('');
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [passengerInfo, setPassengerInfo] = useState<PassengerInfo>({
     name: user?.name || '',
     phone: user?.phone || '',
-    email: user?.email || '',
     notes: '',
-    pickupPoint: '',
-    dropoffPoint: '',
+    pickupStopId: '',
+    dropoffStopId: '',
   });
 
+  // Fetch trip data on mount
   useEffect(() => {
-    if (!routeLoading && !route && routeId) {
-      toast.error(t('booking.routeNotFound') || 'Route not found');
+    if (!tripId) {
       navigate('/');
       return;
     }
 
-    if (route) {
-      // Use total_seats to determine van layout
-      const seatNumbers = route.total_seats <= 12
-        ? [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14]
-        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
-      const initialSeats: Seat[] = seatNumbers.map((num) => ({
-        number: num,
-        isAvailable: !bookedSeats.includes(num),
-        isSelected: false,
-        price: num === 1 ? (route.price + 50) : route.price,
-      }));
-      setSeats(initialSeats);
-    }
-  }, [route, routeLoading, routeId, bookedSeats, navigate, t]);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch stops
+        const stopsData = await getStops();
+        setStops(stopsData);
+
+        // Fetch trip (we need to get all trips and find the one with matching ID)
+        const tripsData = await getTrips();
+        const foundTrip = tripsData.find(t => t.id === parseInt(tripId));
+        
+        if (!foundTrip) {
+          toast.error(t('booking.tripNotFound') || 'Trip not found');
+          navigate('/');
+          return;
+        }
+        
+        setTrip(foundTrip);
+
+        // Fetch booked seats for this trip
+        const bookedSeatsData = await getBookedSeats(parseInt(tripId));
+        setBookedSeats(bookedSeatsData);
+
+        // Initialize seat map
+        const totalSeats = foundTrip.attributes.vehicle_type === '12' ? 12 : 13;
+        const seatNumbers = totalSeats === 12
+          ? [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14]
+          : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
+        
+        const initialSeats: Seat[] = seatNumbers.map((num) => ({
+          number: num,
+          isAvailable: !bookedSeatsData.includes(num),
+          isSelected: false,
+          price: 500, // Default price - should come from Strapi config
+        }));
+        
+        setSeats(initialSeats);
+      } catch (error) {
+        console.error('Error fetching trip data:', error);
+        toast.error('Failed to load trip details');
+        navigate('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [tripId, navigate, t]);
 
   // Update passenger info when user changes
   useEffect(() => {
@@ -90,7 +111,6 @@ const BookingFlow: React.FC = () => {
         ...prev,
         name: user.name || prev.name,
         phone: user.phone || prev.phone,
-        email: user.email || prev.email,
       }));
     }
   }, [user]);
@@ -104,13 +124,7 @@ const BookingFlow: React.FC = () => {
   };
 
   const selectedSeats = seats.filter((s) => s.isSelected);
-  const subtotalPrice = selectedSeats.reduce((sum, seat) => sum + (seat.price || route?.price || 0), 0);
-  
-  // Calculate discount
-  const discountAmount = appliedPromoCode 
-    ? Math.round((subtotalPrice * appliedPromoCode.discount_percent) / 100)
-    : 0;
-  const totalPrice = subtotalPrice - discountAmount;
+  const totalPrice = selectedSeats.reduce((sum, seat) => sum + (seat.price || 0), 0);
 
   const handleContinue = () => {
     if (selectedSeats.length === 0) {
@@ -123,47 +137,37 @@ const BookingFlow: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user || !route) return;
+    if (!user || !trip || !token) {
+      toast.error('Please log in to continue');
+      navigate('/auth');
+      return;
+    }
 
-    if (!passengerInfo.name || !passengerInfo.phone || !passengerInfo.email) {
+    if (!passengerInfo.name || !passengerInfo.phone) {
       toast.error(t('booking.fillRequired') || 'Please fill in all required fields');
+      return;
+    }
+
+    if (!passengerInfo.pickupStopId || !passengerInfo.dropoffStopId) {
+      toast.error('Please select pickup and dropoff stops');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const notesWithStops = [
-        passengerInfo.pickupPoint ? `Pickup: ${passengerInfo.pickupPoint}` : '',
-        passengerInfo.dropoffPoint ? `Dropoff: ${passengerInfo.dropoffPoint}` : '',
-        passengerInfo.notes || '',
-      ].filter(Boolean).join(' | ');
-
       const bookingData = {
-        user_id: user.id,
-        route_id: route.id,
-        seats: selectedSeats.map((s) => s.number),
+        trip: trip.id,
         passenger_name: passengerInfo.name,
-        passenger_phone: passengerInfo.phone,
-        passenger_email: passengerInfo.email,
-        passenger_notes: notesWithStops || null,
+        phone: passengerInfo.phone,
+        seats: selectedSeats.map((s) => s.number),
         total_price: totalPrice,
-        promo_code: appliedPromoCode?.code || null,
-        discount_amount: discountAmount,
-        payment_screenshot_url: paymentScreenshotUrl || null,
-        status: 'pending',
-        is_paid: false,
+        pickup_stop: parseInt(passengerInfo.pickupStopId),
+        dropoff_stop: parseInt(passengerInfo.dropoffStopId),
+        notes: passengerInfo.notes || undefined,
       };
 
-      const newBooking = await createBooking.mutateAsync(bookingData);
-
-      // Increment promo code usage if one was applied
-      if (appliedPromoCode) {
-        await incrementPromoUsage.mutateAsync(appliedPromoCode.code);
-      }
-
-      // Send confirmation email
-      sendBookingEmail(newBooking.id);
+      const newBooking = await createBooking(bookingData, token, screenshotFile || undefined);
 
       toast.success(t('booking.confirmed') || 'Booking confirmed!');
 
@@ -171,24 +175,33 @@ const BookingFlow: React.FC = () => {
       navigate('/booking/confirmation', {
         state: {
           booking: newBooking,
-          route: route,
+          trip: trip,
         },
         replace: true,
       });
     } catch (error) {
-      logger.error('Booking error:', error);
+      console.error('Booking error:', error);
       toast.error(t('booking.error') || 'Failed to create booking');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (routeLoading || !route) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setScreenshotFile(file);
+    }
+  };
+
+  if (isLoading || !trip) {
     return (
       <div className="min-h-screen bg-gradient-hero">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <p className="text-center text-muted-foreground">{t('common.loading')}</p>
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          </div>
         </div>
       </div>
     );
@@ -220,8 +233,8 @@ const BookingFlow: React.FC = () => {
                   <SeatMap
                     seats={seats}
                     onSeatSelect={handleSeatSelect}
-                    maxSeats={14}
-                    seatPrice={route.price}
+                    maxSeats={trip.attributes.vehicle_type === '12' ? 12 : 13}
+                    seatPrice={500}
                   />
                 </CardContent>
               </Card>
@@ -234,36 +247,36 @@ const BookingFlow: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>{t('booking.pickupPoint') || 'Pickup Point'} *</Label>
+                        <Label>{t('booking.pickupPoint') || 'Pickup Stop'} *</Label>
                         <Select
-                          value={passengerInfo.pickupPoint}
-                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, pickupPoint: v }))}
+                          value={passengerInfo.pickupStopId}
+                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, pickupStopId: v }))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={t('booking.selectPickup') || 'Select pickup stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {allStops.map(stop => (
-                              <SelectItem key={stop.id} value={stop.name_en}>
-                                {stop.name_en} - {stop.name_ar}
+                            {stops.map(stop => (
+                              <SelectItem key={stop.id} value={String(stop.id)}>
+                                {stop.attributes.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>{t('booking.dropoffPoint') || 'Dropoff Point'} *</Label>
+                        <Label>{t('booking.dropoffPoint') || 'Dropoff Stop'} *</Label>
                         <Select
-                          value={passengerInfo.dropoffPoint}
-                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, dropoffPoint: v }))}
+                          value={passengerInfo.dropoffStopId}
+                          onValueChange={(v) => setPassengerInfo((prev) => ({ ...prev, dropoffStopId: v }))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={t('booking.selectDropoff') || 'Select dropoff stop'} />
                           </SelectTrigger>
                           <SelectContent>
-                            {allStops.map(stop => (
-                              <SelectItem key={stop.id} value={stop.name_en}>
-                                {stop.name_en} - {stop.name_ar}
+                            {stops.map(stop => (
+                              <SelectItem key={stop.id} value={String(stop.id)}>
+                                {stop.attributes.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -299,20 +312,6 @@ const BookingFlow: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t('booking.email')} *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={passengerInfo.email}
-                        onChange={(e) =>
-                          setPassengerInfo((prev) => ({ ...prev, email: e.target.value }))
-                        }
-                        placeholder="your.email@example.com"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
                       <Label htmlFor="notes">{t('booking.notes')}</Label>
                       <Textarea
                         id="notes"
@@ -325,18 +324,31 @@ const BookingFlow: React.FC = () => {
                       />
                     </div>
 
-                    {/* Payment Upload */}
-                    <PaymentUpload
-                      onUpload={setPaymentScreenshotUrl}
-                      uploadedUrl={paymentScreenshotUrl}
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="screenshot">{t('booking.paymentScreenshot') || 'Payment Screenshot (Optional)'}</Label>
+                      <Input
+                        id="screenshot"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                      {screenshotFile && (
+                        <p className="text-sm text-muted-foreground">
+                          Selected: {screenshotFile.name}
+                        </p>
+                      )}
+                    </div>
 
                     <Button
                       type="submit"
                       disabled={isSubmitting}
                       className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-white transition-opacity gap-2"
                     >
-                      <Check className="w-5 h-5" />
+                      {isSubmitting ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Check className="w-5 h-5" />
+                      )}
                       {isSubmitting ? t('common.processing') : t('booking.confirmBooking')}
                     </Button>
                   </form>
@@ -354,16 +366,16 @@ const BookingFlow: React.FC = () => {
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm text-muted-foreground mb-1">{t('booking.route')}</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t('booking.trip')}</div>
                     <div className="font-semibold text-foreground">
-                      {route.origin} → {route.destination}
+                      {trip.attributes.direction === 'cairo_sinai' ? 'Cairo → Sinai' : 'Sinai → Cairo'}
                     </div>
                   </div>
 
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">{t('booking.dateTime')}</div>
                     <div className="font-semibold text-foreground">
-                      {route.date} {t('common.at')} {route.departure_time}
+                      {trip.attributes.date} {t('common.at')} {trip.attributes.time}
                     </div>
                   </div>
 
@@ -377,39 +389,11 @@ const BookingFlow: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Promo Code Input */}
-                <div className="border-t pt-4">
-                  <PromoCodeInput
-                    onApply={setAppliedPromoCode}
-                    appliedCode={appliedPromoCode}
-                  />
-                </div>
-
                 <div className="border-t pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{t('booking.pricePerSeat')}</span>
-                    <span className="font-medium text-foreground">{route.price} {t('common.currency')}</span>
-                  </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{t('booking.numberOfSeats')}</span>
                     <span className="font-medium text-foreground">{selectedSeats.length}</span>
                   </div>
-                  
-                  {appliedPromoCode && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('promo.originalPrice')}</span>
-                        <span className="font-medium text-foreground line-through">{subtotalPrice} {t('common.currency')}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-success">
-                        <span className="flex items-center gap-1">
-                          <Tag className="w-3 h-3" />
-                          {t('promo.discountApplied')} ({appliedPromoCode.discount_percent}%)
-                        </span>
-                        <span className="font-medium">-{discountAmount} {t('common.currency')}</span>
-                      </div>
-                    </>
-                  )}
                   
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span className="text-foreground">{t('booking.total')}</span>

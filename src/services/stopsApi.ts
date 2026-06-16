@@ -1,5 +1,6 @@
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logger';
+// Stub for stops and route templates - partially implemented in Strapi
+// Core stops functionality is available via the main api.ts file
+// Route templates and advanced scheduling features are not part of the initial migration
 
 export interface Stop {
   id: string;
@@ -37,100 +38,61 @@ export interface RouteTemplateStop {
   stop?: Stop;
 }
 
-// ─── Stops ───
-
+// Stops - Use main api.ts getStops() function instead
 export const getStops = async (includeInactive = false): Promise<Stop[]> => {
-  let query = supabase.from('stops').select('*').order('region').order('name_en');
-  if (!includeInactive) {
-    query = query.eq('is_active', true);
-  }
-  const { data, error } = await query;
-  if (error) { logger.error('Error fetching stops:', error); return []; }
-  return data || [];
+  console.warn('Use getStops from @/services/api instead');
+  return [];
 };
 
 export const createStop = async (stop: Omit<Stop, 'id' | 'created_at' | 'updated_at'>): Promise<Stop | null> => {
-  const { data, error } = await supabase.from('stops').insert([stop]).select().single();
-  if (error) { logger.error('Error creating stop:', error); throw error; }
-  return data;
+  console.warn('Stop management not implemented in Strapi migration');
+  return null;
 };
 
 export const updateStop = async (id: string, updates: Partial<Stop>): Promise<Stop | null> => {
-  const { data, error } = await supabase.from('stops').update(updates).eq('id', id).select().single();
-  if (error) { logger.error('Error updating stop:', error); throw error; }
-  return data;
+  console.warn('Stop management not implemented in Strapi migration');
+  return null;
 };
 
 export const deleteStop = async (id: string): Promise<boolean> => {
-  const { error } = await supabase.from('stops').delete().eq('id', id);
-  if (error) { logger.error('Error deleting stop:', error); return false; }
-  return true;
+  console.warn('Stop management not implemented in Strapi migration');
+  return false;
 };
 
-// ─── Route Templates ───
-
+// Route Templates - Not implemented in initial Strapi migration
 export const getRouteTemplates = async (includeInactive = false): Promise<RouteTemplate[]> => {
-  let query = supabase.from('route_templates').select('*').order('name');
-  if (!includeInactive) {
-    query = query.eq('is_active', true);
-  }
-  const { data, error } = await query;
-  if (error) { logger.error('Error fetching route templates:', error); return []; }
-  return data || [];
+  console.warn('Route templates not implemented in Strapi migration');
+  return [];
 };
 
 export const createRouteTemplate = async (
   template: Omit<RouteTemplate, 'id' | 'created_at' | 'updated_at'>
 ): Promise<RouteTemplate | null> => {
-  const { data, error } = await supabase.from('route_templates').insert([template]).select().single();
-  if (error) { logger.error('Error creating route template:', error); throw error; }
-  return data;
+  console.warn('Route templates not implemented in Strapi migration');
+  return null;
 };
 
 export const updateRouteTemplate = async (
   id: string, updates: Partial<RouteTemplate>
 ): Promise<RouteTemplate | null> => {
-  const { data, error } = await supabase.from('route_templates').update(updates).eq('id', id).select().single();
-  if (error) { logger.error('Error updating route template:', error); throw error; }
-  return data;
+  console.warn('Route templates not implemented in Strapi migration');
+  return null;
 };
 
 export const deleteRouteTemplate = async (id: string): Promise<boolean> => {
-  const { error } = await supabase.from('route_templates').delete().eq('id', id);
-  if (error) { logger.error('Error deleting route template:', error); return false; }
-  return true;
+  console.warn('Route templates not implemented in Strapi migration');
+  return false;
 };
 
-// ─── Route Template Stops ───
-
 export const getRouteTemplateStops = async (templateId: string): Promise<RouteTemplateStop[]> => {
-  const { data, error } = await supabase
-    .from('route_template_stops')
-    .select('*, stop:stops(*)')
-    .eq('route_template_id', templateId)
-    .order('sequence_order');
-  if (error) { logger.error('Error fetching route template stops:', error); return []; }
-  return (data || []).map(item => ({
-    ...item,
-    stop_role: item.stop_role as StopRole,
-    stop: item.stop as unknown as Stop | undefined,
-  }));
+  console.warn('Route template stops not implemented in Strapi migration');
+  return [];
 };
 
 export const setRouteTemplateStops = async (
   templateId: string,
   stops: { stop_id: string; sequence_order: number; stop_role: StopRole }[]
 ): Promise<boolean> => {
-  const { error: deleteError } = await supabase
-    .from('route_template_stops')
-    .delete()
-    .eq('route_template_id', templateId);
-  if (deleteError) { logger.error('Error clearing template stops:', deleteError); return false; }
-
-  if (stops.length === 0) return true;
-
-  const rows = stops.map(s => ({ route_template_id: templateId, ...s }));
-  const { error: insertError } = await supabase.from('route_template_stops').insert(rows);
-  if (insertError) { logger.error('Error setting template stops:', insertError); return false; }
-  return true;
+  console.warn('Route template stops not implemented in Strapi migration');
+  return false;
 };

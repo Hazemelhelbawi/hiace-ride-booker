@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useRoutes } from "@/hooks/useData";
-import RouteCard from "@/components/RouteCard";
+import { getStops, getTrips, STRAPI_URL, type StrapiItem, type Stop, type Trip } from "@/services/api";
 import Navbar from "@/components/Navbar";
 import PromoBanner from "@/components/PromoBanner";
 import Gallery from "@/components/Gallery";
@@ -28,100 +27,77 @@ import {
   Car,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-// import heroImage from "@/assets/hero-van.jpg";
 import hero from "@/assets/hero.png";
 import logoImage from "@/assets/logo.png";
-// import destinationsImage from "@/assets/egypt-destinations.jpg";
 import aboutImage from "@/assets/about.png";
 
 interface FilterOptions {
-  origin?: string;
-  destination?: string;
+  direction?: 'cairo_sinai' | 'sinai_cairo';
   date?: string;
 }
 
 const Routes: React.FC = () => {
-  const { data: routes = [], isLoading } = useRoutes();
+  const [stops, setStops] = useState<StrapiItem<Stop>[]>([]);
+  const [trips, setTrips] = useState<StrapiItem<Trip>[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({});
   const [passengers, setPassengers] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  // Get unique origins and destinations from routes
-  const uniqueOrigins = useMemo(() => {
-    const origins = [...new Set(routes.map((r) => r.origin))];
-    return origins.sort();
-  }, [routes]);
+  // Fetch stops on mount
+  useEffect(() => {
+    const fetchStops = async () => {
+      try {
+        const stopsData = await getStops();
+        setStops(stopsData);
+      } catch (error) {
+        console.error('Error fetching stops:', error);
+      }
+    };
 
-  const uniqueDestinations = useMemo(() => {
-    // If origin is selected, show only destinations available from that origin
-    if (filters.origin) {
-      const destinations = routes
-        .filter((r) => r.origin === filters.origin)
-        .map((r) => r.destination);
-      return [...new Set(destinations)].sort();
-    }
-    // Otherwise show all destinations
-    const destinations = [...new Set(routes.map((r) => r.destination))];
-    return destinations.sort();
-  }, [routes, filters.origin]);
+    fetchStops();
+  }, []);
 
-  // Available origins based on selected destination
-  const availableOrigins = useMemo(() => {
-    if (filters.destination) {
-      const origins = routes
-        .filter((r) => r.destination === filters.destination)
-        .map((r) => r.origin);
-      return [...new Set(origins)].sort();
-    }
-    return uniqueOrigins;
-  }, [routes, filters.destination, uniqueOrigins]);
+  // Get unique regions for origin/destination  
+  const cairoStops = stops.filter(s => s.attributes.region === 'cairo');
+  const sinaiStops = stops.filter(s => s.attributes.region === 'south_sinai');
 
-  const filteredRoutes = useMemo(() => {
-    let filtered = [...routes];
-
-    if (filters.origin) {
-      filtered = filtered.filter((r) => r.origin === filters.origin);
-    }
-
-    if (filters.destination) {
-      filtered = filtered.filter((r) => r.destination === filters.destination);
-    }
-
-    if (filters.date) {
-      filtered = filtered.filter((r) => r.date === filters.date);
-    }
-
-    return filtered;
-  }, [filters, routes]);
-
-  const handleBook = (route: (typeof routes)[0]) => {
-    if (!isAuthenticated) {
-      navigate("/auth", { state: { from: "/", routeId: route.id } });
+  const handleSearch = async () => {
+    if (!filters.direction) {
       return;
     }
-    navigate(`/booking/${route.id}`);
+
+    setIsLoading(true);
+    try {
+      const tripsData = await getTrips(filters);
+      setTrips(tripsData);
+    } catch (error) {
+      console.error('Error fetching trips:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleOriginChange = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      origin: value === "all" ? undefined : value,
-      // Reset destination if it's not available from new origin
-      destination: value === "all" ? prev.destination : undefined,
-    }));
-  };
-
-  const handleDestinationChange = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      destination: value === "all" ? undefined : value,
-    }));
+  const handleDirectionChange = (value: string) => {
+    if (value === 'all') {
+      setFilters(prev => ({ ...prev, direction: undefined }));
+    } else {
+      setFilters(prev => ({ ...prev, direction: value as 'cairo_sinai' | 'sinai_cairo' }));
+    }
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, date: e.target.value || undefined }));
+    setFilters(prev => ({ ...prev, date: e.target.value || undefined }));
+  };
+
+  const handleBookTrip = (trip: StrapiItem<Trip>) => {
+    if (!isAuthenticated) {
+      navigate("/auth", { state: { from: "/", tripId: trip.id } });
+      return;
+    }
+    navigate(`/booking/${trip.id}`);
   };
 
   return (
@@ -134,7 +110,6 @@ const Routes: React.FC = () => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${hero})` }}
-          // style={{ backgroundImage: `url(${heroImage})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50"></div>
         </div>
@@ -150,9 +125,6 @@ const Routes: React.FC = () => {
             <div className="flex items-center justify-center">
               <img src={logoImage} alt="logo" />
             </div>
-            {/* <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
-                {t("hero.welcome")}
-              </h1> */}
             <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
               {t("hero.title")}
             </h1>
@@ -162,29 +134,26 @@ const Routes: React.FC = () => {
           </div>
 
           <Card className="max-w-5xl mx-auto bg-card/95 backdrop-blur-lg border-0 shadow-2xl p-4 sm:p-6 md:p-8 rounded-2xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">
-                  {t("search.pickupLocation")}
+                  {t("search.direction") || "Direction"}
                 </label>
                 <div className="relative">
                   <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary z-10" />
                   <Select
-                    value={filters.origin || "all"}
-                    onValueChange={handleOriginChange}
+                    value={filters.direction || "all"}
+                    onValueChange={handleDirectionChange}
                   >
                     <SelectTrigger className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary">
-                      <SelectValue placeholder={t("search.pickupLocation")} />
+                      <SelectValue placeholder={t("search.selectDirection") || "Select Direction"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">
-                        {t("search.allLocations") || "All Locations"}
+                        {t("search.allDirections") || "All Directions"}
                       </SelectItem>
-                      {availableOrigins.map((origin) => (
-                        <SelectItem key={origin} value={origin}>
-                          {origin}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="cairo_sinai">Cairo → Sinai</SelectItem>
+                      <SelectItem value="sinai_cairo">Sinai → Cairo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -192,31 +161,21 @@ const Routes: React.FC = () => {
 
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">
-                  {t("search.dropoffLocation")}
+                  {t("search.departureDate")}
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary z-10" />
-                  <Select
-                    value={filters.destination || "all"}
-                    onValueChange={handleDestinationChange}
-                  >
-                    <SelectTrigger className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary">
-                      <SelectValue placeholder={t("search.dropoffLocation")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t("search.allLocations") || "All Locations"}
-                      </SelectItem>
-                      {uniqueDestinations.map((destination) => (
-                        <SelectItem key={destination} value={destination}>
-                          {destination}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+                  <Input
+                    type="date"
+                    value={filters.date || ""}
+                    onChange={handleDateChange}
+                    className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
+                  />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-end">
               <div className="space-y-2">
                 <label className="text-foreground text-sm font-medium block">
                   {t("search.quantity")}
@@ -234,43 +193,17 @@ const Routes: React.FC = () => {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-end">
-              <div className="space-y-2">
-                <label className="text-foreground text-sm font-medium block">
-                  {t("search.departureDate")}
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                  <Input
-                    type="date"
-                    value={filters.date || ""}
-                    onChange={handleDateChange}
-                    className="ps-10 bg-secondary border-border h-12 text-foreground rounded-xl focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg flex-1 rounded-xl shadow-lg hover:shadow-xl transition-all"
-                  onClick={() => navigate('/book')}
-                >
-                  {t("hero.findTransfer")}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12 font-bold text-lg flex-1 rounded-xl"
-                  onClick={() =>
-                    document
-                      .getElementById("routes")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                >
-                  View Legacy Routes
-                </Button>
-              </div>
+              <Button
+                className="h-12 bg-primary hover:bg-primary-dark text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+                onClick={handleSearch}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : null}
+                {t("hero.findTransfer")}
+              </Button>
             </div>
           </Card>
         </div>
@@ -344,18 +277,13 @@ const Routes: React.FC = () => {
               </p>
               <Button
                 className="bg-primary hover:bg-primary-dark text-white font-bold text-lg px-8 py-6 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all"
-                onClick={() =>
-                  document
-                    .getElementById("routes")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
+                onClick={handleSearch}
               >
                 {t("destinations.exploreRoutes")}
               </Button>
             </div>
             <div className="order-1 lg:order-2">
               <img
-                // src={destinationsImage}
                 src={aboutImage}
                 alt="about Image"
                 className="rounded-3xl shadow-2xl w-full"
@@ -389,45 +317,50 @@ const Routes: React.FC = () => {
       {/* Testimonials Section */}
       <Testimonials />
 
-      {/* Routes Grid */}
-      <section id="routes" className="py-24 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-4xl font-black text-foreground mb-4">
-              {t("routes.title")}
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              {t("routes.subtitle")}
-            </p>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            </div>
-          ) : filteredRoutes.length === 0 ? (
-            <Card className="p-12 text-center border-2 border-dashed rounded-2xl">
-              <Bus className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {t("routes.noRoutes")}
-              </h3>
-              <p className="text-muted-foreground">
-                {t("routes.noRoutesDesc")}
+      {/* Trips Results */}
+      {trips.length > 0 && (
+        <section id="routes" className="py-24 bg-card">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-14">
+              <h2 className="text-4xl font-black text-foreground mb-4">
+                {t("routes.title")}
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                {t("routes.subtitle")}
               </p>
-            </Card>
-          ) : (
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredRoutes.map((route) => (
-                <RouteCard
-                  key={route.id}
-                  route={route}
-                  onBook={() => handleBook(route)}
-                />
+              {trips.map((trip) => (
+                <Card key={trip.id} className="border-2 shadow-lg p-6 hover:shadow-xl transition-shadow">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold mb-2">
+                      {trip.attributes.direction === 'cairo_sinai' ? 'Cairo → Sinai' : 'Sinai → Cairo'}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {trip.attributes.date} at {trip.attributes.time}
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground">Vehicle: {trip.attributes.vehicle_type} seats</p>
+                    {trip.attributes.is_extra && (
+                      <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium mt-2">
+                        Extra Trip
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => handleBookTrip(trip)}
+                    className="w-full"
+                  >
+                    Book Now
+                  </Button>
+                </Card>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React from "react";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getAllPrivateTrips, STRAPI_URL, type StrapiItem, type PrivateTrip } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,43 +26,34 @@ import { Car, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-interface PrivateTripRequest {
-  id: string;
-  name: string;
-  phone: string;
-  number_of_passengers: number;
-  pickup_location: string;
-  dropoff_location: string;
-  preferred_date: string | null;
-  notes: string | null;
-  status: string;
-  created_at: string;
-}
-
 const PrivateTripRequestsManager: React.FC = () => {
   const queryClient = useQueryClient();
   const { confirm } = useConfirmDialog();
   const { t } = useLanguage();
+  const { token } = useAuth();
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["private-trip-requests"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("private_trip_requests" as any)
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data || []) as unknown as PrivateTripRequest[];
+      if (!token) return [];
+      return await getAllPrivateTrips(token);
     },
+    enabled: !!token,
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("private_trip_requests" as any)
-        .update({ status } as any)
-        .eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      if (!token) throw new Error('No auth token');
+      const res = await fetch(`${STRAPI_URL}/api/private-trips/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ data: { status } }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["private-trip-requests"] });
@@ -71,12 +63,13 @@ const PrivateTripRequestsManager: React.FC = () => {
   });
 
   const deleteRequest = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("private_trip_requests" as any)
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+    mutationFn: async (id: number) => {
+      if (!token) throw new Error('No auth token');
+      const res = await fetch(`${STRAPI_URL}/api/private-trips/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["private-trip-requests"] });
@@ -87,14 +80,12 @@ const PrivateTripRequestsManager: React.FC = () => {
 
   const statusColor = (s: string) => {
     switch (s) {
-      case "pending":
+      case "new":
         return "bg-warning/10 text-warning";
-      case "contacted":
+      case "in_progress":
         return "bg-primary/10 text-primary";
-      case "confirmed":
+      case "completed":
         return "bg-success/10 text-success";
-      case "rejected":
-        return "bg-destructive/10 text-destructive";
       default:
         return "";
     }
@@ -106,9 +97,9 @@ const PrivateTripRequestsManager: React.FC = () => {
         <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
           <Car className="w-5 h-5" />
           {t("privateTrips.title")}
-          {requests.filter((r) => r.status === "pending").length > 0 && (
+          {requests.filter((r) => r.attributes.status === "new").length > 0 && (
             <Badge className="bg-warning/10 text-warning ml-2">
-              {requests.filter((r) => r.status === "pending").length}{" "}
+              {requests.filter((r) => r.attributes.status === "new").length}{" "}
               {t("privateTrips.new")}
             </Badge>
           )}
@@ -138,9 +129,6 @@ const PrivateTripRequestsManager: React.FC = () => {
                     {t("privateTrips.phone")}
                   </TableHead>
                   <TableHead className="text-xs">
-                    {t("privateTrips.passengers")}
-                  </TableHead>
-                  <TableHead className="text-xs">
                     {t("privateTrips.pickup")}
                   </TableHead>
                   <TableHead className="text-xs">
@@ -164,38 +152,35 @@ const PrivateTripRequestsManager: React.FC = () => {
                 {requests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell className="text-xs">
-                      {format(new Date(req.created_at), "MMM dd, hh:mm a")}
+                      {format(new Date(req.attributes.createdAt), "MMM dd, hh:mm a")}
                     </TableCell>
                     <TableCell className="text-xs font-medium">
-                      {req.name}
+                      {req.attributes.name}
                     </TableCell>
-                    <TableCell className="text-xs">{req.phone}</TableCell>
-                    <TableCell className="text-xs text-center">
-                      {req.number_of_passengers}
+                    <TableCell className="text-xs">{req.attributes.phone}</TableCell>
+                    <TableCell className="text-xs">
+                      {req.attributes.from_location}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {req.pickup_location}
+                      {req.attributes.to_location}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {req.dropoff_location}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {req.preferred_date
-                        ? format(new Date(req.preferred_date), "MMM dd, yyyy")
+                      {req.attributes.requested_date
+                        ? format(new Date(req.attributes.requested_date), "MMM dd, yyyy")
                         : "—"}
                     </TableCell>
                     <TableCell className="text-xs max-w-[150px] truncate">
-                      {req.notes || "—"}
+                      {req.attributes.notes || "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusColor(req.status)}>
-                        {t(`privateTrips.${req.status}`)}
+                      <Badge className={statusColor(req.attributes.status)}>
+                        {req.attributes.status.replace('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Select
-                          value={req.status}
+                          value={req.attributes.status}
                           onValueChange={(v) =>
                             updateStatus.mutate({ id: req.id, status: v })
                           }
@@ -204,18 +189,9 @@ const PrivateTripRequestsManager: React.FC = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">
-                              {t("privateTrips.pending")}
-                            </SelectItem>
-                            <SelectItem value="contacted">
-                              {t("privateTrips.contacted")}
-                            </SelectItem>
-                            <SelectItem value="confirmed">
-                              {t("privateTrips.confirmed")}
-                            </SelectItem>
-                            <SelectItem value="rejected">
-                              {t("privateTrips.rejected")}
-                            </SelectItem>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
                           </SelectContent>
                         </Select>
                         <Button
@@ -223,11 +199,11 @@ const PrivateTripRequestsManager: React.FC = () => {
                           variant="outline"
                           className="h-7 w-7 p-0 text-success hover:text-success"
                           onClick={() => {
-                            let phone = req.phone.replace(/[^0-9]/g, "");
+                            let phone = req.attributes.phone.replace(/[^0-9]/g, "");
                             if (phone.startsWith("0"))
                               phone = "20" + phone.slice(1);
                             const msg = encodeURIComponent(
-                              `Hi ${req.name}, regarding your private trip request from ${req.pickup_location} to ${req.dropoff_location}...`,
+                              `Hi ${req.attributes.name}, regarding your private trip request from ${req.attributes.from_location} to ${req.attributes.to_location}...`,
                             );
                             window.open(
                               `https://wa.me/${phone}?text=${msg}`,
